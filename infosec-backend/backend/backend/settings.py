@@ -21,15 +21,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-e*!2w2qu41&7dql-r8blu0z(8w^0+@x5eyz&^7^^80cc!&ind1'
+SECRET_KEY = config("DJANGO_SECRET_KEY", default="django-insecure-change-me-in-production")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 # Allow local development hosts
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
+    "*.railway.app",
+    config("RAILWAY_STATIC_URL", default=""),
+    config("RAILWAY_PUBLIC_DOMAIN", default=""),
 ]
 
 
@@ -81,12 +84,19 @@ MIDDLEWARE = [
 
 # CORS / CSRF settings for local development
 # Frontend runs on http://127.0.0.1:8081 (and sometimes http://localhost:8081)
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8081",
-    "http://localhost:8081",
-]
+CORS_ALLOWED_ORIGINS = config(
+    "CORS_ALLOWED_ORIGINS",
+    default="http://localhost:8081,http://127.0.0.1:8081",
+    cast=lambda v: [s.strip() for s in v.split(",")]
+)
+
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="http://localhost:8081,http://127.0.0.1:8081",
+    cast=lambda v: [s.strip() for s in v.split(",")]
+)
 
 ROOT_URLCONF = 'backend.urls'
 
