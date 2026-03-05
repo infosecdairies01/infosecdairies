@@ -1,4 +1,4 @@
-import { Shield, Terminal, Activity, Eye, ChevronRight } from "lucide-react";
+import { Terminal, Activity, Eye, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import socLabsHero from "@/assets/soc-labs-hero.jpg";
 const SOCLabs = () => {
@@ -17,11 +17,6 @@ const SOCLabs = () => {
       icon: Eye,
       title: "SIEM Mastery",
       description: "Get hands-on experience with dashboards, queries, and detection rules used by top security teams.",
-    },
-    {
-      icon: Shield,
-      title: "Incident Response",
-      description: "Practice containment, eradication, and recovery procedures in controlled scenarios.",
     },
   ];
   return (

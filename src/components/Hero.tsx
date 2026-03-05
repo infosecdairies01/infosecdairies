@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import logo from "@/assets/infosecdairies-logo.png";
 import FloatingParticles from "./FloatingParticles";
 import AnimatedCounter from "./AnimatedCounter";
@@ -47,7 +47,7 @@ const Hero = () => {
             <div className="space-y-2 group hover:scale-110 transition-transform duration-300 animate-slide-right" style={{
             animationDelay: '0.6s'
           }}>
-              <Shield className="w-8 h-8 mx-auto text-primary group-hover:animate-pulse" />
+              <div className="w-8 h-8 mx-auto text-primary flex items-center justify-center text-2xl group-hover:animate-pulse">🛡️</div>
               <p className="text-2xl font-bold gradient-text">
                 <AnimatedCounter end={100} suffix="%" />
               </p>

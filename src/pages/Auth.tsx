@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shield, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
+import { getCSRFToken } from "@/utils/csrf";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -20,6 +21,12 @@ const Auth = () => {
 
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const handleGoogleLogin = () => {
+    // Redirect to Django allauth Google login flow on the backend.
+    // In local dev, the backend runs on 127.0.0.1:8000.
+    window.location.href = "http://127.0.0.1:8000/accounts/google/login/";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +64,9 @@ const Auth = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
         },
+        credentials: "include",
         body: JSON.stringify(body),
       });
 
@@ -69,7 +78,7 @@ const Auth = () => {
           const firstErrorValue =
             firstErrorKey && Array.isArray(data[firstErrorKey])
               ? data[firstErrorKey][0]
-              : data[firstErrorKey] || "Something went wrong. Please try again.";
+              : data[firstErrorKey] || data.detail || "Something went wrong. Please try again.";
           setError(String(firstErrorValue));
         } else {
           setError("Something went wrong. Please try again.");
@@ -77,14 +86,22 @@ const Auth = () => {
         return;
       }
 
-      const tokens = data.tokens;
-
-      if (!data.email) {
-        // Fallback: use the email the user typed if backend didn't echo it
-        data.email = email;
+      // Check if registration requires email verification
+      if (!isLogin && data.requires_verification) {
+        setSuccess("Verification code sent! Redirecting to verification page...");
+        setTimeout(() => {
+          navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        }, 1000);
+        return;
       }
 
-      login({ email: data.email, tokens });
+      const tokens = data.tokens;
+
+      const userData = data.user || {};
+      const userEmail: string = userData.email || email;
+      const fullNameFromApi: string | undefined = userData.full_name || fullName || undefined;
+
+      login({ email: userEmail, fullName: fullNameFromApi, tokens });
 
       setSuccess(isLogin ? "Logged in successfully." : "Account created successfully.");
 
@@ -105,7 +122,6 @@ const Auth = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8 animate-fade-up">
           <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
-            <Shield className="h-8 w-8 text-primary group-hover:text-primary/80 transition-colors" />
             <span className="font-bold text-2xl gradient-text">InfosecDairies</span>
           </Link>
           <h1 className="text-3xl font-bold mt-4">
@@ -126,7 +142,7 @@ const Auth = () => {
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="tej_learner"
+                  placeholder="Your username"
                   className="bg-background"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -217,6 +233,16 @@ const Auth = () => {
                   ? "Sign In"
                   : "Sign Up"}
             </Button>
+
+            <div className="mt-4 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-[#00ffc8]/60 text-sm font-medium text-[#00ffc8] hover:bg-[#00ffc8]/10 transition-colors py-2"
+              >
+                <span>Continue with Google</span>
+              </button>
+            </div>
           </form>
 
           <div className="mt-6 text-center">

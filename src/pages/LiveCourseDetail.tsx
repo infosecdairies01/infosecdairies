@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Phone, Clock, Users, Calendar, ChevronRight, CheckCircle2, BookOpen, Target, GraduationCap, Send } from "lucide-react";
+import { Phone, Clock, Users, Calendar, ChevronRight, CheckCircle2, BookOpen, Target, GraduationCap, Send, Loader2 } from "lucide-react";
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -22,18 +22,57 @@ const LiveCourseDetail = () => {
     message: ""
   });
 
+  const [loading, setLoading] = useState(false);
+
   if (!course) {
     navigate("/courses");
     return null;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Inquiry Submitted!",
-      description: "We'll contact you shortly to discuss enrollment.",
-    });
-    setFormData({ name: "", email: "", phone: "", message: "" });
+    setLoading(true);
+    
+    try {
+      const response = await fetch("/api/leads/create/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          course_name: course.title,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+          country: "",
+          city: ""
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Inquiry Submitted!",
+          description: "We'll contact you shortly to discuss enrollment.",
+        });
+        setFormData({ name: "", email: "", phone: "", message: "" });
+      } else {
+        const data = await response.json();
+        toast({
+          title: "Submission Failed",
+          description: data.detail || "Please check your details and try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Network Error",
+        description: "Please check your connection and try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -260,9 +299,13 @@ const LiveCourseDetail = () => {
                       rows={3}
                     />
                   </div>
-                  <Button type="submit" className="w-full gap-2">
-                    <Send className="w-4 h-4" />
-                    Submit Inquiry
+                  <Button type="submit" className="w-full gap-2" disabled={loading}>
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                    {loading ? "Submitting..." : "Submit Inquiry"}
                   </Button>
                 </form>
 

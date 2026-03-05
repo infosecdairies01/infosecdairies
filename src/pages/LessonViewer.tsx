@@ -2,12 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { 
-  Shield, ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen, 
-  Lightbulb, FlaskConical, ExternalLink, Menu, X, Lock
+  ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen, 
+  Lightbulb, FlaskConical, ExternalLink, Menu, X, Lock, FileQuestion
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { getCourseById, Course, Lesson, Module } from "@/data/courses";
 import { getLessonContent, LessonContent } from "@/data/lessonContent";
+import { getLessonContentFromPerCourse } from "@/data/lessons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Import course backgrounds
@@ -19,6 +21,7 @@ import incidentResponseBg from "@/assets/courses/incident-response-bg.jpg";
 import threatHuntingBg from "@/assets/courses/threat-hunting-bg.jpg";
 import detectionEngineeringBg from "@/assets/courses/detection-engineering-bg.jpg";
 import malwareAnalysisBg from "@/assets/courses/malware-analysis-bg.jpg";
+import networkFundamentalsBg from "@/assets/courses/network-fundamentals-bg.jpg";
 
 const courseBackgrounds: Record<string, string> = {
   "blue-team-soc-fundamentals": socFundamentalsBg,
@@ -29,6 +32,7 @@ const courseBackgrounds: Record<string, string> = {
   "threat-hunting": threatHuntingBg,
   "detection-engineering": detectionEngineeringBg,
   "malware-analysis": malwareAnalysisBg,
+  "network-fundamentals": networkFundamentalsBg,
 };
 
 const LessonViewer = () => {
@@ -46,6 +50,8 @@ const LessonViewer = () => {
     if (!slug) return "";
 
     switch (slug) {
+      case "blue-team-soc-fundamentals":
+        return "soc-fundamentals";
       case "log-analysis-for-beginners":
         return "log-analysis";
       case "soc-analyst-practical-training":
@@ -56,8 +62,16 @@ const LessonViewer = () => {
         return "detection-engineering";
       case "malware-analysis-fundamentals":
         return "malware-analysis";
+      case "threat-hunting-fundamentals":
+        return "threat-hunting";
+      case "soc-analyst-path":
+        return "soc-analyst-path";
+      case "network-fundamentals":
+        return "network-fundamentals";
+      case "network-security-monitoring":
+        return "network-security-monitoring";
       default:
-        // slugs that already match static course IDs (e.g. blue-team-soc-fundamentals, siem-fundamentals)
+        // slugs that already match static course IDs (e.g. siem-fundamentals)
         return slug;
     }
   }, [slug]);
@@ -79,13 +93,32 @@ const LessonViewer = () => {
         return "detection-engineering";
       case "malware-analysis-fundamentals":
         return "malware-analysis";
+      case "threat-hunting-fundamentals":
+        return "threat-hunting";
+      case "soc-analyst-path":
+        return "soc-analyst-path";
+      case "network-fundamentals":
+        return "network-fundamentals";
+      case "network-security-monitoring":
+        return "network-security-monitoring";
       default:
         return slug;
     }
   }, [slug]);
 
   const course = getCourseById(courseIdForMeta);
-  const lessonContent = getLessonContent(lessonsCourseId, lessonId || "");
+  const lessonContentFromMain = getLessonContent(lessonsCourseId, lessonId || "");
+  const lessonContentFromPerCourse = getLessonContentFromPerCourse(lessonsCourseId, lessonId || "");
+  const lessonContent = lessonContentFromMain || lessonContentFromPerCourse;
+
+  // Debug logging
+  console.log('LessonViewer Debug:');
+  console.log('Slug:', slug);
+  console.log('LessonId:', lessonId);
+  console.log('CourseIdForMeta:', courseIdForMeta);
+  console.log('LessonsCourseId:', lessonsCourseId);
+  console.log('Course:', course);
+  console.log('LessonContent:', lessonContent);
 
   // Get all lessons flattened for navigation
   const allLessons = useMemo(() => {
@@ -99,19 +132,25 @@ const LessonViewer = () => {
     );
   }, [course]);
 
+  // More debug once allLessons is computed
+  console.log('All lessons length:', allLessons.length);
+  console.log('First few lessons:', allLessons.slice(0, 5));
+
   // Find current lesson index
   const currentLessonIndex = allLessons.findIndex((l) => l.id === lessonId);
-  const currentLesson = allLessons[currentLessonIndex];
+  const currentLesson =
+    currentLessonIndex >= 0 ? allLessons[currentLessonIndex] : null;
+
+  console.log('Current lesson index:', currentLessonIndex);
+  console.log('Current lesson:', currentLesson);
+
   const prevLesson = currentLessonIndex > 0 ? allLessons[currentLessonIndex - 1] : null;
   const nextLesson = currentLessonIndex < allLessons.length - 1 ? allLessons[currentLessonIndex + 1] : null;
 
   // Only some courses have full lesson navigation/progress enabled
   const isCourseProgressEnabled = useMemo(() => {
     if (!slug) return false;
-    return [
-      "blue-team-soc-fundamentals", // SOC Level 1
-      "log-analysis-for-beginners", // Log Analysis course
-    ].includes(slug);
+    return Boolean(course);
   }, [slug]);
 
   // Calculate progress based on backend-tracked completions
@@ -136,36 +175,51 @@ const LessonViewer = () => {
   // Load completion progress from backend for this course
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
-    if (!slug || !accessToken) {
+    if (!slug) {
       setCompletedLessonIds([]);
       return;
     }
 
     const fetchProgress = async () => {
       try {
-        const res = await fetch(`/api/courses/${slug}/progress/`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        let backendIds: string[] = [];
 
-        if (res.status === 401) {
-          // Token is missing/invalid/expired - force re-auth
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("userEmail");
-          navigate("/auth");
-          return;
+        if (accessToken) {
+          const res = await fetch(`/api/courses/${slug}/progress/`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+
+          if (res.status === 401) {
+            // Token is missing/invalid/expired - force re-auth
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("userEmail");
+            navigate("/auth");
+            return;
+          }
+
+          if (res.ok) {
+            const data: any[] = await res.json();
+            backendIds = data
+              .map((item) =>
+                item && item.lesson_id != null ? String(item.lesson_id) : null,
+              )
+              .filter((id: string | null): id is string => Boolean(id));
+            
+            // If backend has no progress, clear localStorage to prevent stale data
+            if (backendIds.length === 0) {
+              const completedKey = `completed_lessons_${slug}`;
+              localStorage.removeItem(completedKey);
+            }
+          }
         }
 
-        if (!res.ok) return;
-
-        const data: any[] = await res.json();
-        const ids = data
-          .map((item) => (item && item.lesson_id != null ? String(item.lesson_id) : null))
-          .filter((id: string | null): id is string => Boolean(id));
-
-        setCompletedLessonIds(ids);
+        const completedKey = `completed_lessons_${slug}`;
+        const localIds = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
+        const merged = Array.from(new Set([...(backendIds || []), ...(localIds || [])]));
+        setCompletedLessonIds(merged);
       } catch {
         // best-effort; if it fails, keep existing local state
       }
@@ -183,17 +237,94 @@ const LessonViewer = () => {
     }
   }, [currentLesson?.id, completedLessonIds]);
 
+  // Auto-mark lesson as complete when first viewed
+  useEffect(() => {
+    if (!isCourseProgressEnabled || !currentLesson) return;
+    
+    // Only mark if not already completed
+    if (!completedLessonIds.includes(currentLesson.id)) {
+      // Small delay to ensure the user actually stayed on the page
+      const timer = setTimeout(() => {
+        void markLessonComplete();
+      }, 3000); // 3 seconds delay
+      
+      return () => clearTimeout(timer);
+    }
+  }, [currentLesson?.id, isCourseProgressEnabled]);
+
+  // Gate access to a module until the previous module's quiz is passed (>= 70%)
+  useEffect(() => {
+    if (!slug || !lessonId || !course) return;
+
+    const currentModuleIndex = course.modules.findIndex((m) =>
+      m.lessons.some((l) => l.id === lessonId),
+    );
+    if (currentModuleIndex <= 0) return;
+
+    const previousModule = course.modules[currentModuleIndex - 1];
+    if (!previousModule?.quizId) return;
+
+    const scoreRaw = localStorage.getItem(`quiz_${slug}_${previousModule.quizId}`);
+    const score = scoreRaw != null ? Number(scoreRaw) : null;
+    const passed = score != null && !Number.isNaN(score) && score >= 70;
+
+    if (passed) return;
+
+    // Redirect to the previous module quiz
+    const quizId = previousModule.quizId;
+    const isSocFundamentals = slug === "blue-team-soc-fundamentals";
+    if (isSocFundamentals) {
+      navigate(`/courses/${slug}/lesson/${quizId}`, { replace: true });
+    } else {
+      navigate(`/courses/${slug}/quiz/${quizId}`, { replace: true });
+    }
+  }, [slug, lessonId, course, navigate]);
+
   // Redirect if course or lesson not found
   if (!course) {
+    console.warn('LessonViewer redirect: course not found, going back to /courses');
     return <Navigate to="/courses" replace />;
   }
 
   if (!lessonId || !currentLesson) {
+    console.warn('LessonViewer redirect: lesson not found, going back to course page', {
+      slug,
+      lessonId,
+      hasCourse: !!course,
+      allLessonsIds: allLessons.map(l => l.id),
+    });
     return <Navigate to={`/courses/${slug}`} replace />;
   }
 
-  const navigateToLesson = (newLessonId: string) => {
+  const navigateToLesson = (newLessonId: string): boolean => {
+    if (!slug || !course) return false;
+
+    const targetModuleIndex = course.modules.findIndex((m) =>
+      m.lessons.some((l) => l.id === newLessonId),
+    );
+    if (targetModuleIndex > 0) {
+      const previousModule = course.modules[targetModuleIndex - 1];
+      if (previousModule?.quizId) {
+        const scoreRaw = localStorage.getItem(`quiz_${slug}_${previousModule.quizId}`);
+        const score = scoreRaw != null ? Number(scoreRaw) : null;
+        const passed = score != null && !Number.isNaN(score) && score >= 70;
+
+        if (!passed) {
+          window.alert("Complete the quiz (70%+) to unlock the next module.");
+          const quizId = previousModule.quizId;
+          const isSocFundamentals = slug === "blue-team-soc-fundamentals";
+          if (isSocFundamentals) {
+            navigate(`/courses/${slug}/lesson/${quizId}`);
+          } else {
+            navigate(`/courses/${slug}/quiz/${quizId}`);
+          }
+          return false;
+        }
+      }
+    }
+
     navigate(`/courses/${slug}/lesson/${newLessonId}`);
+    return true;
   };
 
   const markLessonComplete = async (): Promise<boolean> => {
@@ -454,7 +585,7 @@ const LessonViewer = () => {
                 {/* Course Header */}
                 <Link to={`/courses/${slug}`} className="flex items-center gap-3 mb-6 group">
                   <div className="w-10 h-10 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-primary" />
+                    <div className="w-5 h-5 rounded-full bg-primary/40" />
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -490,7 +621,7 @@ const LessonViewer = () => {
                                   ? 'bg-primary/15 text-primary border border-primary/25' 
                                   : isLocked
                                   ? 'text-muted-foreground/40 cursor-not-allowed'
-                                  : 'text-muted-foreground hover:bg-white/[0.03] hover:text-foreground'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.03]'
                               }`}
                             >
                               {isCompleted ? (
@@ -574,6 +705,86 @@ const LessonViewer = () => {
                   <div className="prose prose-invert max-w-none">
                     {renderContent(lessonContent.content)}
                   </div>
+
+                  {/* Quiz Button for Quiz Lessons */}
+                  {(() => {
+                    // Base rule: quiz if lessonContent has an explicit quiz field
+                    let isQuizLesson = Boolean(lessonContent?.quiz);
+
+                    // Fallback rule: treat purely numeric *.5 lessons (e.g., 5.5) as quizzes
+                    // (Avoid misclassifying prefixed IDs like nf-5.5)
+                    if (!isQuizLesson && lessonId && /^\d+\.\d+$/.test(lessonId) && lessonId.split('.')[1] === '5') {
+                      isQuizLesson = true;
+                    }
+
+                    // Special case: SOC Fundamentals summary lesson 10.5 should NOT be a quiz
+                    if (slug === "blue-team-soc-fundamentals" && lessonId === "10.5") {
+                      isQuizLesson = false;
+                    }
+
+                    // Special case: Network Fundamentals lesson nf-2.5 is a regular lesson, not a quiz
+                    if (slug === "network-fundamentals" && lessonId === "nf-2.5") {
+                      isQuizLesson = false;
+                    }
+
+                    // Special case: Network Fundamentals lesson nf-3.5 is a regular lesson, not a quiz
+                    if (slug === "network-fundamentals" && lessonId === "nf-3.5") {
+                      isQuizLesson = false;
+                    }
+
+                    // Special case: Network Fundamentals lesson nf-4.5 is a regular lesson, not a quiz
+                    if (slug === "network-fundamentals" && lessonId === "nf-4.5") {
+                      isQuizLesson = false;
+                    }
+
+                    return isQuizLesson;
+                  })() && (
+                    <div className="mt-8 p-6 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                      <div className="flex items-center gap-3 mb-4">
+                        <FileQuestion className="w-6 h-6 text-orange-400" />
+                        <h3 className="text-lg font-semibold text-foreground">Ready to Test Your Knowledge?</h3>
+                      </div>
+                      <p className="text-muted-foreground mb-6">
+                        This quiz covers the material from the previous lessons. You need to score 70% or higher to unlock the next module.
+                      </p>
+                      
+                      {/* Quiz Score Display */}
+                      <div className="mb-6 p-4 rounded-lg bg-background/50 border border-white/[0.08]">
+                        <div className="text-center">
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Quiz Score</h4>
+                          <div className="text-2xl font-bold text-foreground mb-1">
+                            {(() => {
+                              const quizKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
+                              const score = localStorage.getItem(quizKey);
+                              return score ? `${score}%` : 'Not taken yet';
+                            })()}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {(() => {
+                            const quizKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
+                            const score = localStorage.getItem(quizKey);
+                            if (!score) return 'Complete the quiz to see your score';
+                            const scoreNum = parseInt(score);
+                            if (scoreNum >= 70) return '✅ Passed - Ready for next module!';
+                            return '❌ Need 70% to pass - Try again!';
+                          })()}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        onClick={() => navigate(`/courses/${slug}/quiz/${lessonContent?.quiz || lessonId}`)}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3"
+                      >
+                        <FileQuestion className="w-4 h-4 mr-2" />
+                        {(() => {
+                          const quizKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
+                          const score = localStorage.getItem(quizKey);
+                          return score ? 'Retake Quiz' : 'Start Quiz';
+                        })()}
+                      </Button>
+                    </div>
+                  )}
 
                   {/* Key Takeaways */}
                   {lessonContent.keyTakeaways && lessonContent.keyTakeaways.length > 0 && (
@@ -682,9 +893,11 @@ const LessonViewer = () => {
                   nextLesson ? (
                     <button
                       onClick={() => {
-                        // Fire-and-forget: try to mark current lesson complete, but don't block navigation
-                        void markLessonComplete();
-                        navigateToLesson(nextLesson.id);
+                        const didNavigate = navigateToLesson(nextLesson.id);
+                        if (didNavigate) {
+                          // Fire-and-forget: try to mark current lesson complete, but don't block navigation
+                          void markLessonComplete();
+                        }
                       }}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                     >

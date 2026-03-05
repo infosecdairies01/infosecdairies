@@ -603,14 +603,22 @@ export const liveCourses: LiveCourse[] = [
   }
 ];
 
-export const getLiveCourseById = (id: string): LiveCourse | undefined => {
-  return liveCourses.find(course => course.id === id);
+export interface LiveCourseCardData {
+  id: string;
+  title: string;
+  description: string;
+}
+
+const liveCoursesCardData: LiveCourseCardData[] = liveCourses.map(course => ({
+  id: course.id,
+  title: course.title,
+  description: course.description.substring(0, 150) + "..."
+}));
+
+export const getLiveCourseCardData = (): LiveCourseCardData[] => {
+  return liveCoursesCardData;
 };
 
-export const getLiveCourseCardData = () => {
-  return liveCourses.map(course => ({
-    id: course.id,
-    title: course.title,
-    description: course.description.substring(0, 150) + "..."
-  }));
+export const getLiveCourseById = (id: string): LiveCourse | undefined => {
+  return liveCourses.find(course => course.id === id);
 };

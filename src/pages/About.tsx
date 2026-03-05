@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { useEffect, useRef, useState } from "react";
-import { Shield, Users, Target, BookOpen, Award, Globe } from "lucide-react";
+import { Users, Target, BookOpen, Award, Globe } from "lucide-react";
 
 const About = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -31,7 +31,7 @@ const About = () => {
 
   const values = [
     {
-      icon: Shield,
+      icon: Target,
       title: "Defense First",
       description: "We believe the best offense is a strong defense. Our content focuses on building impenetrable security postures."
     },

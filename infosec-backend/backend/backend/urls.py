@@ -16,12 +16,24 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf import settings
+from django.conf.urls.static import static
 
 from .views import api_root
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', api_root, name='api-root'),
-    path('api/auth/', include('accounts.urls')),
-    path('api/courses/', include('courses.urls')),
+    path("admin/", admin.site.urls),
+    path("", api_root, name="api-root"),
+    path("api/auth/", include("accounts.urls")),
+    path("api/courses/", include("courses.urls")),
+    path("api/certificates/", include("certificates.urls")),
+    path("api/payments/", include("payments.urls")),
+    path("api/leads/", include("leads.urls")),
+
+    # Enable django-allauth routes (e.g. /accounts/google/login/)
+    path("accounts/", include("allauth.urls")),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

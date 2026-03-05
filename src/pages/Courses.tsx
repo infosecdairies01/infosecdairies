@@ -1,32 +1,76 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CourseCard from "@/components/CourseCard";
-import { fetchCourses } from "../services/api";
+import { ALL_COURSES_BUNDLE_PRICE_INR, ALL_COURSES_BUNDLE_SLUG, getCoursePriceInr, getCourseCardData } from "@/data/courses";
 import { getLiveCourseCardData } from "@/data/liveCourses";
-import { courses as staticCourses } from "@/data/courses";
+import { useAuth } from "@/context/AuthContext";
 
 const Courses = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"self-paced" | "live">("self-paced");
-  const [selfPacedCourses, setSelfPacedCourses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const [hasBundle, setHasBundle] = useState(false);
+  
   useEffect(() => {
-    const loadCourses = async () => {
+    const checkBundlePurchase = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken || !user) {
+        setHasBundle(false);
+        return;
+      }
+      
       try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchCourses();
-        setSelfPacedCourses(data);
-      } catch (err) {
-        setError("Failed to load courses");
-      } finally {
-        setLoading(false);
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/my-purchases/`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        
+        if (res.ok) {
+          const purchases = await res.json();
+          const bundlePurchased = purchases.some(
+            (p: any) => p.course_slug === ALL_COURSES_BUNDLE_SLUG && p.status === "paid"
+          );
+          setHasBundle(bundlePurchased);
+        }
+      } catch {
+        setHasBundle(false);
       }
     };
+    
+    checkBundlePurchase();
+  }, [user]);
+  
+  const selfPacedCourses = useMemo(() => {
+    const courses = getCourseCardData();
+    const difficultyRank: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
+    const priorityOrder = [
+      "network-fundamentals",
+      "soc-fundamentals",
+      "log-analysis",
+      "siem-fundamentals",
+      "incident-response",
+      "soc-analyst-path",
+      "network-security-monitoring",
+    ];
+    const priorityIndex = new Map(priorityOrder.map((id, idx) => [id, idx] as const));
 
-    loadCourses();
+    return [...courses].sort((a, b) => {
+      const aPriority = priorityIndex.get(a.courseId);
+      const bPriority = priorityIndex.get(b.courseId);
+      if (aPriority != null && bPriority != null) return aPriority - bPriority;
+      if (aPriority != null) return -1;
+      if (bPriority != null) return 1;
+
+      const aRank = difficultyRank[a.difficulty ?? ""] ?? 99;
+      const bRank = difficultyRank[b.difficulty ?? ""] ?? 99;
+
+      const aIsAdvanced = aRank >= 2;
+      const bIsAdvanced = bRank >= 2;
+      if (aIsAdvanced !== bIsAdvanced) return aIsAdvanced ? 1 : -1;
+
+      if (aRank !== bRank) return aRank - bRank;
+
+      return String(a.title).localeCompare(String(b.title));
+    });
   }, []);
   const liveCourses = getLiveCourseCardData();
 
@@ -76,46 +120,55 @@ const Courses = () => {
                 : "Interactive instructor-led sessions with real-time Q&A, hands-on labs, and personalized feedback."
               }
             </p>
+
+            {activeTab === "self-paced" && !hasBundle && (
+              <div className="mb-10">
+                <div className="relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] shadow-lg shadow-black/20">
+                  <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-br from-primary/20 via-transparent to-secondary/10 blur-sm pointer-events-none" />
+                  <div className="relative px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">All Courses Bundle</div>
+                      <div className="text-xs text-muted-foreground/80">Get access to all self-paced courses at one price</div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-lg font-semibold text-primary">₹{ALL_COURSES_BUNDLE_PRICE_INR}</div>
+                      <a
+                        href={`/courses/${ALL_COURSES_BUNDLE_SLUG}/checkout`}
+                        className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Get Bundle
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Courses Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeTab === "self-paced" 
-                ? (
-                  loading ? (
-                    <p className="text-muted-foreground col-span-full text-center">Loading courses...</p>
-                  ) : error ? (
-                    <p className="text-red-500 col-span-full text-center">{error}</p>
-                  ) : (
-                    selfPacedCourses.map((course, index) => {
-                      const staticCourse = staticCourses.find(
-                        (c) => c.id === course.slug || c.title === course.title
-                      );
-
-                      return (
-                        <CourseCard 
-                          key={course.slug} 
-                          title={course.title} 
-                          description={course.description} 
-                          index={index} 
-                          slug={course.slug}
-                          thumbnail={staticCourse?.bgImage}
-                          difficulty={staticCourse?.difficulty}
-                        />
-                      );
-                    })
-                  )
-                )
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {activeTab === "self-paced"
+                ? selfPacedCourses.map((course, index) => (
+                    <CourseCard
+                      key={course.courseId}
+                      title={course.title}
+                      description={course.description}
+                      index={index}
+                      difficulty={course.difficulty}
+                      slug={(course as any).slug ?? course.courseId}
+                      thumbnail={course.thumbnail}
+                      priceInr={(course as any).priceInr ?? getCoursePriceInr((course as any).slug ?? course.courseId, course.difficulty)}
+                    />
+                  ))
                 : liveCourses.map((course, index) => (
-                    <CourseCard 
-                      key={course.id} 
-                      title={course.title} 
-                      description={course.description} 
+                    <CourseCard
+                      key={course.id}
+                      title={course.title}
+                      description={course.description}
                       index={index}
                       slug={course.id}
                       isLiveCourse={true}
                     />
-                  ))
-              }
+                  ))}
             </div>
           </div>
         </div>

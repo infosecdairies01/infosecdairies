@@ -6,6 +6,18 @@ from .models import Course, Enrollment, LessonProgress
 from .serializers import CourseSerializer, LessonProgressSerializer
 
 
+FREE_COURSE_SLUG = "network-fundamentals"
+
+
+def _ensure_enrolled_and_paid(user, course: Course):
+    enrollment = Enrollment.objects.filter(user=user, course=course).first()
+    if not enrollment:
+        return None, Response({"detail": "Not enrolled in this course."}, status=403)
+    if course.slug != FREE_COURSE_SLUG and not enrollment.is_paid:
+        return enrollment, Response({"detail": "Payment required for this course."}, status=403)
+    return enrollment, None
+
+
 @api_view(["GET"])
 def health_check(request):
     return Response({
@@ -31,6 +43,16 @@ def course_detail(request, slug):
 @permission_classes([IsAuthenticated])
 def enroll(request, slug):
     course = get_object_or_404(Course, slug=slug, is_published=True)
+
+    if course.slug != FREE_COURSE_SLUG:
+        return Response(
+            {
+                "detail": "Payment required for this course.",
+                "course_slug": course.slug,
+            },
+            status=403,
+        )
+
     enrollment, created = Enrollment.objects.get_or_create(
         user=request.user,
         course=course,
@@ -61,6 +83,11 @@ def lesson_progress(request, slug):
     """Return list of completed lesson IDs for this user and course."""
 
     course = get_object_or_404(Course, slug=slug, is_published=True)
+
+    _, denied = _ensure_enrolled_and_paid(request.user, course)
+    if denied:
+        return denied
+
     progress_qs = LessonProgress.objects.filter(user=request.user, course=course)
     serializer = LessonProgressSerializer(progress_qs, many=True)
     return Response(serializer.data)
@@ -73,9 +100,9 @@ def mark_lesson_complete(request, slug, lesson_id):
 
     course = get_object_or_404(Course, slug=slug, is_published=True)
 
-    # Ensure user is enrolled before tracking progress
-    if not Enrollment.objects.filter(user=request.user, course=course).exists():
-        return Response({"detail": "Not enrolled in this course."}, status=403)
+    _, denied = _ensure_enrolled_and_paid(request.user, course)
+    if denied:
+        return denied
 
     LessonProgress.objects.get_or_create(
         user=request.user,

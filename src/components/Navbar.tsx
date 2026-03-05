@@ -12,13 +12,13 @@ const Navbar = () => {
   
   return (
     <nav className="w-full z-50">
-      <div className="container mx-auto px-4">
+      <div className="w-full px-6">
         <div className="flex items-center justify-between h-20">
-          <Link to="/" className="group">
-            <img src={logo} alt="InfosecDairies" className="h-32 w-auto ml-4" />
+          <Link to="/" className="group flex-shrink-0">
+            <img src={logo} alt="InfosecDairies" className="h-32 w-auto" />
           </Link>
-          
-          <div className="flex items-center gap-8">
+
+          <div className="flex items-center gap-8 ml-auto">
             <Link
               to="/"
               className={`text-sm font-medium transition-colors ${
@@ -47,7 +47,7 @@ const Navbar = () => {
                   : "text-[#00ffc8] hover:text-[#7bff81]"
               }`}
             >
-              Labs
+              practice 
             </Link>
             <Link
               to="/about"
@@ -73,7 +73,7 @@ const Navbar = () => {
                   className="flex items-center gap-2 text-sm font-medium text-[#00ffc8] hover:text-[#7bff81] transition-colors"
                 >
                   <UserCircle2 className="w-6 h-6" />
-                  <span>{user?.email?.split("@")[0] || "Profile"}</span>
+                  <span>{user?.fullName || user?.email?.split("@")[0] || "Profile"}</span>
                 </button>
                 <div className="absolute right-0 mt-2 w-44 rounded-md bg-[#020817] border border-[#00ffc8]/20 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                   <button

@@ -4,7 +4,7 @@ import {
   FileWarning, 
   ScrollText, 
   Monitor, 
-  Shield, 
+  Activity,
   Settings 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ const navItems = [
   { icon: FileWarning, label: "Incidents" },
   { icon: ScrollText, label: "Logs" },
   { icon: Monitor, label: "Endpoints" },
-  { icon: Shield, label: "Threat Intel" },
+  { icon: Activity, label: "Threat Intel" },
   { icon: Settings, label: "Settings" },
 ];
 
@@ -24,7 +24,6 @@ const SOCSidebar = () => {
     <aside className="w-16 lg:w-56 bg-[#0d1117] border-r border-[#21262d] flex flex-col shrink-0">
       <div className="p-4 border-b border-[#21262d]">
         <h2 className="hidden lg:block text-lg font-bold text-[#00ffc8]">SOC Labs</h2>
-        <Shield className="lg:hidden w-8 h-8 text-[#00ffc8] mx-auto" />
       </div>
       
       <nav className="flex-1 py-4">

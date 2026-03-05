@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Eye, AlertTriangle, FileSearch, Lock, Activity } from "lucide-react";
+import { Eye, AlertTriangle, FileSearch, Lock, Activity, Target } from "lucide-react";
 import { useState } from "react";
 
 const topics = [
   {
-    icon: Shield,
+    icon: Target,
     title: "Threat Detection",
     description: "Advanced techniques for identifying and analyzing security threats in real-time",
     color: "from-primary to-secondary"

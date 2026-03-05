@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { 
-  Shield, ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, 
-  AlertTriangle, Trophy, RotateCcw, Home
+  ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, 
+  AlertTriangle, Trophy, RotateCcw, Home, BookOpen
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { getCourseById } from "@/data/courses";
@@ -16,8 +16,141 @@ const QuizPage = () => {
   const { slug, quizId } = useParams<{ slug: string; quizId: string }>();
   const navigate = useNavigate();
   
-  const course = getCourseById(slug || "");
-  const quiz = getQuizById(slug || "", quizId || "");
+  const normalizedCourseId = useMemo(() => {
+    if (!slug) return "";
+
+    switch (slug) {
+      case "blue-team-soc-fundamentals":
+        return "soc-fundamentals";
+      case "log-analysis-for-beginners":
+        return "log-analysis";
+      case "network-fundamentals":
+        return "network-fundamentals";
+      case "incident-response-fundamentals":
+        return "incident-response";
+      case "soc-analyst-path":
+        return "soc-analyst-path";
+      case "network-security-monitoring":
+        return "network-security-monitoring";
+      case "detection-engineering-basics":
+        return "detection-engineering";
+      case "malware-analysis-fundamentals":
+        return "malware-analysis";
+      case "threat-hunting-fundamentals":
+        return "threat-hunting";
+      default:
+        return slug;
+    }
+  }, [slug]);
+
+  const course = getCourseById(normalizedCourseId || "");
+
+  const resolvedQuizId = useMemo(() => {
+    if (!quizId) return "";
+
+    // Map lesson-style IDs to quizIds for specific courses
+    if (slug === "blue-team-soc-fundamentals") {
+      const socQuizMap: Record<string, string> = {
+        "1.5": "q1",
+        "2.5": "q2",
+        "3.5": "q3",
+        "4.5": "q4",
+        "5.5": "q5",
+        "6.5": "q6",
+        "7.5": "q7",
+        "8.5": "q8",
+        "9.5": "q9",
+        "10.4": "q10",
+      };
+
+      return socQuizMap[quizId] ?? quizId;
+    }
+
+    if (slug === "soc-analyst-path") {
+      const sapQuizMap: Record<string, string> = {
+        "1.5": "sap-q1",
+        "2.5": "sap-q2",
+        "3.5": "sap-q3",
+        "4.5": "sap-q4",
+        "5.5": "sap-q5",
+        "6.5": "sap-q6",
+      };
+
+      return sapQuizMap[quizId] ?? quizId;
+    }
+
+    if (slug === "network-security-monitoring") {
+      const nsmQuizMap: Record<string, string> = {
+        "1.5": "nsm-q1",
+        "2.6": "nsm-q2",
+        "3.5": "nsm-q3",
+        "4.5": "nsm-q4",
+        "5.5": "nsm-q5",
+        "6.5": "nsm-q6",
+      };
+
+      return nsmQuizMap[quizId] ?? quizId;
+    }
+
+    if (slug === "detection-engineering-basics") {
+      const deQuizMap: Record<string, string> = {
+        "1.5": "de-q1",
+        "2.5": "de-q2",
+        "3.5": "de-q3",
+        "4.5": "de-q4",
+        "5.5": "de-q5",
+        "6.5": "de-q6",
+      };
+
+      return deQuizMap[quizId] ?? quizId;
+    }
+
+    if (slug === "malware-analysis-fundamentals") {
+      const maQuizMap: Record<string, string> = {
+        "1.5": "ma-q1",
+        "2.5": "ma-q2",
+        "3.5": "ma-q3",
+        "4.5": "ma-q4",
+        "5.5": "ma-q5",
+        "6.5": "ma-q6",
+      };
+
+      return maQuizMap[quizId] ?? quizId;
+    }
+
+    if (slug === "log-analysis-for-beginners") {
+      const laQuizMap: Record<string, string> = {
+        "1.5": "la-q1",
+        "2.7": "la-q2",
+        "3.6": "la-q3",
+        "4.5": "la-q4",
+        "5.5": "la-q5",
+        "6.5": "la-q5",
+      };
+
+      return laQuizMap[quizId] ?? quizId;
+    }
+
+    if (slug === "threat-hunting-fundamentals") {
+      const thQuizMap: Record<string, string> = {
+        "1.5": "th-q1",
+        "2.5": "th-q2",
+        "3.5": "th-q3",
+        "4.5": "th-q4",
+        "5.5": "th-q5",
+        "6.5": "th-q6",
+      };
+
+      return thQuizMap[quizId] ?? quizId;
+    }
+
+    // Default: treat quizId from route as the actual quizId
+    return quizId;
+  }, [quizId, slug]);
+
+  const quiz = resolvedQuizId
+    ? getQuizById(normalizedCourseId || "", resolvedQuizId) || getQuizById(normalizedCourseId || "", "q1")
+    : null;
   
   const [quizState, setQuizState] = useState<QuizState>("intro");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -131,6 +264,73 @@ const QuizPage = () => {
     setShowExplanation(true);
   };
 
+  // Save quiz score and unlock next lesson
+  useEffect(() => {
+    if (quizState === "results") {
+      // Save quiz score to localStorage (always save, regardless of pass/fail)
+      const quizKey = `quiz_${slug}_${quizId}`;
+      localStorage.setItem(quizKey, score.percentage.toString());
+
+      // Mark lesson as completed ONLY if passed
+      if (passed) {
+        const completedKey = `completed_lessons_${slug}`;
+        const completedLessons = JSON.parse(localStorage.getItem(completedKey) || "[]");
+        if (!completedLessons.includes(quizId)) {
+          completedLessons.push(quizId);
+          localStorage.setItem(completedKey, JSON.stringify(completedLessons));
+        }
+      }
+      
+      // Always save to database (both passed and failed)
+      saveQuizScoreToDatabase(quizId, score.percentage);
+      
+      // Trigger a custom event to notify course detail of progress update
+      window.dispatchEvent(new CustomEvent('quizCompleted', { 
+        detail: { quizId, score: score.percentage, courseId: slug, passed } 
+      }));
+    }
+  }, [quizState, passed, score.percentage, slug, quizId]);
+
+  // Save quiz score to database
+  const saveQuizScoreToDatabase = async (quizId: string, score: number) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) return;
+
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/quiz-scores/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          course_id: slug,
+          quiz_id: quizId,
+          score: score,
+          passed: score >= 70,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to save quiz score to database');
+      }
+    } catch (error) {
+      console.error('Error saving quiz score:', error);
+    }
+  };
+
+  // Get next lesson after quiz
+  const getNextLessonAfterQuiz = (storageQuizId: string): string | null => {
+    if (!course) return null;
+
+    const moduleIndex = course.modules.findIndex((m) => m.quizId === storageQuizId);
+    if (moduleIndex < 0) return null;
+
+    const nextModule = course.modules[moduleIndex + 1];
+    const nextLesson = nextModule?.lessons?.[0];
+    return nextLesson?.id ?? null;
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
@@ -149,7 +349,7 @@ const QuizPage = () => {
             
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-primary" />
+                <BookOpen className="w-6 h-6 text-primary" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">{quiz.title}</h1>
@@ -168,7 +368,7 @@ const QuizPage = () => {
                 <h2 className="text-xl font-semibold text-foreground mb-4">Quiz Overview</h2>
                 <p className="text-muted-foreground mb-6">{quiz.description}</p>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
                   <div className="p-4 rounded-lg bg-card/30 border border-white/[0.06] text-center">
                     <div className="text-2xl font-bold text-primary">{quiz.questions.length}</div>
                     <div className="text-xs text-muted-foreground">Questions</div>
@@ -180,10 +380,6 @@ const QuizPage = () => {
                   <div className="p-4 rounded-lg bg-card/30 border border-white/[0.06] text-center">
                     <div className="text-2xl font-bold text-primary">{quiz.timeLimit || "∞"}</div>
                     <div className="text-xs text-muted-foreground">Minutes</div>
-                  </div>
-                  <div className="p-4 rounded-lg bg-card/30 border border-white/[0.06] text-center">
-                    <div className="text-2xl font-bold text-secondary">1</div>
-                    <div className="text-xs text-muted-foreground">Attempts</div>
                   </div>
                 </div>
 
@@ -215,18 +411,18 @@ const QuizPage = () => {
           {(quizState === "active" || quizState === "review") && currentQuestion && (
             <div className="space-y-6">
               {/* Progress & Timer */}
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between mb-6">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">
-                      Question {currentQuestionIndex + 1} of {quiz.questions.length}
+                    <span className="text-sm font-medium text-foreground">
+                      Progress
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}%
+                      {Math.round((Object.keys(selectedAnswers).length / quiz.questions.length) * 100)}%
                     </span>
                   </div>
                   <Progress 
-                    value={((currentQuestionIndex + 1) / quiz.questions.length) * 100} 
+                    value={(Object.keys(selectedAnswers).length / quiz.questions.length) * 100} 
                     className="h-2"
                   />
                 </div>
@@ -422,60 +618,54 @@ const QuizPage = () => {
 
           {/* Results */}
           {quizState === "results" && (
-            <div className="relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] p-8 shadow-lg text-center">
+            <div className="relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] p-8 shadow-lg">
               <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               
-              {/* Trophy or X icon based on pass/fail */}
-              <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 ${
-                passed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-              }`}>
-                {passed ? (
-                  <Trophy className="w-10 h-10" />
-                ) : (
-                  <XCircle className="w-10 h-10" />
-                )}
-              </div>
-
-              <h2 className="text-2xl font-bold text-foreground mb-2">
-                {passed ? "Congratulations!" : "Keep Learning!"}
-              </h2>
-              <p className="text-muted-foreground mb-8">
-                {passed 
-                  ? "You've successfully passed this quiz." 
-                  : `You need ${quiz.passingScore}% to pass. Don't give up!`}
-              </p>
-
-              {/* Score Display */}
-              <div className="grid grid-cols-3 gap-4 mb-8 max-w-md mx-auto">
-                <div className="p-4 rounded-lg bg-card/30 border border-white/[0.06]">
-                  <div className={`text-3xl font-bold ${passed ? 'text-green-400' : 'text-red-400'}`}>
+              {/* Score Display - Like your images */}
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-foreground mb-4">
+                  Quiz Completed!
+                </h2>
+                
+                {/* Main Score Display */}
+                <div className="mb-6">
+                  <div className="text-5xl font-bold text-primary mb-2">
                     {score.percentage}%
                   </div>
-                  <div className="text-xs text-muted-foreground">Your Score</div>
+                  <p className="text-lg text-muted-foreground">
+                    You got {score.correct} out of {score.total} questions correct
+                  </p>
                 </div>
-                <div className="p-4 rounded-lg bg-card/30 border border-white/[0.06]">
-                  <div className="text-3xl font-bold text-primary">
-                    {score.correct}/{score.total}
-                  </div>
-                  <div className="text-xs text-muted-foreground">Correct</div>
-                </div>
-                <div className="p-4 rounded-lg bg-card/30 border border-white/[0.06]">
-                  <div className="text-3xl font-bold text-foreground">
-                    {quiz.passingScore}%
-                  </div>
-                  <div className="text-xs text-muted-foreground">Required</div>
+
+                {/* Pass/Fail Status */}
+                <div className={`inline-flex items-center gap-2 px-6 py-3 rounded-full text-lg font-medium ${
+                  passed 
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                }`}>
+                  {passed ? (
+                    <>
+                      <Trophy className="w-6 h-6" />
+                      <span>Passed!</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-6 h-6" />
+                      <span>Not Passed - Need 70%</span>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Progress Bar */}
               <div className="max-w-md mx-auto mb-8">
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-muted-foreground">Score Progress</span>
+                  <span className="text-muted-foreground">Your Score</span>
                   <span className={passed ? 'text-green-400' : 'text-red-400'}>
                     {score.percentage}%
                   </span>
                 </div>
-                <div className="relative h-3 bg-card/50 rounded-full overflow-hidden">
+                <div className="relative h-4 bg-card/50 rounded-full overflow-hidden">
                   <div 
                     className={`absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ${
                       passed ? 'bg-green-500' : 'bg-red-500'
@@ -484,36 +674,55 @@ const QuizPage = () => {
                   />
                   {/* Passing threshold marker */}
                   <div 
-                    className="absolute top-0 w-0.5 h-full bg-foreground/50"
+                    className="absolute top-0 w-1 h-full bg-foreground/50"
                     style={{ left: `${quiz.passingScore}%` }}
                   />
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 text-right">
-                  Passing: {quiz.passingScore}%
+                  Required: {quiz.passingScore}%
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   variant="outline"
                   onClick={handleReviewAnswers}
-                  className="gap-2"
+                  className="gap-2 px-6 py-3"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Review Answers
                 </Button>
+                
                 <Button
                   variant="outline"
                   onClick={handleRetry}
-                  className="gap-2"
+                  className="gap-2 px-6 py-3"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  Try Again
+                  Retake Quiz
                 </Button>
+                
+                {passed && (
+                  <Button
+                    onClick={() => {
+                      const nextLessonId = getNextLessonAfterQuiz(resolvedQuizId);
+                      if (nextLessonId) {
+                        navigate(`/courses/${slug}/lesson/${nextLessonId}`);
+                      } else {
+                        navigate(`/courses/${slug}`);
+                      }
+                    }}
+                    className="bg-green-500 hover:bg-green-600 text-white gap-2 px-6 py-3"
+                  >
+                    Next Lesson
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                )}
+                
                 <Button
                   onClick={() => navigate(`/courses/${slug}`)}
-                  className="bg-primary hover:bg-primary/90 gap-2"
+                  className="bg-primary hover:bg-primary/90 gap-2 px-6 py-3"
                 >
                   <Home className="w-4 h-4" />
                   Back to Course

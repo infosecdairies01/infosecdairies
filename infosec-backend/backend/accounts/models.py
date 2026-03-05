@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 
 class AuthProvider(models.TextChoices):
@@ -48,6 +49,7 @@ class User(AbstractUser):
         choices=AuthProvider.choices,
         default=AuthProvider.EMAIL,
     )
+    is_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["full_name"]
@@ -56,3 +58,28 @@ class User(AbstractUser):
 
     def __str__(self) -> str:  # type: ignore[override]
         return self.email
+
+    def save(self, *args, **kwargs):  # type: ignore[override]
+        # For users created via social login (Google), allauth may not
+        # populate our custom full_name field. In that case, derive a
+        # sensible default from the email local part so the app always
+        # has a username to display.
+        if not self.full_name and self.email:
+            self.full_name = self.email.split("@")[0]
+        super().save(*args, **kwargs)
+
+
+class LoginOtp(models.Model):
+    """One-time code for verifying a login via email (e.g. after Google)."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="login_otps")
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+
+    def is_valid(self) -> bool:
+        return not self.used and self.expires_at > timezone.now()
+
+    def __str__(self) -> str:  # pragma: no cover
+        return f"OTP for {self.user.email} ({self.code})"

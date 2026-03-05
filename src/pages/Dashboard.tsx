@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Target,
   Calendar,
+  Pencil,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -51,10 +52,16 @@ const getDifficultyColor = (difficulty: string) => {
 };
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState<string>(
+    user?.fullName || user?.email?.split("@")[0] || "",
+  );
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEnrollments = async () => {
@@ -75,15 +82,6 @@ const Dashboard = () => {
 
         const enrollmentChecks = await Promise.all(
           courses.map(async (course) => {
-            // Only track progress for fully implemented courses
-            const isCourseProgressEnabled = [
-              "blue-team-soc-fundamentals",
-              "log-analysis-for-beginners",
-            ].includes(course.slug);
-
-            if (!isCourseProgressEnabled) {
-              return null;
-            }
             const res = await fetch(
               `/api/courses/${course.slug}/enrollment/`,
               {
@@ -108,9 +106,12 @@ const Dashboard = () => {
                 ? "Medium"
                 : "Easy";
 
-            // Map backend slug to static course id used on frontend
+            // Map backend slug to static course id used in static course data
             let staticCourseId = course.slug;
             switch (course.slug) {
+              case "blue-team-soc-fundamentals":
+                staticCourseId = "soc-fundamentals";
+                break;
               case "log-analysis-for-beginners":
                 staticCourseId = "log-analysis";
                 break;
@@ -126,8 +127,20 @@ const Dashboard = () => {
               case "malware-analysis-fundamentals":
                 staticCourseId = "malware-analysis";
                 break;
+              case "threat-hunting-fundamentals":
+                staticCourseId = "threat-hunting";
+                break;
+              case "network-security-monitoring":
+                staticCourseId = "network-security-monitoring";
+                break;
+              case "network-fundamentals":
+                staticCourseId = "network-fundamentals";
+                break;
+              case "soc-analyst-path":
+                staticCourseId = "soc-analyst-path";
+                break;
               default:
-                // slugs that already match static ids, e.g. blue-team-soc-fundamentals
+                // slugs that already match static ids (e.g. siem-fundamentals)
                 staticCourseId = course.slug;
             }
 
@@ -205,7 +218,11 @@ const Dashboard = () => {
     [enrolledCourses],
   );
   const totalPoints = completedLessonsCount * 100; // simple placeholder formula
-  const achievementsCount = 0; // Achievements will be added in a later phase
+  const achievementsCount = useMemo(() => {
+    return enrolledCourses.filter(
+      (c) => c.totalLessons > 0 && c.completedLessons >= c.totalLessons,
+    ).length;
+  }, [enrolledCourses]);
 
   return (
     <main className="min-h-screen bg-background">
@@ -214,10 +231,100 @@ const Dashboard = () => {
       <div className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
         {/* Welcome Header */}
         <div className="mb-8 animate-fade-up">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Welcome back, <span className="gradient-text">{user?.email?.split("@")[0] || "Blue Teamer"}</span>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2 flex flex-wrap items-center gap-3">
+            <span>Welcome back,</span>
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  className="bg-transparent border-b border-primary/60 focus:outline-none focus:border-primary text-2xl md:text-3xl font-bold text-primary px-1"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  disabled={nameSaving}
+                  autoFocus
+                />
+                <button
+                  className="text-sm text-primary hover:text-primary/80"
+                  onClick={async () => {
+                    const trimmed = nameInput.trim();
+                    if (!trimmed) {
+                      setNameError("Name cannot be empty");
+                      return;
+                    }
+
+                    const accessToken = localStorage.getItem("accessToken");
+                    if (!accessToken) {
+                      setNameError("You must be logged in to change your name.");
+                      return;
+                    }
+
+                    try {
+                      setNameSaving(true);
+                      setNameError(null);
+                      const res = await fetch("/api/auth/profile/", {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: JSON.stringify({ full_name: trimmed }),
+                      });
+
+                      if (!res.ok) {
+                        setNameError("Could not update name. Please try again.");
+                        return;
+                      }
+
+                      const updatedUser = await res.json();
+                      const refreshToken = localStorage.getItem("refreshToken") || undefined;
+                      login({
+                        email: updatedUser.email,
+                        fullName: updatedUser.full_name,
+                        tokens: { access: accessToken, refresh: refreshToken },
+                      });
+                      setIsEditingName(false);
+                    } catch {
+                      setNameError("Network error while updating name.");
+                    } finally {
+                      setNameSaving(false);
+                    }
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setIsEditingName(false);
+                    setNameInput(
+                      user?.fullName || user?.email?.split("@")[0] || "",
+                    );
+                    setNameError(null);
+                  }}
+                  disabled={nameSaving}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="gradient-text">
+                  {user?.fullName || user?.email?.split("@")[0] || "Blue Teamer"}
+                </span>
+                <button
+                  type="button"
+                  className="p-1 rounded-full hover:bg-primary/10 text-primary"
+                  onClick={() => setIsEditingName(true)}
+                  aria-label="Edit username"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </h1>
-          <p className="text-muted-foreground">
+          {nameError && (
+            <p className="text-sm text-red-500 mb-1">{nameError}</p>
+          )}
+          <p className="text-muted-foreground mb-1">
             Continue your blue team training journey
           </p>
         </div>
@@ -341,10 +448,10 @@ const Dashboard = () => {
             <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-lg p-5 animate-fade-up" style={{ animationDelay: "200ms" }}>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-xl font-bold text-primary-foreground">
-                  {(user?.email || "U").charAt(0).toUpperCase()}
+                  {(user?.fullName || user?.email || "U").charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold">{user?.email ? user.email.split("@")[0] : "Your account"}</p>
+                  <p className="font-semibold">{user?.fullName || (user?.email ? user.email.split("@")[0] : "Your account")}</p>
                   <p className="text-sm text-primary flex items-center gap-1">
                     <TrendingUp className="w-3 h-3" />
                     Blue Team Learner

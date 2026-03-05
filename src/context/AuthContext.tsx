@@ -2,12 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthUser {
   email: string;
+  fullName?: string;
 }
 
 interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
-  login: (data: { email: string; tokens?: { access?: string; refresh?: string } }) => void;
+  login: (data: { email: string; fullName?: string; tokens?: { access?: string; refresh?: string } }) => void;
   logout: () => void;
 }
 
@@ -18,14 +19,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const storedEmail = localStorage.getItem("userEmail");
+    const storedFullName = localStorage.getItem("userFullName");
     const accessToken = localStorage.getItem("accessToken");
     if (storedEmail && accessToken) {
-      setUser({ email: storedEmail });
+      setUser({ email: storedEmail, fullName: storedFullName || undefined });
     }
   }, []);
 
   const login: AuthContextValue["login"] = (data) => {
-    const { email, tokens } = data;
+    const { email, fullName, tokens } = data;
     if (tokens?.access) {
       localStorage.setItem("accessToken", tokens.access);
     }
@@ -33,13 +35,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("refreshToken", tokens.refresh);
     }
     localStorage.setItem("userEmail", email);
-    setUser({ email });
+    if (fullName) {
+      localStorage.setItem("userFullName", fullName);
+    } else {
+      localStorage.removeItem("userFullName");
+    }
+    setUser({ email, fullName });
   };
 
   const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userEmail");
+    localStorage.removeItem("userFullName");
     setUser(null);
   };
 

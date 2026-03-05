@@ -9,6 +9,7 @@ import incidentResponseBg from "@/assets/courses/incident-response-bg.jpg";
 import threatHuntingBg from "@/assets/courses/threat-hunting-bg.jpg";
 import detectionEngineeringBg from "@/assets/courses/detection-engineering-bg.jpg";
 import malwareAnalysisBg from "@/assets/courses/malware-analysis-bg.jpg";
+import networkFundamentalsBg from "@/assets/courses/network-fundamentals-bg.jpg";
 
 interface CourseCardProps {
   title: string;
@@ -18,6 +19,7 @@ interface CourseCardProps {
   slug?: string;
   thumbnail?: string;
   isLiveCourse?: boolean;
+  priceInr?: number;
 }
 
 const difficultyStyles = {
@@ -32,10 +34,12 @@ const thumbnailMap: Record<string, string> = {
   "courses/log-analysis-bg.jpg": logAnalysisBg,
   "courses/siem-fundamentals-bg.jpg": siemFundamentalsBg,
   "courses/soc-analyst-practical-bg.jpg": socAnalystPracticalBg,
+  "courses/soc-analyst-path-bg.jpg": socAnalystPracticalBg,
   "courses/incident-response-bg.jpg": incidentResponseBg,
   "courses/threat-hunting-bg.jpg": threatHuntingBg,
   "courses/detection-engineering-bg.jpg": detectionEngineeringBg,
   "courses/malware-analysis-bg.jpg": malwareAnalysisBg,
+  "courses/network-fundamentals-bg.jpg": networkFundamentalsBg,
 };
 
 // Fallback mapping by slug, in case thumbnail strings don't match exactly
@@ -44,13 +48,16 @@ const thumbnailBySlug: Record<string, string> = {
   "log-analysis": logAnalysisBg,
   "siem-fundamentals": siemFundamentalsBg,
   "soc-analyst-practical": socAnalystPracticalBg,
+  "soc-analyst-practical-training": socAnalystPracticalBg,
+  "soc-analyst-path": socAnalystPracticalBg,
   "incident-response": incidentResponseBg,
   "threat-hunting": threatHuntingBg,
   "detection-engineering": detectionEngineeringBg,
   "malware-analysis": malwareAnalysisBg,
+  "network-fundamentals": networkFundamentalsBg,
 };
 
-const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, isLiveCourse }: CourseCardProps) => {
+const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, isLiveCourse, priceInr }: CourseCardProps) => {
   const linkTo = slug
     ? (isLiveCourse ? `/live-courses/${slug}` : `/courses/${slug}`)
     : "/courses";
@@ -114,6 +121,14 @@ const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, is
           <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">
             {title}
           </h3>
+
+          {typeof priceInr === "number" && !isLiveCourse && (
+            <div className="mb-2">
+              <span className="text-sm font-semibold text-primary">
+                {priceInr === 0 ? "Free" : `₹${priceInr}`}
+              </span>
+            </div>
+          )}
           
           {/* Description */}
           <p className="text-muted-foreground text-sm leading-relaxed flex-1 line-clamp-2">

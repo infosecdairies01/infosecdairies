@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,11 @@ SECRET_KEY = 'django-insecure-e*!2w2qu41&7dql-r8blu0z(8w^0+@x5eyz&^7^^80cc!&ind1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Allow local development hosts
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+]
 
 
 from datetime import timedelta
@@ -46,6 +51,9 @@ INSTALLED_APPS = [
     "corsheaders",
     "courses",
     "accounts",
+    "certificates",
+    "payments",
+    "leads",
 
     # Authentication helpers
     "allauth",
@@ -56,6 +64,8 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     "dj_rest_auth.registration",
 ]
+
+SITE_ID = 2  # Use the Site with domain 127.0.0.1:8000
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -69,9 +79,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS settings for local development
-# Allow all origins while you're developing locally (including LAN IPs)
+# CORS / CSRF settings for local development
+# Frontend runs on http://127.0.0.1:8081 (and sometimes http://localhost:8081)
 CORS_ALLOW_ALL_ORIGINS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:8081",
+    "http://localhost:8081",
+]
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -90,23 +105,39 @@ TEMPLATES = [
     },
 ]
 
-SITE_ID = 1
-
-AUTH_USER_MODEL = "accounts.User"
+AUTH_USER_MODEL = 'accounts.User'
 
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
+
+# django-allauth: configure for email-only User (no username field)
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+
+# allauth: go straight to the provider on GET /accounts/google/login/
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Where to send users after allauth login.
+# Point this at a frontend callback that will exchange the
+# session-based login for JWT tokens and then redirect into
+# the app dashboard.
+LOGIN_REDIRECT_URL = "http://127.0.0.1:8081/auth/google-callback"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    # How long a user stays logged in before the access token expires.
+    # Increase this so the app does not "log out" after ~10-15 minutes.
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
@@ -166,3 +197,29 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files (uploaded certificates)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# In development, send emails (including OTP codes) to the console so
+# you can see them in the runserver output. For production, replace this
+# with a real SMTP backend.
+EMAIL_BACKEND = config(
+    "DJANGO_EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
+)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="infosecdairies@gmail.com")
+
+EMAIL_HOST = config("EMAIL_HOST", default="")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+
+# Razorpay (set via environment variables)
+RAZORPAY_KEY_ID = config("RAZORPAY_KEY_ID", default="")
+RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET", "")
+
+# Payments: when enabled, paid courses charge ₹1 for testing
+PAYMENTS_TEST_MODE = config("PAYMENTS_TEST_MODE", default=False, cast=bool)
