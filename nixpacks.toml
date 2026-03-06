@@ -1,11 +1,5 @@
-[phases.build]
-cmds = ['pip install -r infosec-backend/requirements.txt']
+[build]
+builder = "NIXPACKS"
 
-[phases.setup]
-nixPkgs = ['python311', 'gcc', 'postgresql', 'libffi', 'openssl']
-
-[start]
-cmd = 'cd infosec-backend/backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT'
-
-[variables]
-PYTHON_VERSION = '3.11'
+[deploy]
+startCommand = "cd infosec-backend/backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT"
