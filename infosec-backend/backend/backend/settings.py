@@ -40,6 +40,8 @@ ALLOWED_HOSTS = [
     "localhost",
     ".railway.app",
     ".up.railway.app",
+    "api.infosecdairies.io",
+    "infosecdairies.io",
     *[h for h in _railway_hosts if h],
 ]
 
@@ -111,6 +113,8 @@ CSRF_TRUSTED_ORIGINS = [
     *_csrf_trusted_origins,
     "https://*.railway.app",
     "https://*.up.railway.app",
+    "https://api.infosecdairies.io",
+    "https://infosecdairies.io",
 ]
 
 _railway_public_domain = config("RAILWAY_PUBLIC_DOMAIN", default="").strip()
