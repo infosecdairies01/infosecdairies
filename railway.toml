@@ -1,9 +1,5 @@
 [build]
-builder = "nixpacks"
-
-[build.nixpacks]
-# Tell nixpacks this is a Python project
-providers = ["python"]
+builder = "NIXPACKS"
 
 [deploy]
-startCommand = "gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT"
+startCommand = "cd infosec-backend/backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT"
