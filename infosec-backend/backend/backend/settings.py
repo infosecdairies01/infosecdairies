@@ -101,11 +101,24 @@ CORS_ALLOWED_ORIGINS = config(
     cast=lambda v: [s.strip() for s in v.split(",")]
 )
 
-CSRF_TRUSTED_ORIGINS = config(
+_csrf_trusted_origins = config(
     "CSRF_TRUSTED_ORIGINS",
     default="http://localhost:8081,http://127.0.0.1:8081",
     cast=lambda v: [s.strip() for s in v.split(",")]
 )
+
+CSRF_TRUSTED_ORIGINS = [
+    *_csrf_trusted_origins,
+    "https://*.railway.app",
+    "https://*.up.railway.app",
+]
+
+_railway_public_domain = config("RAILWAY_PUBLIC_DOMAIN", default="").strip()
+if _railway_public_domain:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_railway_public_domain}")
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 ROOT_URLCONF = 'backend.urls'
 
