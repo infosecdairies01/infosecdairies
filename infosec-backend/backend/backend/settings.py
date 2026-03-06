@@ -157,7 +157,10 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 # Point this at a frontend callback that will exchange the
 # session-based login for JWT tokens and then redirect into
 # the app dashboard.
-LOGIN_REDIRECT_URL = "http://127.0.0.1:8081/auth/google-callback"
+_frontend_url = config("FRONTEND_URL", default="http://127.0.0.1:8081").rstrip("/")
+LOGIN_REDIRECT_URL = f"{_frontend_url}/auth/google-callback"
+
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
