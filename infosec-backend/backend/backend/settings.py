@@ -10,6 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
+
+import dj_database_url
 from pathlib import Path
 from decouple import config
 
@@ -27,12 +30,16 @@ SECRET_KEY = config("DJANGO_SECRET_KEY", default="django-insecure-change-me-in-p
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 # Allow local development hosts
+_railway_hosts = [
+    config("RAILWAY_STATIC_URL", default="").strip(),
+    config("RAILWAY_PUBLIC_DOMAIN", default="").strip(),
+]
+
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "*.railway.app",
-    config("RAILWAY_STATIC_URL", default=""),
-    config("RAILWAY_PUBLIC_DOMAIN", default=""),
+    *[h for h in _railway_hosts if h],
 ]
 
 
@@ -72,6 +79,7 @@ SITE_ID = 2  # Use the Site with domain 127.0.0.1:8000
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -171,6 +179,14 @@ DATABASES = {
     }
 }
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES["default"] = dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=True,
+    )
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -207,6 +223,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (uploaded certificates)
 MEDIA_URL = 'media/'
