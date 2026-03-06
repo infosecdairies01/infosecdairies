@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { apiUrl } from "@/services/api";
 
 const GoogleCallback = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const GoogleCallback = () => {
       try {
         setError(null);
 
-        const res = await fetch("/api/auth/google/jwt/", {
+        const res = await fetch(apiUrl("/api/auth/google/jwt/"), {
           method: "GET",
           credentials: "include", // send Django session cookie
         });
