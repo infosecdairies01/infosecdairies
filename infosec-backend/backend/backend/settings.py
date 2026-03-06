@@ -97,17 +97,20 @@ MIDDLEWARE = [
 # Frontend runs on http://127.0.0.1:8081 (and sometimes http://localhost:8081)
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
 
-CORS_ALLOWED_ORIGINS = config(
-    "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:8081,http://127.0.0.1:8081",
-    cast=lambda v: [s.strip() for s in v.split(",")]
-)
-
 _csrf_trusted_origins = config(
     "CSRF_TRUSTED_ORIGINS",
     default="http://localhost:8081,http://127.0.0.1:8081",
     cast=lambda v: [s.strip() for s in v.split(",")]
 )
+
+CORS_ALLOWED_ORIGINS = [
+    *_csrf_trusted_origins,
+    "https://infosecdairies.io",
+    "https://www.infosecdairies.io",
+    "https://api.infosecdairies.io",
+    "https://*.railway.app",
+    "https://*.up.railway.app",
+]
 
 CSRF_TRUSTED_ORIGINS = [
     *_csrf_trusted_origins,
