@@ -20,6 +20,27 @@ const VerifyEmail = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(60);
 
+  const getResendUntilKey = (value: string) => `verifyEmailResendUntil:${value || "_"}`;
+
+  const getRemainingSeconds = (value: string) => {
+    const raw = localStorage.getItem(getResendUntilKey(value));
+    const until = raw ? Number(raw) : 0;
+    if (!Number.isFinite(until) || until <= 0) {
+      return 0;
+    }
+    return Math.max(0, Math.ceil((until - Date.now()) / 1000));
+  };
+
+  const startResendCooldown = (value: string, seconds: number) => {
+    const until = Date.now() + seconds * 1000;
+    localStorage.setItem(getResendUntilKey(value), String(until));
+    setResendTimer(seconds);
+  };
+
+  useEffect(() => {
+    setResendTimer(getRemainingSeconds(email));
+  }, [email]);
+
   // Countdown timer for resend button
   useEffect(() => {
     if (resendTimer > 0) {
@@ -103,7 +124,7 @@ const VerifyEmail = () => {
 
       // Always show success for security (don't reveal if email exists)
       setSuccess("If an account exists, a new verification code has been sent.");
-      setResendTimer(60); // Reset timer
+      startResendCooldown(email, 60);
     } catch (err) {
       setError("Failed to resend code. Please try again.");
     } finally {
