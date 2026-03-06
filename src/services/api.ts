@@ -1,7 +1,14 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+
+export function apiUrl(path: string) {
+  if (!path.startsWith("/")) {
+    path = `/${path}`;
+  }
+  return `${API_BASE}${path}`;
+}
 
 export async function fetchCourses() {
-  const res = await fetch(`/api/courses/`);
+  const res = await fetch(apiUrl(`/api/courses/`));
   if (!res.ok) {
     throw new Error("Failed to fetch courses");
   }
@@ -12,7 +19,7 @@ export async function fetchCourses() {
 }
 
 export async function fetchCourseBySlug(slug: string) {
-  const res = await fetch(`/api/courses/${slug}/`);
+  const res = await fetch(apiUrl(`/api/courses/${slug}/`));
   if (!res.ok) {
     throw new Error("Course not found");
   }

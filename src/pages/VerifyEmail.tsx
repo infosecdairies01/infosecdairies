@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2, Mail, ArrowLeft, RefreshCw } from "lucide-react";
+import { apiUrl } from "@/services/api";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
@@ -45,7 +46,7 @@ const VerifyEmail = () => {
     try {
       setLoading(true);
 
-      const response = await fetch(`/api/auth/verify-email/`, {
+      const response = await fetch(apiUrl(`/api/auth/verify-email/`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +93,7 @@ const VerifyEmail = () => {
       setResendLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/auth/resend-verification-otp/`, {
+      const response = await fetch(apiUrl(`/api/auth/resend-verification-otp/`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

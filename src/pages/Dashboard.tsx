@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { getCourseById } from "@/data/courses";
+import { apiUrl } from "@/services/api";
 
 interface ApiCourse {
   id: number;
@@ -74,7 +75,7 @@ const Dashboard = () => {
         setLoading(true);
         setError(null);
 
-        const coursesRes = await fetch(`/api/courses/`);
+        const coursesRes = await fetch(apiUrl(`/api/courses/`));
         if (!coursesRes.ok) {
           throw new Error("Failed to load courses");
         }
@@ -83,7 +84,7 @@ const Dashboard = () => {
         const enrollmentChecks = await Promise.all(
           courses.map(async (course) => {
             const res = await fetch(
-              `/api/courses/${course.slug}/enrollment/`,
+              apiUrl(`/api/courses/${course.slug}/enrollment/`),
               {
                 headers: {
                   Authorization: `Bearer ${accessToken}`,
