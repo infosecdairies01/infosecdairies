@@ -38,7 +38,8 @@ _railway_hosts = [
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "*.railway.app",
+    ".railway.app",
+    ".up.railway.app",
     *[h for h in _railway_hosts if h],
 ]
 
