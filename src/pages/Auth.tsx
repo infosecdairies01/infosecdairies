@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { getCSRFToken } from "@/utils/csrf";
+import { apiUrl } from "@/services/api";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,9 +24,7 @@ const Auth = () => {
   const { login } = useAuth();
 
   const handleGoogleLogin = () => {
-    // Redirect to Django allauth Google login flow on the backend.
-    // In local dev, the backend runs on 127.0.0.1:8000.
-    window.location.href = "http://127.0.0.1:8000/accounts/google/login/";
+    window.location.href = apiUrl("/accounts/google/login/");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +59,7 @@ const Auth = () => {
         ? { email, password }
         : { full_name: fullName, email, password };
 
-      const response = await fetch(url, {
+      const response = await fetch(apiUrl(url), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
