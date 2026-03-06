@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { CheckCircle, Calendar, User, Award } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Helmet } from "react-helmet-async";
+import { apiUrl } from "@/services/api";
 
 interface VerificationData {
   courseTitle: string;
@@ -22,7 +23,7 @@ export default function VerifyCertificate() {
       try {
         // In a real implementation, you'd call your backend to verify
         // For now, we'll simulate verification
-        const response = await fetch(`/api/certificates/verify/${slug}/${emailHash}`);
+        const response = await fetch(apiUrl(`/api/certificates/verify/${slug}/${emailHash}`));
         if (response.ok) {
           const verificationData = await response.json();
           setData(verificationData);

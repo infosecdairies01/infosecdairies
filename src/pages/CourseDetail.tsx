@@ -24,7 +24,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { courses as staticCourses, getCoursePriceInr } from "@/data/courses";
-import { fetchCourseBySlug } from "../services/api";
+import { apiUrl, fetchCourseBySlug } from "../services/api";
 import QRCode from "qrcode";
 
 // Import all course background images
@@ -301,7 +301,7 @@ const CourseDetail = () => {
         console.log('Checking enrollment for slug:', slug);
         console.log('Access token exists:', !!accessToken);
         
-        const res = await fetch(`/api/courses/${slug}/enrollment/`, {
+        const res = await fetch(apiUrl(`/api/courses/${slug}/enrollment/`), {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -398,7 +398,7 @@ const CourseDetail = () => {
         let backendIds: string[] = [];
 
         if (accessToken) {
-          const res = await fetch(`/api/courses/${slug}/progress/`, {
+          const res = await fetch(apiUrl(`/api/courses/${slug}/progress/`), {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
@@ -873,7 +873,7 @@ const CourseDetail = () => {
     try {
       setEnrollLoading(true);
       setEnrollError(null);
-      const res = await fetch(`/api/courses/${slug}/enroll/`, {
+      const res = await fetch(apiUrl(`/api/courses/${slug}/enroll/`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

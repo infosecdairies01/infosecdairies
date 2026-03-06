@@ -11,6 +11,7 @@ import { getCourseById, Course, Lesson, Module } from "@/data/courses";
 import { getLessonContent, LessonContent } from "@/data/lessonContent";
 import { getLessonContentFromPerCourse } from "@/data/lessons";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { apiUrl } from "@/services/api";
 
 // Import course backgrounds
 import socFundamentalsBg from "@/assets/soc-course-bg.jpg";
@@ -185,7 +186,7 @@ const LessonViewer = () => {
         let backendIds: string[] = [];
 
         if (accessToken) {
-          const res = await fetch(`/api/courses/${slug}/progress/`, {
+          const res = await fetch(apiUrl(`/api/courses/${slug}/progress/`), {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
@@ -339,7 +340,7 @@ const LessonViewer = () => {
     try {
       setMarkingComplete(true);
 
-      const res = await fetch(`/api/courses/${slug}/lessons/${lessonId}/complete/`, {
+      const res = await fetch(apiUrl(`/api/courses/${slug}/lessons/${lessonId}/complete/`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
