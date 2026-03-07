@@ -25,6 +25,7 @@ try:
         "EMAIL_PORT=", getattr(settings, "EMAIL_PORT", None),
         "EMAIL_USE_TLS=", getattr(settings, "EMAIL_USE_TLS", None),
         "EMAIL_HOST_USER=", getattr(settings, "EMAIL_HOST_USER", None),
+        flush=True,
     )
 except Exception:
     pass

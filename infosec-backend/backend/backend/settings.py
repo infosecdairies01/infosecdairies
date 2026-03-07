@@ -288,6 +288,7 @@ print(
     "EMAIL_PORT=", EMAIL_PORT,
     "EMAIL_USE_TLS=", EMAIL_USE_TLS,
     "EMAIL_HOST_USER=", EMAIL_HOST_USER,
+    flush=True,
 )
 
 # Razorpay (set via environment variables)
