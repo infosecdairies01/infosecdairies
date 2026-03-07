@@ -276,6 +276,15 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
 
+print(
+    "[email-config] EMAIL_BACKEND=", EMAIL_BACKEND,
+    "DEFAULT_FROM_EMAIL=", DEFAULT_FROM_EMAIL,
+    "EMAIL_HOST=", EMAIL_HOST,
+    "EMAIL_PORT=", EMAIL_PORT,
+    "EMAIL_USE_TLS=", EMAIL_USE_TLS,
+    "EMAIL_HOST_USER=", EMAIL_HOST_USER,
+)
+
 # Razorpay (set via environment variables)
 RAZORPAY_KEY_ID = config("RAZORPAY_KEY_ID", default="")
 RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET", "")
