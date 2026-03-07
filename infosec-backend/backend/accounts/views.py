@@ -20,6 +20,23 @@ from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 logger = logging.getLogger(__name__)
 
 
+def _send_email(subject: str, message: str, to_email: str, *, from_email: str, context: str) -> None:
+    try:
+        logger.info(
+            "Sending email (%s): EMAIL_BACKEND=%s DEFAULT_FROM_EMAIL=%s EMAIL_HOST=%s EMAIL_PORT=%s EMAIL_USE_TLS=%s to=%s",
+            context,
+            getattr(settings, "EMAIL_BACKEND", None),
+            getattr(settings, "DEFAULT_FROM_EMAIL", None),
+            getattr(settings, "EMAIL_HOST", None),
+            getattr(settings, "EMAIL_PORT", None),
+            getattr(settings, "EMAIL_USE_TLS", None),
+            to_email,
+        )
+        send_mail(subject, message, from_email, [to_email], fail_silently=False)
+    except Exception:
+        logger.exception("Failed to send email (%s)", context)
+
+
 def _jwt_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -58,10 +75,7 @@ def google_jwt(request):
     subject = "Verify your Infosec Dairies account"
     message = f"Welcome to Infosec Dairies!\n\nYour email verification code is: {code}\n\nEnter this code to complete your registration.\n\nThis code expires in 10 minutes."
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "infosecdairies@gmail.com")
-    try:
-        send_mail(subject, message, from_email, [user.email], fail_silently=False)
-    except Exception:
-        logger.exception("Failed to send verification OTP email (google_jwt)")
+    _send_email(subject, message, user.email, from_email=from_email, context="google_jwt")
 
     return Response(
         {
@@ -110,10 +124,7 @@ def google_start_otp(request):
 
     # This will use the configured EMAIL_BACKEND. In development we default
     # to console backend so you can see the code in the terminal.
-    try:
-        send_mail(subject, message, from_email, [user.email], fail_silently=False)
-    except Exception:
-        logger.exception("Failed to send OTP email (google_start_otp)")
+    _send_email(subject, message, user.email, from_email=from_email, context="google_start_otp")
 
     return Response({"detail": "OTP sent"}, status=status.HTTP_200_OK)
 
@@ -194,10 +205,7 @@ def register(request):
     subject = "Verify your Infosec Dairies account"
     message = f"Welcome to Infosec Dairies!\n\nYour email verification code is: {code}\n\nEnter this code to complete your registration.\n\nThis code expires in 10 minutes."
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com")
-    try:
-        send_mail(subject, message, from_email, [user.email], fail_silently=False)
-    except Exception:
-        logger.exception("Failed to send verification OTP email (register)")
+    _send_email(subject, message, user.email, from_email=from_email, context="register")
     
     return Response(
         {
@@ -302,10 +310,7 @@ def resend_verification_otp(request):
     subject = "Verify your Infosec Dairies account"
     message = f"Welcome to Infosec Dairies!\n\nYour email verification code is: {code}\n\nEnter this code to complete your registration.\n\nThis code expires in 10 minutes."
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com")
-    try:
-        send_mail(subject, message, from_email, [user.email], fail_silently=False)
-    except Exception:
-        logger.exception("Failed to resend verification OTP email (resend_verification_otp)")
+    _send_email(subject, message, user.email, from_email=from_email, context="resend_verification_otp")
     
     return Response(
         {"detail": "If an account exists, a verification code has been sent"},
