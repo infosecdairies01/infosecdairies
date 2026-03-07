@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.http import JsonResponse
+from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
@@ -46,7 +47,21 @@ def upload_certificate(request):
         # If using local storage, construct full URL
         if public_url.startswith('/'):
             public_url = f"{request.scheme}://{request.get_host()}{public_url}"
-        
+
+        try:
+            if user_email and "@" in user_email:
+                subject = "Your certificate is ready"
+                body = (
+                    "Congratulations! You have completed the course.\n\n"
+                    f"Certificate download link: {public_url}\n\n"
+                    "Thanks,\n"
+                    "InfosecDairies"
+                )
+                from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "infosecdairies@gmail.com")
+                send_mail(subject, body, from_email, [user_email], fail_silently=True)
+        except Exception:
+            pass
+
         return JsonResponse({
             'success': True,
             'url': public_url,
