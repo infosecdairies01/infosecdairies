@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 from datetime import datetime
+import logging
 
 import razorpay
 from razorpay.errors import BadRequestError
@@ -15,6 +16,9 @@ from rest_framework.response import Response
 from courses.models import Course, Enrollment
 
 from .models import CoursePurchase
+
+
+logger = logging.getLogger(__name__)
 
 
 FREE_COURSE_SLUG = "network-fundamentals"
@@ -252,9 +256,9 @@ def verify_payment(request):
             "You now have lifetime access to the course.\n\n"
             "Thanks,\nInfoSec Diaries"
         )
-        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [request.user.email], fail_silently=True)
+        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [request.user.email], fail_silently=False)
     except Exception:
-        pass
+        logger.exception("Failed to send payment receipt email")
 
     return Response({"success": True, "course_slug": purchase.course_slug})
 

@@ -5,10 +5,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+import logging
 import os
 import uuid
 import base64
 from django.conf import settings
+
+
+logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -58,9 +62,9 @@ def upload_certificate(request):
                     "InfosecDairies"
                 )
                 from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "infosecdairies@gmail.com")
-                send_mail(subject, body, from_email, [user_email], fail_silently=True)
+                send_mail(subject, body, from_email, [user_email], fail_silently=False)
         except Exception:
-            pass
+            logger.exception("Failed to send certificate email")
 
         return JsonResponse({
             'success': True,
