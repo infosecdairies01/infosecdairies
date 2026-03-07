@@ -276,6 +276,11 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
 
+# Safety fallback: if SMTP creds are present, always use SMTP backend.
+# This prevents accidentally using the console backend in production.
+if EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
 print(
     "[email-config] EMAIL_BACKEND=", EMAIL_BACKEND,
     "DEFAULT_FROM_EMAIL=", DEFAULT_FROM_EMAIL,
