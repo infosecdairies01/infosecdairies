@@ -278,9 +278,14 @@ EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
 EMAIL_USE_SSL = config("EMAIL_USE_SSL", default=False, cast=bool)
 EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=10, cast=int)
 
+RESEND_API_KEY = config("RESEND_API_KEY", default="")
+RESEND_TIMEOUT = config("RESEND_TIMEOUT", default=EMAIL_TIMEOUT, cast=int)
+
 # Safety fallback: if SMTP creds are present, always use SMTP backend.
 # This prevents accidentally using the console backend in production.
-if EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+if RESEND_API_KEY:
+    EMAIL_BACKEND = "backend.email_backends.ResendEmailBackend"
+elif EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 print(
