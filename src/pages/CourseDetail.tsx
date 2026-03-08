@@ -669,11 +669,21 @@ const CourseDetail = () => {
 
   const handleShareOnLinkedIn = () => {
     if (!course || !user) return;
-    const shareText = `I have completed my course on ${course.title} from Infosec-Diaries! 🎓`;
-    
-    // Create LinkedIn post URL with pre-filled text
-    const linkedInUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
-    window.open(linkedInUrl, '_blank', 'width=600,height=400');
+    const shareText = `I have completed my course on ${course.title} from Infosec-Dairies! 🎓\n\nhttps://www.infosecdairies.io/`;
+
+    // LinkedIn only shows an image preview when a URL is shared.
+    // We share a static OG-enabled page (public/share/...) so LinkedIn can fetch og:image.
+    const sharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharePageUrl)}`;
+
+    window.open(linkedInUrl, "_blank", "width=600,height=600");
+
+    // Try to copy the post text as a convenience (LinkedIn won't accept prefilled text for share-offsite).
+    try {
+      navigator.clipboard.writeText(shareText);
+    } catch {
+      // best-effort
+    }
   };
 
   const handleDownloadCertificate = async () => {
