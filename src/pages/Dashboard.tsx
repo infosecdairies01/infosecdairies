@@ -157,7 +157,7 @@ const Dashboard = () => {
             let completedLessons = 0;
             try {
               const progressRes = await fetch(
-                `/api/courses/${course.slug}/progress/`,
+                apiUrl(`/api/courses/${course.slug}/progress/`),
                 {
                   headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -261,7 +261,7 @@ const Dashboard = () => {
                     try {
                       setNameSaving(true);
                       setNameError(null);
-                      const res = await fetch("/api/auth/profile/", {
+                      const res = await fetch(apiUrl("/api/auth/profile/"), {
                         method: "PATCH",
                         headers: {
                           "Content-Type": "application/json",
