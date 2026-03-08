@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from courses.models import Course, Enrollment
+from accounts.email_templates import _send_html_email, get_payment_receipt_template
 
 from .models import CoursePurchase
 
@@ -246,17 +247,16 @@ def verify_payment(request):
 
     try:
         subject = f"Payment received: {course_title}"
-        amount_line = f"Amount: ₹{purchase.amount_inr}"
-        body = (
-            f"Hi {purchase.purchaser_name or request.user.email},\n\n"
-            f"We received your payment for the course: {course_title}\n"
-            f"{amount_line}\n"
-            f"Razorpay Order ID: {order_id}\n"
-            f"Razorpay Payment ID: {payment_id}\n\n"
-            "You now have lifetime access to the course.\n\n"
-            "Thanks,\nInfoSec Diaries"
+        user_name = purchase.purchaser_name or request.user.email
+        text_body, html_body = get_payment_receipt_template(
+            course_title=course_title,
+            amount=str(purchase.amount_inr),
+            order_id=order_id,
+            payment_id=payment_id,
+            user_name=user_name
         )
-        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [request.user.email], fail_silently=False)
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
+        _send_html_email(subject, text_body, html_body, request.user.email, from_email=from_email, context="payment_receipt")
     except Exception:
         logger.exception("Failed to send payment receipt email")
 

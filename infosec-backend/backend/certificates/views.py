@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.http import JsonResponse
-from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
@@ -10,6 +9,8 @@ import os
 import uuid
 import base64
 from django.conf import settings
+
+from accounts.email_templates import _send_html_email, get_certificate_template
 
 
 logger = logging.getLogger(__name__)
@@ -55,14 +56,12 @@ def upload_certificate(request):
         try:
             if user_email and "@" in user_email:
                 subject = "Your certificate is ready"
-                body = (
-                    "Congratulations! You have completed the course.\n\n"
-                    f"Certificate download link: {public_url}\n\n"
-                    "Thanks,\n"
-                    "InfosecDairies"
+                text_body, html_body = get_certificate_template(
+                    download_url=public_url,
+                    course_name=course_slug.replace('-', ' ').title()
                 )
-                from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "infosecdairies@gmail.com")
-                send_mail(subject, body, from_email, [user_email], fail_silently=False)
+                from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
+                _send_html_email(subject, text_body, html_body, user_email, from_email=from_email, context="certificate")
         except Exception:
             logger.exception("Failed to send certificate email")
 
