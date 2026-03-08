@@ -10,7 +10,7 @@ const Labs = () => {
       <Navbar />
       
       {/* Access Restriction Overlay */}
-      <div className="fixed inset-0 top-20 z-40 flex items-center justify-center pointer-events-none">
+      <div className="fixed inset-0 top-16 md:top-20 z-40 flex items-start justify-center pt-100 md:pt-60 pointer-events-none">
         <div className="text-center pointer-events-auto">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#21262d]/80 border border-[#30363d] flex items-center justify-center backdrop-blur-sm">
             <Lock className="w-10 h-10 text-red-500" />
@@ -23,7 +23,7 @@ administrator</p>
         </div>
       </div>
       
-      <div className="flex flex-1 pt-20 blur-[3px] pointer-events-none select-none overflow-auto">
+      <div className="flex flex-1 pt-5 md:pt-1 blur-[3px] pointer-events-none select-none overflow-auto">
         <SOCSidebar />
         
         <div className="flex-1 flex flex-col min-w-0">

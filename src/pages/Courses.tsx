@@ -5,9 +5,11 @@ import CourseCard from "@/components/CourseCard";
 import { ALL_COURSES_BUNDLE_PRICE_INR, ALL_COURSES_BUNDLE_SLUG, getCoursePriceInr, getCourseCardData } from "@/data/courses";
 import { getLiveCourseCardData } from "@/data/liveCourses";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Courses = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"self-paced" | "live">("self-paced");
   const [hasBundle, setHasBundle] = useState(false);
   
@@ -78,19 +80,19 @@ const Courses = () => {
     <main className="min-h-screen bg-background">
       <Navbar />
       
-      <section className="relative min-h-screen overflow-hidden py-20">
+      <section className="relative overflow-hidden pt-5 md:pt-7 pb-10">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background/50" />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center space-y-6 mb-12">
+            <div className="text-center space-y-4 mb-6">
               <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
                 Master cybersecurity with our comprehensive blue team training programs
               </p>
             </div>
 
             {/* Tab Selection */}
-            <div className="flex justify-center gap-3 mb-12">
+            <div className="flex justify-center gap-3 mb-6">
               <button 
                 onClick={() => setActiveTab("self-paced")} 
                 className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
@@ -114,35 +116,12 @@ const Courses = () => {
             </div>
 
             {/* Course Description */}
-            <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+            <p className="text-center text-muted-foreground mb-6 max-w-2xl mx-auto">
               {activeTab === "self-paced" 
                 ? "Learn at your own pace with our comprehensive pre-recorded courses. Access anytime, anywhere." 
                 : "Interactive instructor-led sessions with real-time Q&A, hands-on labs, and personalized feedback."
               }
             </p>
-
-            {activeTab === "self-paced" && !hasBundle && (
-              <div className="mb-10">
-                <div className="relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] shadow-lg shadow-black/20">
-                  <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-br from-primary/20 via-transparent to-secondary/10 blur-sm pointer-events-none" />
-                  <div className="relative px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground">All Courses Bundle</div>
-                      <div className="text-xs text-muted-foreground/80">Get access to all self-paced courses at one price</div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-lg font-semibold text-primary">₹{ALL_COURSES_BUNDLE_PRICE_INR}</div>
-                      <a
-                        href={`/courses/${ALL_COURSES_BUNDLE_SLUG}/checkout`}
-                        className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-                      >
-                        Get Bundle
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
             
             {/* Courses Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -170,6 +149,37 @@ const Courses = () => {
                     />
                   ))}
             </div>
+
+            {activeTab === "self-paced" && !hasBundle && (
+              <div className="mt-10">
+                <div className="relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] shadow-lg shadow-black/20">
+                  <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-br from-primary/20 via-transparent to-secondary/10 blur-sm pointer-events-none" />
+                  <div className="relative px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">All Courses Bundle</div>
+                      <div className="text-xs text-muted-foreground/80">Get access to all self-paced courses at one price</div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-lg font-semibold text-primary">₹{ALL_COURSES_BUNDLE_PRICE_INR}</div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const accessToken = localStorage.getItem("accessToken");
+                          if (!accessToken || !user) {
+                            navigate(`/auth?redirect=/courses/${ALL_COURSES_BUNDLE_SLUG}/checkout`);
+                            return;
+                          }
+                          navigate(`/courses/${ALL_COURSES_BUNDLE_SLUG}/checkout`);
+                        }}
+                        className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Get Bundle
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
