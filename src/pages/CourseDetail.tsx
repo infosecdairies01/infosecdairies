@@ -803,7 +803,13 @@ const CourseDetail = () => {
       // LinkedIn only shows an image preview when a URL is shared.
       // We share a backend OG-enabled page so LinkedIn can fetch og:image.
       const sharePageUrl = apiUrl(`/api/certificates/share/?${shareParams.toString()}`);
-      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharePageUrl)}`;
+      // Use shareArticle to (best-effort) prefill text in the share dialog.
+      // share-offsite shows previews reliably but won't accept prefilled text.
+      const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
+        sharePageUrl
+      )}&title=${encodeURIComponent("Certificate Completed - Infosec Dairies")}&summary=${encodeURIComponent(
+        shareText
+      )}&source=${encodeURIComponent("Infosec Dairies")}`;
 
       window.open(linkedInUrl, "_blank", "width=600,height=600");
 
