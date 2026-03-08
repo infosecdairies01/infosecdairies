@@ -164,6 +164,7 @@ def google_verify_otp(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
+@csrf_exempt
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
