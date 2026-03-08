@@ -117,6 +117,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.up.railway.app",
     "https://api.infosecdairies.io",
     "https://infosecdairies.io",
+    "https://www.infosecdairies.io",
 ]
 
 _railway_public_domain = config("RAILWAY_PUBLIC_DOMAIN", default="").strip()
