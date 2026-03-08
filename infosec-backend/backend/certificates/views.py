@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
@@ -9,6 +9,7 @@ import os
 import uuid
 import base64
 from django.conf import settings
+from django.utils.html import escape
 
 from accounts.email_templates import _send_html_email, get_certificate_template
 
@@ -48,9 +49,11 @@ def upload_certificate(request):
         
         # Get public URL
         public_url = default_storage.url(path)
-        
-        # If using local storage, construct full URL
-        if public_url.startswith('/'):
+
+        # Ensure an absolute URL (LinkedIn must be able to fetch og:image)
+        if not (public_url.startswith("http://") or public_url.startswith("https://")):
+            if not public_url.startswith("/"):
+                public_url = f"/{public_url}"
             public_url = f"{request.scheme}://{request.get_host()}{public_url}"
 
         try:
@@ -73,3 +76,43 @@ def upload_certificate(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def certificate_share(request):
+    img = request.GET.get("img") or ""
+    course = request.GET.get("course") or "Course"
+    name = request.GET.get("name") or "Student"
+    date = request.GET.get("date") or ""
+
+    title = f"{escape(name)} completed {escape(course)}"
+    description = f"Certificate of completion for {escape(course)} at Infosec Dairies."
+    if date:
+        description = f"Certificate of completion for {escape(course)} at Infosec Dairies ({escape(date)})."
+
+    if not (img.startswith("http://") or img.startswith("https://")):
+        img = ""
+
+    page_url = request.build_absolute_uri()
+
+    html = f"""<!doctype html>
+<html lang=\"en\">
+  <head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+    <title>{title}</title>
+    <meta property=\"og:site_name\" content=\"Infosec Dairies\" />
+    <meta property=\"og:title\" content=\"{title}\" />
+    <meta property=\"og:description\" content=\"{description}\" />
+    <meta property=\"og:type\" content=\"website\" />
+    <meta property=\"og:url\" content=\"{escape(page_url)}\" />
+    {f'<meta property=\"og:image\" content=\"{escape(img)}\" />' if img else ''}
+    <meta name=\"twitter:card\" content=\"summary_large_image\" />
+    <meta name=\"twitter:title\" content=\"{title}\" />
+    <meta name=\"twitter:description\" content=\"{description}\" />
+    {f'<meta name=\"twitter:image\" content=\"{escape(img)}\" />' if img else ''}
+    <meta http-equiv=\"refresh\" content=\"0; url=https://www.infosecdairies.io/\" />
+  </head>
+  <body></body>
+</html>"""
+
+    return HttpResponse(html, content_type="text/html")

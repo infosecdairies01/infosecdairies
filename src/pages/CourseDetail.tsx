@@ -667,30 +667,10 @@ const CourseDetail = () => {
   const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
   const isCourseCompleted = totalLessons > 0 && completedLessons >= totalLessons;
 
-  const handleShareOnLinkedIn = () => {
-    if (!course || !user) return;
-    const shareText = `I have completed my course on ${course.title} from Infosec-Dairies! 🎓\n\nhttps://www.infosecdairies.io/`;
-
-    // LinkedIn only shows an image preview when a URL is shared.
-    // We share a static OG-enabled page (public/share/...) so LinkedIn can fetch og:image.
-    const sharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
-    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharePageUrl)}`;
-
-    window.open(linkedInUrl, "_blank", "width=600,height=600");
-
-    // Try to copy the post text as a convenience (LinkedIn won't accept prefilled text for share-offsite).
-    try {
-      navigator.clipboard.writeText(shareText);
-    } catch {
-      // best-effort
-    }
-  };
-
-  const handleDownloadCertificate = async () => {
-    if (!course) return;
+  const generateCertificatePngDataUrl = async () => {
+    if (!course) return null;
 
     const displayName = (user?.fullName || user?.email || "Student").trim();
-
     const issueDate = new Date().toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "long",
@@ -710,7 +690,7 @@ const CourseDetail = () => {
 
     if (document.fonts) {
       try {
-        await document.fonts.load('700 48px "Montserrat"');
+        await document.fonts.load('600 48px "Montserrat"');
         await document.fonts.load('700 64px "Playfair Display"');
         await document.fonts.ready;
       } catch {
@@ -723,7 +703,10 @@ const CourseDetail = () => {
     canvas.height = img.naturalHeight || img.height;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) return null;
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
 
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
@@ -738,15 +721,28 @@ const CourseDetail = () => {
     const xLeft = Math.round(w * 0.075);
 
     // Course title (green, near top-left)
-    ctx.textBaseline = "top";
     ctx.fillStyle = "#61FF78";
     ctx.font = `600 ${Math.round(h * 0.045)}px "Montserrat", Inter, Arial, sans-serif`;
-    wrapText(ctx, course.title, xLeft, Math.round(h * 0.22), Math.round(w * 0.55), Math.round(h * 0.055));
+    wrapText(
+      ctx,
+      course.title,
+      xLeft,
+      Math.round(h * 0.22),
+      Math.round(w * 0.55),
+      Math.round(h * 0.055)
+    );
 
     // Student name (big, white)
     ctx.fillStyle = "#FFFFFF";
     ctx.font = `700 ${Math.round(h * 0.075)}px "Playfair Display", Georgia, serif`;
-    wrapText(ctx, displayName, xLeft, Math.round(h * 0.395), Math.round(w * 0.55), Math.round(h * 0.085));
+    wrapText(
+      ctx,
+      displayName,
+      xLeft,
+      Math.round(h * 0.395),
+      Math.round(w * 0.55),
+      Math.round(h * 0.085)
+    );
 
     // Issue date
     ctx.fillStyle = "rgba(255,255,255,0.9)";
@@ -757,9 +753,87 @@ const CourseDetail = () => {
     const fileName = `${safeTitle}-certificate.png`;
 
     const dataUrl = canvas.toDataURL("image/png");
+
+    return {
+      dataUrl,
+      fileName,
+      displayName,
+      issueDate,
+    };
+  };
+
+  const handleShareOnLinkedIn = async () => {
+    if (!course || !user) return;
+
+    const shareText = `I have completed my course on ${course.title} from Infosec-Dairies! 🎓\n\nhttps://www.infosecdairies.io/`;
+
+    try {
+      const cert = await generateCertificatePngDataUrl();
+      if (!cert) return;
+
+      const uploadRes = await fetch(apiUrl("/api/certificates/upload/"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: cert.dataUrl,
+          course_slug: slug || "certificate",
+          user_email: user?.email || "user",
+        }),
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload certificate");
+      }
+
+      const uploadData = await uploadRes.json();
+      const imgUrl: string | undefined = uploadData?.url;
+      if (!imgUrl) {
+        throw new Error("Invalid upload response");
+      }
+
+      const shareParams = new URLSearchParams({
+        img: imgUrl,
+        course: course.title,
+        name: cert.displayName,
+        date: cert.issueDate,
+      });
+
+      // LinkedIn only shows an image preview when a URL is shared.
+      // We share a backend OG-enabled page so LinkedIn can fetch og:image.
+      const sharePageUrl = apiUrl(`/api/certificates/share/?${shareParams.toString()}`);
+      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharePageUrl)}`;
+
+      window.open(linkedInUrl, "_blank", "width=600,height=600");
+
+      // Try to copy the post text as a convenience (LinkedIn won't accept prefilled text for share-offsite).
+      try {
+        navigator.clipboard.writeText(shareText);
+      } catch {
+        // best-effort
+      }
+    } catch {
+      // best-effort; avoid blocking the UI
+      try {
+        const fallbackSharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+          fallbackSharePageUrl
+        )}`;
+        window.open(linkedInUrl, "_blank", "width=600,height=600");
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const handleDownloadCertificate = async () => {
+    const cert = await generateCertificatePngDataUrl();
+    if (!cert) return;
+
     const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = fileName;
+    a.href = cert.dataUrl;
+    a.download = cert.fileName;
     document.body.appendChild(a);
     a.click();
     a.remove();
