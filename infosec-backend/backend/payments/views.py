@@ -26,6 +26,11 @@ FREE_COURSE_SLUG = "network-fundamentals"
 ALL_COURSES_BUNDLE_SLUG = "all-courses-bundle"
 ALL_COURSES_BUNDLE_PRICE_INR = 3999
 
+# Valid promo codes per course slug (case-insensitive)
+VALID_PROMO_CODES: dict[str, list[str]] = {
+    "blue-team-soc-fundamentals": ["SOCFREE", "BLUETEAM", "INFOSOC"],
+}
+
 
 def _difficulty_price_inr(level: str) -> int:
     lvl = (level or "").strip().lower()
@@ -69,9 +74,14 @@ def _clean_razorpay_cred(value: str) -> str:
 def create_order(request):
     course_slug = request.data.get("course_slug")
     purchaser_name = request.data.get("full_name")
+    promo_code = request.data.get("promo_code", "").strip().upper()
 
     if not course_slug:
         return Response({"detail": "course_slug is required"}, status=400)
+
+    # Check if valid promo code applied for this course
+    valid_codes = VALID_PROMO_CODES.get(course_slug, [])
+    is_promo_valid = promo_code and promo_code in valid_codes
 
     is_bundle = course_slug == ALL_COURSES_BUNDLE_SLUG
     course = None
@@ -80,6 +90,10 @@ def create_order(request):
         amount_inr = _course_price_inr(course)
     else:
         amount_inr = _bundle_price_inr()
+
+    # If promo code is valid, make it free
+    if is_promo_valid:
+        amount_inr = 0
 
     if amount_inr == 0:
         return Response({"free": True, "course_slug": course_slug, "amount_inr": 0})

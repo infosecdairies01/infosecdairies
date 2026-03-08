@@ -24,6 +24,9 @@ const CourseCheckout = () => {
   const [name, setName] = useState(user?.fullName || user?.email?.split("@")[0] || "");
   const [error, setError] = useState<string | null>(null);
   const [displayAmountInr, setDisplayAmountInr] = useState<number | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -59,6 +62,41 @@ const CourseCheckout = () => {
     });
   };
 
+  // Promo code config - only for Blue Team & SOC Fundamentals
+  const PROMO_CODES: Record<string, string[]> = {
+    "blue-team-soc-fundamentals": ["SOCFREE", "BLUETEAM", "INFOSOC"],
+  };
+
+  const hasPromoCodes = slug && PROMO_CODES[slug]?.length > 0;
+
+  const applyPromoCode = () => {
+    if (!slug) return;
+    setPromoError(null);
+    
+    const validCodes = PROMO_CODES[slug] || [];
+    const trimmedCode = promoCode.trim().toUpperCase();
+    
+    if (validCodes.includes(trimmedCode)) {
+      setPromoApplied(true);
+      setDisplayAmountInr(0);
+    } else {
+      setPromoError("Invalid promo code for this course");
+      setPromoApplied(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoApplied(false);
+    setPromoCode("");
+    setPromoError(null);
+    // Reset to original price
+    if (slug === ALL_COURSES_BUNDLE_SLUG) {
+      setDisplayAmountInr(ALL_COURSES_BUNDLE_PRICE_INR);
+    } else if (course) {
+      setDisplayAmountInr(getCoursePriceInr(slug, course.difficulty));
+    }
+  };
+
   const handlePay = async () => {
     if (!slug || !course) return;
     if (!name.trim()) {
@@ -84,7 +122,11 @@ const CourseCheckout = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ course_slug: slug, full_name: name.trim() }),
+        body: JSON.stringify({ 
+          course_slug: slug, 
+          full_name: name.trim(),
+          promo_code: promoApplied ? promoCode.trim().toUpperCase() : undefined,
+        }),
       });
 
       const data = await res.json();
@@ -261,6 +303,46 @@ const CourseCheckout = () => {
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
+
+              {/* Promo Code Section */}
+              {hasPromoCodes && (
+                <div className="pt-2 border-t border-border">
+                  <label className="text-sm font-medium text-muted-foreground">Promo Code</label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      placeholder="Enter promo code"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                      disabled={promoApplied}
+                      className="flex-1"
+                    />
+                    {!promoApplied ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={applyPromoCode}
+                        disabled={!promoCode.trim()}
+                      >
+                        Apply
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={removePromoCode}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  {promoError && <p className="text-sm text-red-500 mt-1">{promoError}</p>}
+                  {promoApplied && (
+                    <p className="text-sm text-green-500 mt-1">Promo code applied! Course is now FREE.</p>
+                  )}
+                </div>
+              )}
+
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button
                 onClick={handlePay}
@@ -273,6 +355,8 @@ const CourseCheckout = () => {
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing...
                   </>
+                ) : promoApplied ? (
+                  "Get Free Access"
                 ) : (
                   `Pay ${typeof displayAmountInr === "number" ? `₹${displayAmountInr}` : ""}`
                 )}
