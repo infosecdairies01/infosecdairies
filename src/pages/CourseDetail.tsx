@@ -135,6 +135,10 @@ const CourseDetail = () => {
   const [enrollError, setEnrollError] = useState<string | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [quizScores, setQuizScores] = useState<Record<string, number>>({});
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareModalText, setShareModalText] = useState("");
+  const [shareModalUrl, setShareModalUrl] = useState("");
+  const [copied, setCopied] = useState(false);
 
   // Only some courses are fully implemented with enrollment/progress
   const isCourseProgressEnabled = useMemo(() => {
@@ -803,33 +807,18 @@ const CourseDetail = () => {
       // LinkedIn only shows an image preview when a URL is shared.
       // We share a backend OG-enabled page so LinkedIn can fetch og:image.
       const sharePageUrl = apiUrl(`/api/certificates/share/?${shareParams.toString()}`);
-      // Use shareArticle to (best-effort) prefill text in the share dialog.
-      // share-offsite shows previews reliably but won't accept prefilled text.
-      const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
-        sharePageUrl
-      )}&title=${encodeURIComponent("Certificate Completed - Infosec Dairies")}&summary=${encodeURIComponent(
-        shareText
-      )}&source=${encodeURIComponent("Infosec Dairies")}`;
-
-      window.open(linkedInUrl, "_blank", "width=600,height=600");
-
-      // Try to copy the post text as a convenience (LinkedIn won't accept prefilled text for share-offsite).
-      try {
-        navigator.clipboard.writeText(shareText);
-      } catch {
-        // best-effort
-      }
+      
+      // Show modal with pre-written text first
+      setShareModalText(shareText);
+      setShareModalUrl(sharePageUrl);
+      setShowShareModal(true);
+      
     } catch {
-      // best-effort; avoid blocking the UI
-      try {
-        const fallbackSharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
-        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-          fallbackSharePageUrl
-        )}`;
-        window.open(linkedInUrl, "_blank", "width=600,height=600");
-      } catch {
-        // ignore
-      }
+      // Fallback: show modal with static share page
+      const fallbackSharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
+      setShareModalText(shareText);
+      setShareModalUrl(fallbackSharePageUrl);
+      setShowShareModal(true);
     }
   };
 
@@ -1546,6 +1535,52 @@ const CourseDetail = () => {
             </div>
           </div>
         </div>
+      {/* LinkedIn Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-card border border-border rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
+              Share on LinkedIn
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Copy this pre-written text and paste it in LinkedIn:
+            </p>
+            <textarea
+              readOnly
+              value={shareModalText}
+              className="w-full h-32 p-3 rounded-lg bg-background border border-border text-foreground text-sm resize-none mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(shareModalText);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+              >
+                {copied ? "Copied!" : "Copy Text"}
+              </button>
+              <button
+                onClick={() => {
+                  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareModalUrl)}`;
+                  window.open(linkedInUrl, "_blank", "width=600,height=600");
+                }}
+                className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+              >
+                Open LinkedIn
+              </button>
+            </div>
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="w-full mt-3 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       </section>
     </main>
   );
