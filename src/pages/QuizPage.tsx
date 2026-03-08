@@ -335,7 +335,7 @@ const QuizPage = () => {
     <main className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="container mx-auto px-4 pt-24 pb-12">
+      <div className="container mx-auto px-4 pt-20 pb-12">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="mb-8">

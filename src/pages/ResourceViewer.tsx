@@ -202,7 +202,7 @@ const ResourceViewer = () => {
       {/* Screen version */}
       <main className="min-h-screen bg-background print:hidden">
         <Navbar />
-        <div className="container mx-auto px-4 pt-24 pb-16">
+        <div className="container mx-auto px-4 pt-20 pb-16">
           <div className="max-w-4xl mx-auto">
             {/* Breadcrumb */}
             <Link to={`/courses/${courseId}`} className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6">
