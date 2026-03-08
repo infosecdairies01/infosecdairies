@@ -96,6 +96,29 @@ def create_order(request):
         amount_inr = 0
 
     if amount_inr == 0:
+        # Free access (promo code or free course): create enrollment directly
+        if not is_bundle:
+            course = get_object_or_404(Course, slug=course_slug, is_published=True)
+            enrollment, _ = Enrollment.objects.get_or_create(
+                user=request.user,
+                course=course,
+                defaults={"is_paid": True},
+            )
+            if not enrollment.is_paid:
+                enrollment.is_paid = True
+                enrollment.save(update_fields=["is_paid"])
+        else:
+            # Bundle - enroll in all courses
+            courses = Course.objects.filter(is_published=True)
+            for c in courses:
+                enrollment, _ = Enrollment.objects.get_or_create(
+                    user=request.user,
+                    course=c,
+                    defaults={"is_paid": True},
+                )
+                if not enrollment.is_paid:
+                    enrollment.is_paid = True
+                    enrollment.save(update_fields=["is_paid"])
         return Response({"free": True, "course_slug": course_slug, "amount_inr": 0})
 
     existing_paid = CoursePurchase.objects.filter(
