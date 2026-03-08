@@ -167,7 +167,7 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 _frontend_url = config("FRONTEND_URL", default="http://127.0.0.1:8081").rstrip("/")
 LOGIN_REDIRECT_URL = f"{_frontend_url}/auth/google-callback"
 
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http" if DEBUG else "https"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (

@@ -1,9 +1,17 @@
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+const RAW_API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_BASE = (RAW_API_BASE || "http://127.0.0.1:8000").replace(/\/$/, "");
 
 export function apiUrl(path: string) {
   if (!path.startsWith("/")) {
     path = `/${path}`;
   }
+
+  // In local development, prefer the Vite dev proxy for /api/* requests.
+  // This prevents CORS issues and keeps requests working while offline.
+  if (import.meta.env.DEV && !RAW_API_BASE && path.startsWith("/api/")) {
+    return path;
+  }
+
   return `${API_BASE}${path}`;
 }
 
