@@ -68,7 +68,7 @@ Infosec Dairies Team"""
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, {brand_color} 0%, #06b6d4 100%); padding: 40px 30px; text-align: center;">
-                            <img src="{logo_url}" alt="Infosec Dairies" width="60" height="60" style="margin-bottom: 15px; border-radius: 12px;">
+                            <img src="{logo_url}" alt="Infosec Dairies" width="100" height="100" style="margin-bottom: 15px; border-radius: 16px;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Infosec Dairies</h1>
                             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Secure Your Digital Future</p>
                         </td>
@@ -158,7 +158,7 @@ Infosec Dairies Team"""
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
-                            <img src="{logo_url}" alt="Infosec Dairies" width="60" height="60" style="margin-bottom: 15px; border-radius: 12px; background: white; padding: 5px;">
+                            <img src="{logo_url}" alt="Infosec Dairies" width="100" height="100" style="margin-bottom: 15px; border-radius: 16px; background: white; padding: 8px;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Payment Successful!</h1>
                             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Your enrollment is confirmed</p>
                         </td>
@@ -270,7 +270,7 @@ P.S. Share your achievement on LinkedIn and tag us!"""
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 50px 30px; text-align: center;">
-                            <img src="{logo_url}" alt="Infosec Dairies" width="70" height="70" style="margin-bottom: 20px; border-radius: 12px; background: white; padding: 5px;">
+                            <img src="{logo_url}" alt="Infosec Dairies" width="100" height="100" style="margin-bottom: 20px; border-radius: 16px; background: white; padding: 8px;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700;">Congratulations!</h1>
                             <p style="color: rgba(255,255,255,0.9); margin: 15px 0 0 0; font-size: 18px;">You've earned your certificate</p>
                         </td>
