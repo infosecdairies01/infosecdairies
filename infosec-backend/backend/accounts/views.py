@@ -15,21 +15,20 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import LoginOtp
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .email_templates import _send_html_email, get_otp_email_template
 
 
 logger = logging.getLogger(__name__)
 
 
 def _send_email(subject: str, message: str, to_email: str, *, from_email: str, context: str) -> None:
+    """Legacy function - use _send_html_email for HTML emails."""
     try:
         logger.info(
-            "Sending email (%s): EMAIL_BACKEND=%s DEFAULT_FROM_EMAIL=%s EMAIL_HOST=%s EMAIL_PORT=%s EMAIL_USE_TLS=%s to=%s",
+            "Sending email (%s): EMAIL_BACKEND=%s DEFAULT_FROM_EMAIL=%s to=%s",
             context,
             getattr(settings, "EMAIL_BACKEND", None),
             getattr(settings, "DEFAULT_FROM_EMAIL", None),
-            getattr(settings, "EMAIL_HOST", None),
-            getattr(settings, "EMAIL_PORT", None),
-            getattr(settings, "EMAIL_USE_TLS", None),
             to_email,
         )
         send_mail(subject, message, from_email, [to_email], fail_silently=False)
@@ -72,10 +71,11 @@ def google_jwt(request):
     expires_at = timezone.now() + timedelta(minutes=10)
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
 
+    # Send beautiful HTML verification email
     subject = "Verify your Infosec Dairies account"
-    message = f"Welcome to Infosec Dairies!\n\nYour email verification code is: {code}\n\nEnter this code to complete your registration.\n\nThis code expires in 10 minutes."
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "infosecdairies@gmail.com")
-    _send_email(subject, message, user.email, from_email=from_email, context="google_jwt")
+    text_body, html_body = get_otp_email_template(code)
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
+    _send_html_email(subject, text_body, html_body, user.email, from_email=from_email, context="google_jwt")
 
     return Response(
         {
@@ -118,13 +118,14 @@ def google_start_otp(request):
 
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
 
+    # Send beautiful HTML OTP email
     subject = "Your Infosec Dairies login code"
-    message = f"Your one-time login code is: {code}\n\nIt will expire in 10 minutes."
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com")
+    text_body, html_body = get_otp_email_template(code)
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
 
     # This will use the configured EMAIL_BACKEND. In development we default
     # to console backend so you can see the code in the terminal.
-    _send_email(subject, message, user.email, from_email=from_email, context="google_start_otp")
+    _send_html_email(subject, text_body, html_body, user.email, from_email=from_email, context="google_start_otp")
 
     return Response({"detail": "OTP sent"}, status=status.HTTP_200_OK)
 
@@ -203,9 +204,9 @@ def register(request):
     
     # Send verification email
     subject = "Verify your Infosec Dairies account"
-    message = f"Welcome to Infosec Dairies!\n\nYour email verification code is: {code}\n\nEnter this code to complete your registration.\n\nThis code expires in 10 minutes."
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com")
-    _send_email(subject, message, user.email, from_email=from_email, context="register")
+    text_body, html_body = get_otp_email_template(code)
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
+    _send_html_email(subject, text_body, html_body, user.email, from_email=from_email, context="register")
     
     return Response(
         {
@@ -308,9 +309,9 @@ def resend_verification_otp(request):
     
     # Send verification email
     subject = "Verify your Infosec Dairies account"
-    message = f"Welcome to Infosec Dairies!\n\nYour email verification code is: {code}\n\nEnter this code to complete your registration.\n\nThis code expires in 10 minutes."
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com")
-    _send_email(subject, message, user.email, from_email=from_email, context="resend_verification_otp")
+    text_body, html_body = get_otp_email_template(code)
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
+    _send_html_email(subject, text_body, html_body, user.email, from_email=from_email, context="resend_verification_otp")
     
     return Response(
         {"detail": "If an account exists, a verification code has been sent"},
