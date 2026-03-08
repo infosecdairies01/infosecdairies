@@ -84,15 +84,22 @@ def certificate_share(request):
     name = request.GET.get("name") or "Student"
     date = request.GET.get("date") or ""
 
-    title = f"{escape(name)} completed {escape(course)}"
-    description = f"Certificate of completion for {escape(course)} at Infosec Dairies."
+    safe_name = escape(name)
+    safe_course = escape(course)
+    safe_date = escape(date)
+
+    title = f"{safe_name} completed {safe_course}"
+    description = f"Certificate of completion for {safe_course} at Infosec Dairies."
     if date:
-        description = f"Certificate of completion for {escape(course)} at Infosec Dairies ({escape(date)})."
+        description = f"Certificate of completion for {safe_course} at Infosec Dairies ({safe_date})."
 
     if not (img.startswith("http://") or img.startswith("https://")):
         img = ""
 
     page_url = request.build_absolute_uri()
+
+    og_image_meta = f'<meta property="og:image" content="{escape(img)}" />' if img else ""
+    twitter_image_meta = f'<meta name="twitter:image" content="{escape(img)}" />' if img else ""
 
     html = f"""<!doctype html>
 <html lang=\"en\">
@@ -105,11 +112,11 @@ def certificate_share(request):
     <meta property=\"og:description\" content=\"{description}\" />
     <meta property=\"og:type\" content=\"website\" />
     <meta property=\"og:url\" content=\"{escape(page_url)}\" />
-    {f'<meta property=\"og:image\" content=\"{escape(img)}\" />' if img else ''}
+    {og_image_meta}
     <meta name=\"twitter:card\" content=\"summary_large_image\" />
     <meta name=\"twitter:title\" content=\"{title}\" />
     <meta name=\"twitter:description\" content=\"{description}\" />
-    {f'<meta name=\"twitter:image\" content=\"{escape(img)}\" />' if img else ''}
+    {twitter_image_meta}
     <meta http-equiv=\"refresh\" content=\"0; url=https://www.infosecdairies.io/\" />
   </head>
   <body></body>
