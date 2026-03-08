@@ -37,7 +37,7 @@ def _send_html_email(subject: str, text_body: str, html_body: str, to_email: str
 
 def get_otp_email_template(code: str, brand_color: str = "#0891b2") -> tuple[str, str]:
     """Return (text_body, html_body) for OTP email."""
-    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo.png"
+    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo-3K6bivW-.png"
     
     text_body = f"""Welcome to Infosec Dairies!
 
@@ -123,7 +123,7 @@ Infosec Dairies Team"""
 
 def get_payment_receipt_template(course_title: str, amount: str, order_id: str, payment_id: str, user_name: str) -> tuple[str, str]:
     """Return (text_body, html_body) for payment receipt email."""
-    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo.png"
+    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo-3K6bivW-.png"
     
     text_body = f"""Payment Confirmation
 
@@ -238,7 +238,7 @@ Infosec Dairies Team"""
 
 def get_certificate_template(download_url: str, course_name: str = "your course") -> tuple[str, str]:
     """Return (text_body, html_body) for certificate email."""
-    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo.png"
+    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo-3K6bivW-.png"
     
     text_body = f"""🎉 Congratulations!
 
