@@ -44,6 +44,8 @@ const LessonViewer = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
 
+  const formatModuleId = (id: string) => id.replace(/^[a-z]+-/, "");
+
   // Normalize backend slugs separately for course metadata vs lesson content
   // Course metadata (data/courses.ts) uses one set of IDs, while lessonContent
   // still uses a legacy ID for the SOC fundamentals course.
@@ -604,7 +606,7 @@ const LessonViewer = () => {
                   {course.modules.map((module) => (
                     <div key={module.id}>
                       <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        {module.id}. {module.title}
+                        {formatModuleId(module.id)}. {module.title}
                       </div>
                       <div className="space-y-0.5">
                         {module.lessons.map((lesson) => {

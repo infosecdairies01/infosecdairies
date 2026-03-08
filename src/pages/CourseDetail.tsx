@@ -161,8 +161,8 @@ const CourseDetail = () => {
 
   const isLockedForPayment = isPaidCourse && !isEnrolled;
 
-  const effectiveCompletedLessonIds = isLockedForPayment ? [] : completedLessonIds;
-  const effectiveQuizScores = isLockedForPayment ? ({} as Record<string, number>) : quizScores;
+  const effectiveCompletedLessonIds = !isEnrolled || isLockedForPayment ? [] : completedLessonIds;
+  const effectiveQuizScores = !isEnrolled || isLockedForPayment ? ({} as Record<string, number>) : quizScores;
 
   useEffect(() => {
     if (!slug) return;
@@ -387,6 +387,11 @@ const CourseDetail = () => {
       return;
     }
 
+    if (!isEnrolled) {
+      setCompletedLessonIds([]);
+      return;
+    }
+
     const accessToken = localStorage.getItem("accessToken");
     if (!slug) {
       setCompletedLessonIds([]);
@@ -438,7 +443,7 @@ const CourseDetail = () => {
     };
 
     fetchProgress();
-  }, [slug, isCourseProgressEnabled, navigate]);
+  }, [slug, isCourseProgressEnabled, isEnrolled, navigate]);
 
   // Get course-specific background image
   const courseBgImage = useMemo(() => {
@@ -481,6 +486,8 @@ const CourseDetail = () => {
       </main>
     );
   }
+
+  const formatModuleId = (id: string) => id.replace(/^[a-z]+-/, "");
 
   const toggleModule = (moduleId: string) => {
     setOpenModules((prev) =>
@@ -1104,7 +1111,7 @@ const CourseDetail = () => {
                         <CollapsibleTrigger className="relative w-full px-6 py-4 pl-7 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
                           <div className="flex items-center gap-3">
                             <span className="text-base font-semibold text-foreground">
-                              {module.id}. {module.title}
+                              {formatModuleId(module.id)}. {module.title}
                             </span>
                             {module.badge}
                           </div>
