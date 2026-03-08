@@ -209,7 +209,7 @@ const CourseCheckout = () => {
     return (
       <main className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-center">
+        <div className="pt-20 pb-16 px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
       </main>
@@ -220,7 +220,7 @@ const CourseCheckout = () => {
     return (
       <main className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto text-center">
+        <div className="pt-20 pb-16 px-4 md:px-8 max-w-7xl mx-auto text-center">
           <h1 className="text-2xl font-bold mb-4">Course not found</h1>
           <Button onClick={() => navigate("/courses")}>Browse Courses</Button>
         </div>
@@ -231,7 +231,7 @@ const CourseCheckout = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
+      <div className="pt-20 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
         <div className="mb-6">
           <Button variant="ghost" onClick={() => navigate(`/courses/${slug}`)} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />

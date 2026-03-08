@@ -462,7 +462,7 @@ const CourseDetail = () => {
     return (
       <main className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-24 flex items-center justify-center">
+        <div className="pt-20 flex items-center justify-center">
           <p className="text-muted-foreground">Loading course...</p>
         </div>
       </main>
@@ -473,7 +473,7 @@ const CourseDetail = () => {
     return (
       <main className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-24 flex items-center justify-center">
+        <div className="pt-20 flex items-center justify-center">
           <p className="text-red-500">
             {error ?? "Course not found for this slug."}
           </p>

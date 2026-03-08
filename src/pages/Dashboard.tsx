@@ -229,7 +229,7 @@ const Dashboard = () => {
     <main className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
+      <div className="pt-20 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
         {/* Welcome Header */}
         <div className="mb-8 animate-fade-up">
           <h1 className="text-3xl md:text-4xl font-bold mb-2 flex flex-wrap items-center gap-3">
