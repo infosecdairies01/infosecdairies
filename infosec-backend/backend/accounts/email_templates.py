@@ -18,6 +18,10 @@ def _send_html_email(subject: str, text_body: str, html_body: str, to_email: str
             to_email,
         )
         
+        # Format from_email with sender name if not already formatted
+        if "<" not in from_email:
+            from_email = f"Infosec Dairies <{from_email}>"
+        
         msg = EmailMultiAlternatives(
             subject=subject,
             body=text_body,
@@ -33,6 +37,8 @@ def _send_html_email(subject: str, text_body: str, html_body: str, to_email: str
 
 def get_otp_email_template(code: str, brand_color: str = "#0891b2") -> tuple[str, str]:
     """Return (text_body, html_body) for OTP email."""
+    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo.png"
+    
     text_body = f"""Welcome to Infosec Dairies!
 
 Your email verification code is: {code}
@@ -62,7 +68,8 @@ Infosec Dairies Team"""
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, {brand_color} 0%, #06b6d4 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">🔒 Infosec Dairies</h1>
+                            <img src="{logo_url}" alt="Infosec Dairies" width="60" height="60" style="margin-bottom: 15px; border-radius: 12px;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Infosec Dairies</h1>
                             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Secure Your Digital Future</p>
                         </td>
                     </tr>
@@ -116,6 +123,8 @@ Infosec Dairies Team"""
 
 def get_payment_receipt_template(course_title: str, amount: str, order_id: str, payment_id: str, user_name: str) -> tuple[str, str]:
     """Return (text_body, html_body) for payment receipt email."""
+    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo.png"
+    
     text_body = f"""Payment Confirmation
 
 Hi {user_name},
@@ -149,7 +158,7 @@ Infosec Dairies Team"""
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
-                            <div style="font-size: 60px; margin-bottom: 10px;">✅</div>
+                            <img src="{logo_url}" alt="Infosec Dairies" width="60" height="60" style="margin-bottom: 15px; border-radius: 12px; background: white; padding: 5px;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Payment Successful!</h1>
                             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Your enrollment is confirmed</p>
                         </td>
@@ -229,6 +238,8 @@ Infosec Dairies Team"""
 
 def get_certificate_template(download_url: str, course_name: str = "your course") -> tuple[str, str]:
     """Return (text_body, html_body) for certificate email."""
+    logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo.png"
+    
     text_body = f"""🎉 Congratulations!
 
 You have successfully completed {course_name}!
@@ -259,7 +270,7 @@ P.S. Share your achievement on LinkedIn and tag us!"""
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 50px 30px; text-align: center;">
-                            <div style="font-size: 80px; margin-bottom: 15px;">🏆</div>
+                            <img src="{logo_url}" alt="Infosec Dairies" width="70" height="70" style="margin-bottom: 20px; border-radius: 12px; background: white; padding: 5px;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700;">Congratulations!</h1>
                             <p style="color: rgba(255,255,255,0.9); margin: 15px 0 0 0; font-size: 18px;">You've earned your certificate</p>
                         </td>
