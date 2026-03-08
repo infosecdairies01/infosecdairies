@@ -165,24 +165,29 @@ const Dashboard = () => {
                 },
               );
 
+              let completedIds: string[] = [];
+
               if (progressRes.ok) {
                 const progressData: any[] = await progressRes.json();
-                const completedIds = progressData
+                completedIds = progressData
                   .map((item) =>
                     item && item.lesson_id != null ? String(item.lesson_id) : null,
                   )
                   .filter((id: string | null): id is string => Boolean(id));
+              } else {
+                const completedKey = `completed_lessons_${course.slug}`;
+                completedIds = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
+              }
 
-                if (staticCourse) {
-                  const allLessonIds = staticCourse.modules.flatMap((m) =>
-                    m.lessons.map((l) => l.id),
-                  );
-                  completedLessons = allLessonIds.filter((id) =>
-                    completedIds.includes(id),
-                  ).length;
-                } else {
-                  completedLessons = completedIds.length;
-                }
+              if (staticCourse) {
+                const allLessonIds = staticCourse.modules.flatMap((m) =>
+                  m.lessons.map((l) => l.id),
+                );
+                completedLessons = allLessonIds.filter((id) =>
+                  completedIds.includes(id),
+                ).length;
+              } else {
+                completedLessons = completedIds.length;
               }
             } catch {
               // best-effort; leave completedLessons at 0 on failure

@@ -259,7 +259,7 @@ STORAGES = {
 }
 
 # Media files (uploaded certificates)
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # In development, send emails (including OTP codes) to the console so
