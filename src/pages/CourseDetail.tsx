@@ -51,7 +51,16 @@ const courseBackgrounds: Record<string, string> = {
 };
 
 const certificateTemplatesBySlug: Record<string, string> = {
-  "log-analysis-for-beginners": "/certs/log-analysis-for-beginners.jpg",
+  "blue-team-soc-fundamentals": "/certs/blue team soc analyst.jpeg",
+  "detection-engineering-basics": "/certs/Detection Engineering Basics course copy.jpg.jpeg",
+  "incident-response-fundamentals": "/certs/Incident Response course copy.jpg.jpeg",
+  "log-analysis-for-beginners": "/certs/Log Analysis for Beginners course copy FINAL.jpg",
+  "malware-analysis-fundamentals": "/certs/Malware Analysis Fundamentals Courses copy.jpg.jpeg",
+  "network-fundamentals": "/certs/network fundaments.jpeg",
+  "network-security-monitoring": "/certs/Network Security Monitoring course copy.jpg.jpeg",
+  "siem-fundamentals": "/certs/SIEM Fundamentals course copy.jpg.jpeg",
+  "soc-analyst-path": "/certs/soc analyst learing path.jpeg",
+  "threat-hunting-fundamentals": "/certs/Threat Hunting Fundamentals course copy.jpg.jpeg",
 };
 
 const wrapText = (
@@ -689,7 +698,7 @@ const CourseDetail = () => {
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();
       img.onerror = () => reject(new Error("Failed to load certificate template"));
-      img.src = imageSrc;
+      img.src = encodeURI(imageSrc);
     });
 
     if (document.fonts) {
@@ -724,18 +733,6 @@ const CourseDetail = () => {
 
     const xLeft = Math.round(w * 0.075);
 
-    // Course title (green, near top-left)
-    ctx.fillStyle = "#61FF78";
-    ctx.font = `600 ${Math.round(h * 0.045)}px "Montserrat", Inter, Arial, sans-serif`;
-    wrapText(
-      ctx,
-      course.title,
-      xLeft,
-      Math.round(h * 0.22),
-      Math.round(w * 0.55),
-      Math.round(h * 0.055)
-    );
-
     // Student name (big, white)
     ctx.fillStyle = "#FFFFFF";
     ctx.font = `700 ${Math.round(h * 0.075)}px "Playfair Display", Georgia, serif`;
@@ -752,6 +749,36 @@ const CourseDetail = () => {
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.font = `500 ${Math.round(h * 0.028)}px "Montserrat", Inter, Arial, sans-serif`;
     ctx.fillText(issueDate, xLeft, Math.round(h * 0.835));
+
+    // Date of Issue label (below the date)
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.font = `400 ${Math.round(h * 0.022)}px "Montserrat", Inter, Arial, sans-serif`;
+    ctx.fillText("Date of Issue", xLeft, Math.round(h * 0.875));
+
+    // QR Code (bottom right) - link to course page
+    try {
+      const courseUrl = `https://www.infosecdairies.io/courses/${slug}`;
+      const qrDataUrl = await QRCode.toDataURL(courseUrl, {
+        width: Math.round(Math.min(w, h) * 0.12),
+        margin: 1,
+        color: {
+          dark: "#FFFFFF",
+          light: "#04162B",
+        },
+      });
+      const qrImg = new Image();
+      await new Promise<void>((resolve, reject) => {
+        qrImg.onload = () => resolve();
+        qrImg.onerror = () => reject(new Error("Failed to load QR code"));
+        qrImg.src = qrDataUrl;
+      });
+      const qrSize = Math.round(Math.min(w, h) * 0.12);
+      const qrX = w - qrSize - Math.round(w * 0.05);
+      const qrY = h - qrSize - Math.round(h * 0.05);
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+    } catch {
+      // best-effort: skip QR if generation fails
+    }
 
     const safeTitle = course.title.replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "");
     const fileName = `${safeTitle}-certificate.png`;
