@@ -64,7 +64,7 @@ const CourseCheckout = () => {
 
   // Promo code config - only for Blue Team & SOC Fundamentals
   const PROMO_CODES: Record<string, string[]> = {
-    "blue-team-soc-fundamentals": ["INFO100"],
+    "blue-team-soc-fundamentals": ["HEHE100"],
   };
 
   const hasPromoCodes = slug && PROMO_CODES[slug]?.length > 0;
