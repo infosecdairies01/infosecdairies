@@ -78,9 +78,9 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def is_auto_signup_allowed(self, request, sociallogin):
         """
-        Disable auto-signup. Our frontend flow handles user creation and OTP.
+        Allow auto-signup. The adapter's pre_social_login handles user linking.
         """
-        return False
+        return True
 
     def get_connect_redirect_url(self, request, socialaccount):
         """
