@@ -127,6 +127,16 @@ if _railway_public_domain:
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
+# CSRF and Session cookie settings for production
+CSRF_COOKIE_SECURE = not DEBUG  # Require HTTPS in production
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access if needed
+CSRF_COOKIE_SAMESITE = 'Lax'  # Allow cross-site requests with caution
+CSRF_COOKIE_DOMAIN = None  # Use current domain
+
+SESSION_COOKIE_SECURE = not DEBUG  # Require HTTPS in production
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_DOMAIN = None
+
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
