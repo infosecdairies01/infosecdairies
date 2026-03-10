@@ -28,7 +28,7 @@ ALL_COURSES_BUNDLE_PRICE_INR = 3999
 
 # Valid promo codes per course slug (case-insensitive)
 VALID_PROMO_CODES: dict[str, list[str]] = {
-    "blue-team-soc-fundamentals": ["INFO100"],
+    "blue-team-soc-fundamentals": ["HEHE100"],
 }
 
 
