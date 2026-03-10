@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from courses.models import Course, Enrollment
 from accounts.email_templates import _send_html_email, get_payment_receipt_template
 
-from .models import CoursePurchase
+from .models import CoursePurchase, PromoCode, PromoCodeUsage
 
 
 logger = logging.getLogger(__name__)
@@ -79,9 +79,27 @@ def create_order(request):
     if not course_slug:
         return Response({"detail": "course_slug is required"}, status=400)
 
-    # Check if valid promo code applied for this course
-    valid_codes = VALID_PROMO_CODES.get(course_slug, [])
-    is_promo_valid = promo_code and promo_code in valid_codes
+    # Check promo code validity using PromoCode model with usage limits
+    is_promo_valid = False
+    promo_code_obj = None
+    if promo_code:
+        try:
+            promo_code_obj = PromoCode.objects.get(
+                code=promo_code,
+                course_slug=course_slug,
+                is_active=True
+            )
+            if promo_code_obj.is_valid_for_user(request.user):
+                is_promo_valid = True
+            else:
+                if promo_code_obj.current_uses >= promo_code_obj.max_uses and promo_code_obj.max_uses > 0:
+                    return Response({"detail": "This promo code has reached its usage limit"}, status=400)
+                elif PromoCodeUsage.objects.filter(code=promo_code, user=request.user).exists():
+                    return Response({"detail": "You have already used this promo code"}, status=400)
+                else:
+                    return Response({"detail": "Invalid or inactive promo code"}, status=400)
+        except PromoCode.DoesNotExist:
+            return Response({"detail": "Invalid promo code for this course"}, status=400)
 
     is_bundle = course_slug == ALL_COURSES_BUNDLE_SLUG
     course = None
@@ -119,6 +137,11 @@ def create_order(request):
                 if not enrollment.is_paid:
                     enrollment.is_paid = True
                     enrollment.save(update_fields=["is_paid"])
+        
+        # Record promo code usage if applicable
+        if is_promo_valid and promo_code_obj:
+            promo_code_obj.record_usage(request.user, course_slug)
+        
         return Response({"free": True, "course_slug": course_slug, "amount_inr": 0})
 
     existing_paid = CoursePurchase.objects.filter(

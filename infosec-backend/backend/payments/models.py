@@ -2,6 +2,59 @@ from django.conf import settings
 from django.db import models
 
 
+class PromoCode(models.Model):
+    """Promo codes with usage limits per course."""
+    code = models.CharField(max_length=50, unique=True, db_index=True)
+    course_slug = models.SlugField(db_index=True)
+    max_uses = models.PositiveIntegerField(default=0, help_text="Maximum unique users allowed (0 = unlimited)")
+    current_uses = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["code", "course_slug"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.code} ({self.current_uses}/{self.max_uses})"
+
+    def is_valid_for_user(self, user) -> bool:
+        """Check if promo code can be used by this user."""
+        if not self.is_active:
+            return False
+        if self.max_uses > 0 and self.current_uses >= self.max_uses:
+            return False
+        # Check if user already used this code
+        if PromoCodeUsage.objects.filter(code=self.code, user=user).exists():
+            return False
+        return True
+
+    def record_usage(self, user, course_slug: str):
+        """Record that a user used this promo code."""
+        PromoCodeUsage.objects.get_or_create(
+            code=self.code,
+            user=user,
+            defaults={"course_slug": course_slug}
+        )
+        self.current_uses = PromoCodeUsage.objects.filter(code=self.code).count()
+        self.save(update_fields=["current_uses"])
+
+
+class PromoCodeUsage(models.Model):
+    """Tracks which users have used which promo codes."""
+    code = models.CharField(max_length=50, db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    course_slug = models.SlugField()
+    used_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("code", "user")
+        indexes = [
+            models.Index(fields=["code", "used_at"]),
+        ]
+
+
 class CoursePurchase(models.Model):
     STATUS_CREATED = "created"
     STATUS_PAID = "paid"
