@@ -21,9 +21,21 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         
         If a user with the same email already exists, connect the social account
         to that existing user instead of creating a new one.
+        Also ensures user is marked as verified when using social auth.
         """
         # Skip if user is already connected
         if sociallogin.user.pk:
+            # User already exists - ensure they're marked as verified for social login
+            user = sociallogin.user
+            updated = False
+            if not user.is_verified:
+                user.is_verified = True
+                updated = True
+            if not user.is_active:
+                user.is_active = True
+                updated = True
+            if updated:
+                user.save(update_fields=['is_verified', 'is_active'])
             return
 
         email = sociallogin.user.email
@@ -49,16 +61,17 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 sociallogin.user = existing_user
                 sociallogin.account.user = existing_user
                 
-                # Mark as verified since they're using social auth
-                if not existing_user.is_verified:
-                    existing_user.is_verified = True
-                    existing_user.save(update_fields=['is_verified'])
+            # Always ensure user is verified and active when using social auth
+            updated = False
+            if not existing_user.is_verified:
+                existing_user.is_verified = True
+                updated = True
+            if not existing_user.is_active:
+                existing_user.is_active = True
+                updated = True
+            if updated:
+                existing_user.save(update_fields=['is_verified', 'is_active'])
                 
-                # If user was inactive, activate them
-                if not existing_user.is_active:
-                    existing_user.is_active = True
-                    existing_user.save(update_fields=['is_active'])
-                    
         except User.DoesNotExist:
             # No existing user with this email - proceed with new account creation
             pass
