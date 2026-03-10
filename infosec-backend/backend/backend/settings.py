@@ -179,6 +179,15 @@ LOGIN_REDIRECT_URL = f"{_frontend_url}/auth/google-callback"
 
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http" if DEBUG else "https"
 
+# allauth settings to prevent duplicate users and ensure proper account linking
+ACCOUNT_UNIQUE_EMAIL = True  # Critical: prevents creating new users with same email
+ACCOUNT_EMAIL_VERIFICATION = "none"  # We handle verification via OTP manually
+SOCIALACCOUNT_AUTO_SIGNUP = False  # Don't auto-signup, let our flow handle it
+SOCIALACCOUNT_QUERY_EMAIL = True  # Always request email from social providers
+
+# Ensure social accounts connect to existing users with same email
+SOCIALACCOUNT_ADAPTER = "accounts.adapter.CustomSocialAccountAdapter"
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
