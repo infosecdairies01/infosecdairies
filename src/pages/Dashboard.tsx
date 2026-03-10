@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import {
   BookOpen,
@@ -53,7 +53,8 @@ const getDifficultyColor = (difficulty: string) => {
 };
 
 const Dashboard = () => {
-  const { user, login } = useAuth();
+  const { user, login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
@@ -63,6 +64,12 @@ const Dashboard = () => {
   );
   const [nameSaving, setNameSaving] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const fetchEnrollments = async () => {
