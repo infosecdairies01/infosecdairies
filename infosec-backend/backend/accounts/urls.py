@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     register,
     login,
+    verify_token,
     google_jwt,
     update_profile,
     google_start_otp,
@@ -14,6 +15,7 @@ from .views import (
 urlpatterns = [
     path("register/", register, name="auth-register"),
     path("login/", login, name="auth-login"),
+    path("verify/", verify_token, name="auth-verify-token"),
     path("verify-email/", verify_email, name="auth-verify-email"),
     path("resend-verification-otp/", resend_verification_otp, name="auth-resend-verification-otp"),
     path("google/jwt/", google_jwt, name="auth-google-jwt"),

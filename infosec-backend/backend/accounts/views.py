@@ -11,7 +11,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 from .models import LoginOtp
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
@@ -335,3 +336,23 @@ def login(request):
             status=status.HTTP_200_OK,
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def verify_token(request):
+    """Verify if the provided JWT access token is valid.
+    
+    This endpoint cryptographically validates the token signature and expiry.
+    Used by frontend to prevent response manipulation attacks.
+    """
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return Response({"valid": False, "detail": "Authorization header required"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    token = auth_header.split(" ")[1]
+    try:
+        AccessToken(token)  # Validates signature, expiry, and issuer
+        return Response({"valid": True}, status=status.HTTP_200_OK)
+    except TokenError as e:
+        return Response({"valid": False, "detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
