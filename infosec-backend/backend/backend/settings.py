@@ -82,6 +82,7 @@ SITE_ID = 2  # Use the Site with domain 127.0.0.1:8000
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'backend.middleware.SecurityHeadersMiddleware',  # CSP and Permissions-Policy
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -126,6 +127,15 @@ if _railway_public_domain:
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
+
+# Security Headers
+X_FRAME_OPTIONS = "DENY"  # Prevents clickjacking
+SECURE_CONTENT_TYPE_NOSNIFF = True  # X-Content-Type-Options: nosniff
+SECURE_BROWSER_XSS_FILTER = True  # X-XSS-Protection: 1; mode=block
+REFERRER_POLICY = "strict-origin-when-cross-origin"  # Referrer-Policy
+
+# Note: CSP and Permissions-Policy require django-csp package or custom middleware
+# Will add those next
 
 # CSRF and Session cookie settings for production
 CSRF_COOKIE_SECURE = not DEBUG  # Require HTTPS in production
