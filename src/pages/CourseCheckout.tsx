@@ -62,27 +62,10 @@ const CourseCheckout = () => {
     });
   };
 
-  // Promo code config - only for Blue Team & SOC Fundamentals
-  const PROMO_CODES: Record<string, string[]> = {
-    "blue-team-soc-fundamentals": ["HEHE100"],
-  };
-
-  const hasPromoCodes = slug && PROMO_CODES[slug]?.length > 0;
-
   const applyPromoCode = () => {
-    if (!slug) return;
     setPromoError(null);
-    
-    const validCodes = PROMO_CODES[slug] || [];
-    const trimmedCode = promoCode.trim().toUpperCase();
-    
-    if (validCodes.includes(trimmedCode)) {
-      setPromoApplied(true);
-      setDisplayAmountInr(0);
-    } else {
-      setPromoError("Invalid promo code for this course");
-      setPromoApplied(false);
-    }
+    if (!promoCode.trim()) return;
+    setPromoApplied(true);
   };
 
   const removePromoCode = () => {
@@ -305,7 +288,7 @@ const CourseCheckout = () => {
               </div>
 
               {/* Promo Code Section */}
-              {hasPromoCodes && (
+              {slug !== ALL_COURSES_BUNDLE_SLUG && typeof displayAmountInr === "number" && displayAmountInr > 0 && (
                 <div className="pt-2 border-t border-border">
                   <label className="text-sm font-medium text-muted-foreground">Promo Code</label>
                   <div className="flex gap-2 mt-1">
@@ -338,7 +321,7 @@ const CourseCheckout = () => {
                   </div>
                   {promoError && <p className="text-sm text-red-500 mt-1">{promoError}</p>}
                   {promoApplied && (
-                    <p className="text-sm text-green-500 mt-1">Promo code applied! Course is now FREE.</p>
+                    <p className="text-sm text-green-500 mt-1">Promo code applied! You can proceed to checkout.</p>
                   )}
                 </div>
               )}
