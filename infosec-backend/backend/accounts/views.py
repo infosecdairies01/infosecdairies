@@ -4,11 +4,12 @@ import logging
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils.html import strip_tags
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -17,6 +18,12 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .models import LoginOtp
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from .email_templates import _send_html_email, get_otp_email_template
+from .throttles import (
+    EmailRateThrottle,
+    LoginIPRateThrottle,
+    OTPIPRateThrottle,
+    RegisterIPRateThrottle,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -92,6 +99,7 @@ def google_jwt(request):
 @api_view(["POST"])
 @authentication_classes([])  # use Django's session auth directly, skip DRF CSRF
 @permission_classes([AllowAny])
+@throttle_classes([OTPIPRateThrottle, EmailRateThrottle])
 def google_start_otp(request):
     """Start OTP verification for a logged-in Google user.
 
@@ -135,6 +143,7 @@ def google_start_otp(request):
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
+@throttle_classes([OTPIPRateThrottle, EmailRateThrottle])
 def google_verify_otp(request):
     """Verify the OTP and issue JWT tokens for the authenticated user."""
 
@@ -182,7 +191,14 @@ def update_profile(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    user.full_name = full_name
+    raw = str(full_name).strip()
+    cleaned = strip_tags(raw).strip()
+    if cleaned != raw:
+        return Response({"detail": "Invalid characters in full_name"}, status=status.HTTP_400_BAD_REQUEST)
+    if len(cleaned) < 2 or len(cleaned) > 255:
+        return Response({"detail": "full_name length is invalid"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.full_name = cleaned
     user.save()
 
     return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
@@ -190,6 +206,7 @@ def update_profile(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([RegisterIPRateThrottle, EmailRateThrottle])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
     if not serializer.is_valid():
@@ -224,6 +241,7 @@ def register(request):
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
+@throttle_classes([OTPIPRateThrottle, EmailRateThrottle])
 def verify_email(request):
     """Verify email OTP and activate user account."""
     email = request.data.get("email")
@@ -281,6 +299,7 @@ def verify_email(request):
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
+@throttle_classes([OTPIPRateThrottle, EmailRateThrottle])
 def resend_verification_otp(request):
     """Resend verification OTP for pending registration."""
     email = request.data.get("email")
@@ -323,6 +342,7 @@ def resend_verification_otp(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([LoginIPRateThrottle, EmailRateThrottle])
 def login(request):
     serializer = LoginSerializer(data=request.data, context={"request": request})
     if serializer.is_valid():
