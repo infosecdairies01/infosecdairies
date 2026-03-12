@@ -32,9 +32,6 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 if getattr(user, "auth_provider", None) != "google":
                     user.auth_provider = "google"
                     updated = True
-                if user.has_usable_password():
-                    user.set_unusable_password()
-                    updated = True
             if not user.is_verified:
                 user.is_verified = True
                 updated = True
@@ -79,9 +76,6 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             if getattr(sociallogin.account, "provider", None) == "google" and getattr(existing_user, "auth_provider", None) != "google":
                 existing_user.auth_provider = "google"
                 updated = True
-            if getattr(sociallogin.account, "provider", None) == "google" and existing_user.has_usable_password():
-                existing_user.set_unusable_password()
-                updated = True
             if updated:
                 existing_user.save()
                 
@@ -94,8 +88,10 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             try:
                 if getattr(user, "auth_provider", None) != "google":
                     user.auth_provider = "google"
-                user.is_active = True
-                user.is_verified = True
+                # Brand new Google user: require onboarding + OTP before issuing JWT.
+                user.set_unusable_password()
+                user.is_active = False
+                user.is_verified = False
                 user.save()
             except Exception:
                 pass
