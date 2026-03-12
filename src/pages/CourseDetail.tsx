@@ -201,53 +201,6 @@ const CourseDetail = () => {
     loadCourse();
   }, [slug]);
 
-  // Check enrollment status for the current user (only for fully enabled courses)
-  useEffect(() => {
-    if (!slug || !isCourseProgressEnabled) return;
-
-    const checkEnrollment = async () => {
-      try {
-        setCheckingEnrollment(true);
-        const accessToken = localStorage.getItem("accessToken");
-        if (!accessToken) {
-          // Not logged in - just set as not enrolled, don't redirect
-          setIsEnrolled(false);
-          setCheckingEnrollment(false);
-          return;
-        }
-
-        const res = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/enrollment/`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (res.status === 401) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("userEmail");
-          navigate("/auth");
-          return;
-        }
-
-        if (res.ok) {
-          const data = await res.json();
-          setIsEnrolled(true);
-        }
-      } catch {
-        // best-effort; keep existing state on failure
-      } finally {
-        setCheckingEnrollment(false);
-      }
-    };
-
-    checkEnrollment();
-  }, [slug, isCourseProgressEnabled, navigate]);
-
   // Load quiz scores from localStorage
   useEffect(() => {
     if (!slug) return;
