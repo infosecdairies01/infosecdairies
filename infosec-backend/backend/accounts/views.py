@@ -99,9 +99,10 @@ def google_jwt(request):
             logger.info("google_onboarding: user not found for user_id=%s", str(user_id))
             return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Existing Google (or linked) user: if already verified and has a usable password
-    # (onboarding completed), issue JWT.
-    if getattr(user, "is_verified", False) and user.is_active and user.has_usable_password():
+    # Existing Google (or linked) user: if already verified and active, issue JWT.
+    # Google-only accounts may not have a usable password, but should still be able
+    # to sign in and access their existing purchases/courses.
+    if getattr(user, "is_verified", False) and user.is_active:
         tokens = _jwt_for_user(user)
         data = {"user": UserSerializer(user).data, "tokens": tokens}
         return Response(data, status=status.HTTP_200_OK)
@@ -183,7 +184,9 @@ def google_onboarding(request):
 
     user.full_name = cleaned
     user.set_password(password)
-    user.is_active = False
+    # Keep the user active so they are not redirected to /accounts/inactive/.
+    # OTP verification (is_verified) still gates token issuance.
+    user.is_active = True
     user.is_verified = False
     user.save(update_fields=["full_name", "password", "is_active", "is_verified"])
 
