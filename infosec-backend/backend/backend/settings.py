@@ -193,6 +193,12 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
+    "DEFAULT_THROTTLE_RATES": {
+        "auth_login_ip": config("AUTH_THROTTLE_LOGIN_IP", default="10/min"),
+        "auth_register_ip": config("AUTH_THROTTLE_REGISTER_IP", default="5/min"),
+        "auth_otp_ip": config("AUTH_THROTTLE_OTP_IP", default="5/min"),
+        "auth_email": config("AUTH_THROTTLE_EMAIL", default="5/min"),
+    },
 }
 
 SIMPLE_JWT = {
@@ -231,6 +237,14 @@ if DATABASE_URL:
     )
 
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "infosecdairies-auth-cache",
+    }
+}
+
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
@@ -240,12 +254,18 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 10,
+        },
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'accounts.validators.PasswordComplexityValidator',
     },
 ]
 
@@ -289,6 +309,9 @@ EMAIL_BACKEND = config(
     default="django.core.mail.backends.console.EmailBackend",
 )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="infosecdairies@gmail.com")
+
+BLOCK_DISPOSABLE_EMAILS = config("BLOCK_DISPOSABLE_EMAILS", default=True, cast=bool)
+
 
 EMAIL_HOST = config("EMAIL_HOST", default="")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
