@@ -205,28 +205,31 @@ def update_profile(request):
 
 
 @api_view(["POST"])
+@csrf_exempt
+@authentication_classes([])
 @permission_classes([AllowAny])
 @throttle_classes([RegisterIPRateThrottle, EmailRateThrottle])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     # Create user but keep inactive until email verified
     user = serializer.save(is_active=False)
-    
+
     # Generate OTP for email verification
     import random
+
     code = f"{random.randint(0, 999999):06d}"
     expires_at = timezone.now() + timedelta(minutes=10)
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
-    
+
     # Send verification email
     subject = "Verify your Infosec Dairies account"
     text_body, html_body = get_otp_email_template(code)
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
     _send_html_email(subject, text_body, html_body, user.email, from_email=from_email, context="register")
-    
+
     return Response(
         {
             "detail": "Verification code sent to your email. Please verify to complete registration.",
@@ -234,6 +237,87 @@ def register(request):
             "requires_verification": True,
         },
         status=status.HTTP_201_CREATED,
+    )
+
+
+@csrf_exempt
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+@throttle_classes([OTPIPRateThrottle, EmailRateThrottle])
+def password_reset_request(request):
+    email = (request.data.get("email") or "").strip().lower()
+    if not email:
+        return Response({"detail": "email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    user = User.objects.filter(email=email).first()
+    if user:
+        import random
+
+        code = f"{random.randint(0, 999999):06d}"
+        expires_at = timezone.now() + timedelta(minutes=10)
+        LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
+
+        subject = "Reset your Infosec Dairies password"
+        text_body, html_body = get_otp_email_template(code)
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
+        _send_html_email(subject, text_body, html_body, user.email, from_email=from_email, context="password_reset_request")
+
+    return Response(
+        {"detail": "If an account exists, a password reset code has been sent."},
+        status=status.HTTP_200_OK,
+    )
+
+
+@csrf_exempt
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+@throttle_classes([OTPIPRateThrottle, EmailRateThrottle])
+def password_reset_confirm(request):
+    email = (request.data.get("email") or "").strip().lower()
+    code = (request.data.get("code") or "").strip()
+    new_password = request.data.get("new_password")
+
+    if not email or not code or not new_password:
+        return Response(
+            {"detail": "email, code and new_password are required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.password_validation import validate_password
+    from django.core.exceptions import ValidationError
+
+    User = get_user_model()
+    user = User.objects.filter(email=email).first()
+    if not user:
+        return Response({"detail": "Invalid email or code"}, status=status.HTTP_400_BAD_REQUEST)
+
+    otp = LoginOtp.objects.filter(user=user, code=code).order_by("-created_at").first()
+    if not otp or not otp.is_valid():
+        return Response({"detail": "Invalid or expired code"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        validate_password(new_password, user=user)
+    except ValidationError as e:
+        return Response({"detail": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+    otp.used = True
+    otp.save(update_fields=["used"])
+
+    user.set_password(new_password)
+    user.is_active = True
+    user.is_verified = True
+    user.save(update_fields=["password", "is_active", "is_verified"])
+
+    tokens = _jwt_for_user(user)
+    return Response(
+        {"detail": "Password reset successful", "user": UserSerializer(user).data, "tokens": tokens},
+        status=status.HTTP_200_OK,
     )
 
 
@@ -341,6 +425,8 @@ def resend_verification_otp(request):
 
 
 @api_view(["POST"])
+@csrf_exempt
+@authentication_classes([])
 @permission_classes([AllowAny])
 @throttle_classes([LoginIPRateThrottle, EmailRateThrottle])
 def login(request):
