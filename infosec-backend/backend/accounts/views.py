@@ -87,7 +87,8 @@ def google_jwt(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@authentication_classes([])
+@permission_classes([AllowAny])
 @throttle_classes([RegisterIPRateThrottle, EmailRateThrottle])
 def google_onboarding(request):
     """Complete Google signup by setting full_name + password, then sending OTP.
