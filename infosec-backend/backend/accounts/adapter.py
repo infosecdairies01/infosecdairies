@@ -3,6 +3,7 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 User = get_user_model()
 
@@ -107,3 +108,22 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         Return the URL to redirect to after connecting a social account.
         """
         return '/'
+
+    def get_login_redirect_url(self, request):
+        """
+        Redirect new/inactive Google users to the onboarding flow.
+        Otherwise redirect to the frontend callback for JWT exchange.
+        """
+        user = request.user
+        # Check if this is a new Google user who needs onboarding (inactive but has Google auth)
+        if (user and 
+            not user.is_active and 
+            not user.has_usable_password() and 
+            getattr(user, 'auth_provider', None) == 'google'):
+            # Get frontend URL from settings
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://www.infosecdairies.io').rstrip('/')
+            return f"{frontend_url}/google/onboarding"
+        
+        # For active/verified users, redirect to the frontend callback
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'https://www.infosecdairies.io').rstrip('/')
+        return f"{frontend_url}/auth/google-callback"
