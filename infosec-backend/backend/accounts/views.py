@@ -52,6 +52,13 @@ def _jwt_for_user(user):
     }
 
 
+def _onboarding_token_for_user(user):
+    token = AccessToken.for_user(user)
+    token["onboarding"] = True
+    token.set_exp(lifetime=timedelta(minutes=10))
+    return str(token)
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def google_jwt(request):
@@ -65,7 +72,27 @@ def google_jwt(request):
 
     user = request.user
     if not user.is_authenticated:
-        return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        token_str = auth_header.split(" ", 1)[1].strip()
+        try:
+            token = AccessToken(token_str)
+        except TokenError:
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not token.get("onboarding"):
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        user_id = token.get("user_id")
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
     # Existing Google (or linked) user: if already verified and has a usable password
     # (onboarding completed), issue JWT.
@@ -80,6 +107,7 @@ def google_jwt(request):
             "detail": "Google account linked. Complete signup to continue.",
             "email": user.email,
             "requires_onboarding": True,
+            "onboarding_token": _onboarding_token_for_user(user),
         },
         status=status.HTTP_200_OK,
     )

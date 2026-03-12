@@ -56,6 +56,12 @@ const GoogleOnboarding = () => {
       return;
     }
 
+    const onboardingToken = sessionStorage.getItem("googleOnboardingToken") || "";
+    if (!onboardingToken) {
+      setError("Authentication required. Please sign in with Google again.");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -63,6 +69,7 @@ const GoogleOnboarding = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${onboardingToken}`,
         },
         credentials: "include",
         body: JSON.stringify({ first_name: firstName, last_name: lastName, password }),
@@ -81,6 +88,7 @@ const GoogleOnboarding = () => {
       }
 
       if (data.requires_verification) {
+        sessionStorage.removeItem("googleOnboardingToken");
         setSuccess("Verification code sent! Redirecting...");
         setTimeout(() => {
           navigate(`/verify-email?email=${encodeURIComponent(data.email || email)}`, { replace: true });

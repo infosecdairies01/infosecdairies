@@ -26,6 +26,11 @@ const GoogleCallback = () => {
         const data = await res.json();
 
         if (data.requires_onboarding) {
+          if (data.onboarding_token) {
+            sessionStorage.setItem("googleOnboardingToken", String(data.onboarding_token));
+          } else {
+            sessionStorage.removeItem("googleOnboardingToken");
+          }
           navigate(`/google/onboarding?email=${encodeURIComponent(data.email || "")}`, { replace: true });
           return;
         }
