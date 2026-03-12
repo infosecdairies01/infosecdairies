@@ -12,7 +12,8 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -48,8 +49,8 @@ const Auth = () => {
     }
 
     if (!isLogin) {
-      if (!fullName) {
-        setError("Username is required for sign up.");
+      if (!firstName || !lastName) {
+        setError("First name and last name are required for sign up.");
         return;
       }
       if (password !== confirmPassword) {
@@ -67,7 +68,7 @@ const Auth = () => {
 
       const body = isLogin
         ? { email, password }
-        : { full_name: fullName, email, password };
+        : { full_name: `${firstName} ${lastName}`.trim(), email, password };
 
       const response = await fetch(apiUrl(url), {
         method: "POST",
@@ -136,7 +137,8 @@ const Auth = () => {
 
       const userData = data.user || {};
       const userEmail: string = userData.email || email;
-      const fullNameFromApi: string | undefined = userData.full_name || fullName || undefined;
+      const fullNameFromApi: string | undefined =
+        userData.full_name || `${firstName} ${lastName}`.trim() || undefined;
 
       login({ email: userEmail, fullName: fullNameFromApi, tokens });
 
@@ -174,16 +176,30 @@ const Auth = () => {
         <div className="bg-card border border-border rounded-lg p-8 animate-fade-up" style={{ animationDelay: "100ms" }}>
           <form className="space-y-4" onSubmit={handleSubmit}>
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Username</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Your username"
-                  className="bg-background"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="First name"
+                    className="bg-background"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Last name"
+                    className="bg-background"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
               </div>
             )}
 
