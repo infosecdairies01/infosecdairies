@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
-import { getCSRFToken } from "@/utils/csrf";
 import { apiUrl } from "@/services/api";
 
 const Auth = () => {
@@ -63,9 +62,7 @@ const Auth = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": getCSRFToken(),
         },
-        credentials: "include",
         body: JSON.stringify(body),
       });
 
@@ -95,6 +92,36 @@ const Auth = () => {
       }
 
       const tokens = data.tokens;
+
+      // CRITICAL: Verify token cryptographically to prevent response manipulation attacks
+      // Attacker can modify 401 response to 200 with fake tokens - this catches that
+      if (tokens?.access) {
+        const verifyResponse = await fetch(apiUrl("/api/auth/verify/"), {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${tokens.access}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        if (!verifyResponse.ok) {
+          setError("Invalid session. Please try logging in again.");
+          setLoading(false);
+          return;
+        }
+
+        const verifyData = await verifyResponse.json();
+        if (!verifyData.valid) {
+          setError("Session validation failed. Please try again.");
+          setLoading(false);
+          return;
+        }
+      } else {
+        setError("Authentication failed. Please try again.");
+        setLoading(false);
+        return;
+      }
 
       const userData = data.user || {};
       const userEmail: string = userData.email || email;
@@ -232,6 +259,17 @@ const Auth = () => {
                   ? "Sign In"
                   : "Sign Up"}
             </Button>
+
+            {isLogin && (
+              <div className="text-right">
+                <Link
+                  to={`/forgot-password?email=${encodeURIComponent(email || "")}`}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            )}
 
             <div className="mt-4 flex items-center justify-center">
               <button
