@@ -25,6 +25,7 @@ import ResourceViewer from "./pages/ResourceViewer";
 import CourseCheckout from "./pages/CourseCheckout";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
+import GoogleOnboarding from "./pages/GoogleOnboarding";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/google/onboarding" element={<GoogleOnboarding />} />
             <Route path="/auth/google-callback" element={<GoogleCallback />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />

@@ -25,6 +25,11 @@ const GoogleCallback = () => {
 
         const data = await res.json();
 
+        if (data.requires_onboarding) {
+          navigate(`/google/onboarding?email=${encodeURIComponent(data.email || "")}`, { replace: true });
+          return;
+        }
+
         // Check if Google signup requires email verification
         if (data.requires_verification) {
           navigate(`/verify-email?email=${encodeURIComponent(data.email)}`, { replace: true });

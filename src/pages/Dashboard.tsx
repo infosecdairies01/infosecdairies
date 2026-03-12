@@ -65,6 +65,8 @@ const Dashboard = () => {
   const [nameSaving, setNameSaving] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
 
+  const displayFirstName = (user?.fullName || "").trim().split(/\s+/)[0] || (user?.email ? user.email.split("@")[0] : "");
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/", { replace: true });
@@ -321,7 +323,7 @@ const Dashboard = () => {
             ) : (
               <div className="flex items-center gap-2">
                 <span className="gradient-text">
-                  {user?.fullName || user?.email?.split("@")[0] || "Blue Teamer"}
+                  {displayFirstName || "Blue Teamer"}
                 </span>
                 <button
                   type="button"
@@ -464,7 +466,7 @@ const Dashboard = () => {
                   {(user?.fullName || user?.email || "U").charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold">{user?.fullName || (user?.email ? user.email.split("@")[0] : "Your account")}</p>
+                  <p className="font-semibold">{displayFirstName || "Your account"}</p>
                   <p className="text-sm text-primary flex items-center gap-1">
                     <TrendingUp className="w-3 h-3" />
                     Blue Team Learner
