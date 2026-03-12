@@ -26,11 +26,6 @@ FREE_COURSE_SLUG = "network-fundamentals"
 ALL_COURSES_BUNDLE_SLUG = "all-courses-bundle"
 ALL_COURSES_BUNDLE_PRICE_INR = 3999
 
-# Valid promo codes per course slug (case-insensitive)
-VALID_PROMO_CODES: dict[str, list[str]] = {
-    "blue-team-soc-fundamentals": ["HEHE100", "PBRVITS", "FIX100"],
-}
-
 
 def _difficulty_price_inr(level: str) -> int:
     lvl = (level or "").strip().lower()
@@ -94,7 +89,7 @@ def create_order(request):
             else:
                 if promo_code_obj.current_uses >= promo_code_obj.max_uses and promo_code_obj.max_uses > 0:
                     return Response({"detail": "This promo code has reached its usage limit"}, status=400)
-                elif PromoCodeUsage.objects.filter(code=promo_code, user=request.user).exists():
+                elif PromoCodeUsage.objects.filter(promo_code=promo_code_obj, user=request.user).exists() or PromoCodeUsage.objects.filter(code=promo_code, user=request.user, course_slug=course_slug).exists():
                     return Response({"detail": "You have already used this promo code"}, status=400)
                 else:
                     return Response({"detail": "Invalid or inactive promo code"}, status=400)
