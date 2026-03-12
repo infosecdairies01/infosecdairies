@@ -82,7 +82,7 @@ SITE_ID = 2  # Use the Site with domain 127.0.0.1:8000
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'backend.middleware.SecurityHeadersMiddleware',  # CSP and Permissions-Policy
+    # 'backend.middleware.SecurityHeadersMiddleware',  # Temporarily disabled - may be causing issues
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
