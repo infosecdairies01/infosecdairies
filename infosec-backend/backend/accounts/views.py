@@ -67,23 +67,77 @@ def google_jwt(request):
     if not user.is_authenticated:
         return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # If user is already verified, skip OTP step and just issue JWT tokens
-    if getattr(user, "is_verified", False):
+    # Existing Google (or linked) user: if already verified and has a usable password
+    # (onboarding completed), issue JWT.
+    if getattr(user, "is_verified", False) and user.is_active and user.has_usable_password():
         tokens = _jwt_for_user(user)
         data = {"user": UserSerializer(user).data, "tokens": tokens}
         return Response(data, status=status.HTTP_200_OK)
-    
-    # New Google user - send verification OTP
+
+    # New Google user: require onboarding (set name + password) before OTP.
+    return Response(
+        {
+            "detail": "Google account linked. Complete signup to continue.",
+            "email": user.email,
+            "requires_onboarding": True,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@throttle_classes([RegisterIPRateThrottle, EmailRateThrottle])
+def google_onboarding(request):
+    """Complete Google signup by setting full_name + password, then sending OTP.
+
+    Requires the Django session (allauth) to already be authenticated.
+    """
+
+    user = request.user
+    if not user.is_authenticated:
+        return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    first_name = (request.data.get("first_name") or "").strip()
+    last_name = (request.data.get("last_name") or "").strip()
+    password = request.data.get("password")
+
+    if not first_name or not last_name or not password:
+        return Response(
+            {"detail": "first_name, last_name and password are required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    raw_full_name = f"{first_name} {last_name}".strip()
+    cleaned = strip_tags(raw_full_name).strip()
+    if cleaned != raw_full_name:
+        return Response({"detail": "Invalid characters in name"}, status=status.HTTP_400_BAD_REQUEST)
+
+    from django.contrib.auth.password_validation import validate_password
+    from django.core.exceptions import ValidationError
+
+    try:
+        validate_password(password, user=user)
+    except ValidationError as e:
+        return Response({"detail": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.full_name = cleaned
+    user.set_password(password)
+    user.is_active = False
+    user.is_verified = False
+    user.save(update_fields=["full_name", "password", "is_active", "is_verified"])
+
     import random
+
     code = f"{random.randint(0, 999999):06d}"
     expires_at = timezone.now() + timedelta(minutes=10)
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
 
-    # Send beautiful HTML verification email
     subject = "Verify your Infosec Dairies account"
     text_body, html_body = get_otp_email_template(code)
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
-    _send_html_email(subject, text_body, html_body, user.email, from_email=from_email, context="google_jwt")
+    _send_html_email(subject, text_body, html_body, user.email, from_email=from_email, context="google_onboarding")
 
     return Response(
         {
