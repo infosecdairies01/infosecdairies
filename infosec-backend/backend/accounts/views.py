@@ -107,6 +107,24 @@ def google_jwt(request):
         data = {"user": UserSerializer(user).data, "tokens": tokens}
         return Response(data, status=status.HTTP_200_OK)
 
+    # Legacy case: users may have existing purchases/enrollments but still have
+    # is_verified=False due to older flows/flags. Do not force them through
+    # onboarding again or they may think their old account is lost.
+    if user.is_active:
+        try:
+            from courses.models import Enrollment
+            from payments.models import CoursePurchase
+
+            has_enrollment = Enrollment.objects.filter(user=user).exists()
+            has_purchase = CoursePurchase.objects.filter(user=user, status=CoursePurchase.STATUS_PAID).exists()
+            if has_enrollment or has_purchase:
+                tokens = _jwt_for_user(user)
+                data = {"user": UserSerializer(user).data, "tokens": tokens}
+                return Response(data, status=status.HTTP_200_OK)
+        except Exception:
+            # If these checks fail for any reason, fall through to onboarding.
+            pass
+
     # New Google user: require onboarding (set name + password) before OTP.
     return Response(
         {
