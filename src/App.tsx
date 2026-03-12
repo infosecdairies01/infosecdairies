@@ -24,6 +24,7 @@ import VerifyCertificate from "./pages/VerifyCertificate";
 import ResourceViewer from "./pages/ResourceViewer";
 import CourseCheckout from "./pages/CourseCheckout";
 import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/labs" element={<Labs />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/auth/google-callback" element={<GoogleCallback />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
