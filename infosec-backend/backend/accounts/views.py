@@ -74,14 +74,17 @@ def google_jwt(request):
     if not user.is_authenticated:
         auth_header = request.headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
+            logger.info("google_jwt: missing bearer token")
             return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
         token_str = auth_header.split(" ", 1)[1].strip()
         try:
             token = AccessToken(token_str)
-        except TokenError:
+        except TokenError as e:
+            logger.info("google_jwt: invalid token: %s", str(e))
             return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
         if not token.get("onboarding"):
+            logger.info("google_jwt: token missing onboarding claim")
             return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
         from django.contrib.auth import get_user_model
@@ -89,9 +92,11 @@ def google_jwt(request):
         User = get_user_model()
         user_id = token.get("user_id")
         if not user_id:
+            logger.info("google_onboarding: token missing user_id")
             return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
         user = User.objects.filter(id=user_id).first()
         if not user:
+            logger.info("google_onboarding: user not found for user_id=%s", str(user_id))
             return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
     # Existing Google (or linked) user: if already verified and has a usable password
@@ -126,7 +131,32 @@ def google_onboarding(request):
 
     user = request.user
     if not user.is_authenticated:
-        return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            logger.info("google_onboarding: missing bearer token")
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        token_str = auth_header.split(" ", 1)[1].strip()
+        try:
+            token = AccessToken(token_str)
+        except TokenError as e:
+            logger.info("google_onboarding: invalid token: %s", str(e))
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not token.get("onboarding"):
+            logger.info("google_onboarding: token missing onboarding claim")
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        user_id = token.get("user_id")
+        if not user_id:
+            logger.info("google_onboarding: token missing user_id")
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            logger.info("google_onboarding: user not found for user_id=%s", str(user_id))
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
     first_name = (request.data.get("first_name") or "").strip()
     last_name = (request.data.get("last_name") or "").strip()
