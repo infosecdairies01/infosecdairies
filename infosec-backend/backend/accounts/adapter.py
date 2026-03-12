@@ -28,6 +28,13 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             # User already exists - ensure they're marked as verified for social login
             user = sociallogin.user
             updated = False
+            if getattr(sociallogin.account, "provider", None) == "google":
+                if getattr(user, "auth_provider", None) != "google":
+                    user.auth_provider = "google"
+                    updated = True
+                if user.has_usable_password():
+                    user.set_unusable_password()
+                    updated = True
             if not user.is_verified:
                 user.is_verified = True
                 updated = True
@@ -35,7 +42,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 user.is_active = True
                 updated = True
             if updated:
-                user.save(update_fields=['is_verified', 'is_active'])
+                user.save()
             return
 
         email = sociallogin.user.email
@@ -69,12 +76,29 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             if not existing_user.is_active:
                 existing_user.is_active = True
                 updated = True
+            if getattr(sociallogin.account, "provider", None) == "google" and getattr(existing_user, "auth_provider", None) != "google":
+                existing_user.auth_provider = "google"
+                updated = True
+            if getattr(sociallogin.account, "provider", None) == "google" and existing_user.has_usable_password():
+                existing_user.set_unusable_password()
+                updated = True
             if updated:
-                existing_user.save(update_fields=['is_verified', 'is_active'])
+                existing_user.save()
                 
         except User.DoesNotExist:
             # No existing user with this email - proceed with new account creation
             pass
+
+        if getattr(sociallogin.account, "provider", None) == "google":
+            user = sociallogin.user
+            try:
+                if getattr(user, "auth_provider", None) != "google":
+                    user.auth_provider = "google"
+                user.is_active = True
+                user.is_verified = True
+                user.save()
+            except Exception:
+                pass
 
     def is_auto_signup_allowed(self, request, sociallogin):
         """

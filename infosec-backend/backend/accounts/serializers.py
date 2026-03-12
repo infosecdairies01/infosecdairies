@@ -126,6 +126,14 @@ class LoginSerializer(serializers.Serializer):
         email = attrs.get("email")
         password = attrs.get("password")
 
+        try:
+            existing_user = User.objects.get(email=str(email).strip().lower())
+        except User.DoesNotExist:
+            existing_user = None
+
+        if existing_user and existing_user.auth_provider == AuthProvider.GOOGLE and not existing_user.has_usable_password():
+            raise serializers.ValidationError("This account was created with Google. Please continue with Google.")
+
         user = authenticate(request=self.context.get("request"), email=email, password=password)
         if not user:
             raise serializers.ValidationError("Invalid email or password")
