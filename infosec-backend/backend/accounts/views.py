@@ -274,10 +274,16 @@ def google_verify_otp(request):
     otp.used = True
     otp.save(update_fields=["used"])
 
-    # Mark the user as verified so future logins can skip OTP
+    # Mark the user as verified AND active so future logins can skip OTP
+    updated = False
     if hasattr(user, "is_verified") and not user.is_verified:
         user.is_verified = True
-        user.save(update_fields=["is_verified"])
+        updated = True
+    if hasattr(user, "is_active") and not user.is_active:
+        user.is_active = True
+        updated = True
+    if updated:
+        user.save(update_fields=["is_verified", "is_active"])
 
     tokens = _jwt_for_user(user)
     data = {
