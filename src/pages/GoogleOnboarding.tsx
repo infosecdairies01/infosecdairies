@@ -22,6 +22,17 @@ const GoogleOnboarding = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const passwordRules = useMemo(() => {
+    const value = password || "";
+    return {
+      minLen: value.length >= 10,
+      upper: /[A-Z]/.test(value),
+      lower: /[a-z]/.test(value),
+      digit: /\d/.test(value),
+      symbol: /[^A-Za-z0-9]/.test(value),
+    };
+  }, [password]);
+
   const email = useMemo(() => searchParams.get("email") || "", [searchParams]);
 
   useEffect(() => {
@@ -152,6 +163,26 @@ const GoogleOnboarding = () => {
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+              </div>
+              <div className="mt-2 rounded-md border border-border bg-background/40 p-3">
+                <p className="text-xs text-muted-foreground mb-2">Password must include:</p>
+                <div className="space-y-1 text-xs">
+                  <div className={passwordRules.minLen ? "text-green-500" : "text-muted-foreground"}>
+                    At least 10 characters
+                  </div>
+                  <div className={passwordRules.upper ? "text-green-500" : "text-muted-foreground"}>
+                    One uppercase letter (A-Z)
+                  </div>
+                  <div className={passwordRules.lower ? "text-green-500" : "text-muted-foreground"}>
+                    One lowercase letter (a-z)
+                  </div>
+                  <div className={passwordRules.digit ? "text-green-500" : "text-muted-foreground"}>
+                    One number (0-9)
+                  </div>
+                  <div className={passwordRules.symbol ? "text-green-500" : "text-muted-foreground"}>
+                    One symbol (!@#$...)
+                  </div>
+                </div>
               </div>
             </div>
 
