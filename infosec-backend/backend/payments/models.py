@@ -4,7 +4,7 @@ from django.db import models
 
 class PromoCode(models.Model):
     """Promo codes with usage limits per course."""
-    code = models.CharField(max_length=50, unique=True, db_index=True)
+    code = models.CharField(max_length=50, db_index=True)
     course_slug = models.SlugField(db_index=True)
     max_uses = models.PositiveIntegerField(default=0, help_text="Maximum unique users allowed (0 = unlimited)")
     current_uses = models.PositiveIntegerField(default=0)
@@ -15,9 +15,19 @@ class PromoCode(models.Model):
         indexes = [
             models.Index(fields=["code", "course_slug"]),
         ]
+        constraints = [
+            models.UniqueConstraint(fields=["code", "course_slug"], name="uniq_promo_code_per_course"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.code} ({self.current_uses}/{self.max_uses})"
+
+    def save(self, *args, **kwargs):
+        if self.code:
+            self.code = self.code.strip().upper()
+        if self.course_slug:
+            self.course_slug = self.course_slug.strip()
+        super().save(*args, **kwargs)
 
     def is_valid_for_user(self, user) -> bool:
         """Check if promo code can be used by this user."""
@@ -26,32 +36,39 @@ class PromoCode(models.Model):
         if self.max_uses > 0 and self.current_uses >= self.max_uses:
             return False
         # Check if user already used this code
-        if PromoCodeUsage.objects.filter(code=self.code, user=user).exists():
+        if PromoCodeUsage.objects.filter(promo_code=self, user=user).exists():
+            return False
+        # Backward compat: old usage rows stored by code/course_slug only
+        if PromoCodeUsage.objects.filter(code=self.code, course_slug=self.course_slug, user=user).exists():
             return False
         return True
 
     def record_usage(self, user, course_slug: str):
         """Record that a user used this promo code."""
         PromoCodeUsage.objects.get_or_create(
+            promo_code=self,
             code=self.code,
             user=user,
-            defaults={"course_slug": course_slug}
+            course_slug=course_slug,
         )
-        self.current_uses = PromoCodeUsage.objects.filter(code=self.code).count()
+        self.current_uses = PromoCodeUsage.objects.filter(promo_code=self).count()
         self.save(update_fields=["current_uses"])
 
 
 class PromoCodeUsage(models.Model):
     """Tracks which users have used which promo codes."""
+    promo_code = models.ForeignKey(PromoCode, on_delete=models.CASCADE, related_name="usages", null=True, blank=True)
     code = models.CharField(max_length=50, db_index=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     course_slug = models.SlugField()
     used_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("code", "user")
+        unique_together = ("code", "course_slug", "user")
         indexes = [
+            models.Index(fields=["promo_code", "used_at"]),
             models.Index(fields=["code", "used_at"]),
+            models.Index(fields=["code", "course_slug", "used_at"]),
         ]
 
 
