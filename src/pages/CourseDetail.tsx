@@ -466,6 +466,22 @@ const CourseDetail = () => {
   const resolveQuizStorageId = (lessonLikeQuizId: string): string => {
     if (!slug) return lessonLikeQuizId;
 
+    if (slug === "blue-team-soc-fundamentals") {
+      const socQuizMap: Record<string, string> = {
+        "1.5": "q1",
+        "2.5": "q2",
+        "3.5": "q3",
+        "4.5": "q4",
+        "5.5": "q5",
+        "6.5": "q6",
+        "7.5": "q7",
+        "8.5": "q8",
+        "9.5": "q9",
+        "10.4": "q10",
+      };
+      return socQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
     if (slug === "threat-hunting-fundamentals") {
       const thQuizMap: Record<string, string> = {
         "1.5": "th-q1",
@@ -614,7 +630,9 @@ const CourseDetail = () => {
 
       if (isPreviousQuiz) {
         // Check if quiz was passed with 70%
-        const quizScore = effectiveQuizScores[resolveQuizStorageId(previousLesson.id)];
+        const resolvedPrevQuizId = resolveQuizStorageId(previousLesson.id);
+        const quizScore =
+          effectiveQuizScores[resolvedPrevQuizId] ?? effectiveQuizScores[previousLesson.id];
         return quizScore !== undefined && quizScore >= 70;
       }
     }
@@ -634,7 +652,7 @@ const CourseDetail = () => {
       const gateQuizId = getModuleGateQuizId(previousModule);
       if (gateQuizId) {
         const storageGateQuizId = resolveQuizStorageId(gateQuizId);
-        const prevQuizScore = effectiveQuizScores[storageGateQuizId];
+        const prevQuizScore = effectiveQuizScores[storageGateQuizId] ?? effectiveQuizScores[gateQuizId];
         const passedPrevQuiz =
           (prevQuizScore != null && prevQuizScore >= 70) ||
           effectiveCompletedLessonIds.includes(storageGateQuizId) ||
