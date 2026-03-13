@@ -48,7 +48,112 @@ const LessonViewer = () => {
 
   const resolveQuizStorageId = (lessonLikeQuizId: string): string => {
     if (!slug) return lessonLikeQuizId;
+
+    if (slug === "blue-team-soc-fundamentals") {
+      const socQuizMap: Record<string, string> = {
+        "1.5": "q1",
+        "2.5": "q2",
+        "3.5": "q3",
+        "4.5": "q4",
+        "5.5": "q5",
+        "6.5": "q6",
+        "7.5": "q7",
+        "8.5": "q8",
+        "9.5": "q9",
+        "10.4": "q10",
+      };
+      return socQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
+    if (slug === "threat-hunting-fundamentals") {
+      const thQuizMap: Record<string, string> = {
+        "1.5": "th-q1",
+        "2.5": "th-q2",
+        "3.5": "th-q3",
+        "4.5": "th-q4",
+        "5.5": "th-q5",
+        "6.5": "th-q6",
+      };
+      return thQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
+    if (slug === "network-security-monitoring") {
+      const nsmQuizMap: Record<string, string> = {
+        "1.5": "nsm-q1",
+        "2.6": "nsm-q2",
+        "3.5": "nsm-q3",
+        "4.5": "nsm-q4",
+        "5.5": "nsm-q5",
+        "6.5": "nsm-q6",
+      };
+      return nsmQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
+    if (slug === "log-analysis-for-beginners") {
+      const laQuizMap: Record<string, string> = {
+        "1.5": "la-q1",
+        "2.7": "la-q2",
+        "3.6": "la-q3",
+        "4.5": "la-q4",
+        "5.5": "la-q5",
+        "6.5": "la-q5",
+      };
+      return laQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
+    if (slug === "soc-analyst-path") {
+      const sapQuizMap: Record<string, string> = {
+        "1.5": "sap-q1",
+        "2.5": "sap-q2",
+        "3.5": "sap-q3",
+        "4.5": "sap-q4",
+        "5.5": "sap-q5",
+        "6.5": "sap-q6",
+      };
+      return sapQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
+    if (slug === "detection-engineering-basics") {
+      const deQuizMap: Record<string, string> = {
+        "1.5": "de-q1",
+        "2.5": "de-q2",
+        "3.5": "de-q3",
+        "4.5": "de-q4",
+        "5.5": "de-q5",
+        "6.5": "de-q6",
+      };
+      return deQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
+    if (slug === "malware-analysis-fundamentals") {
+      const maQuizMap: Record<string, string> = {
+        "1.5": "ma-q1",
+        "2.5": "ma-q2",
+        "3.5": "ma-q3",
+        "4.5": "ma-q4",
+        "5.5": "ma-q5",
+        "6.5": "ma-q6",
+      };
+      return maQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
     return lessonLikeQuizId;
+  };
+
+  const getStoredQuizScore = (lessonLikeQuizId: string): number | null => {
+    if (!slug) return null;
+
+    const resolved = resolveQuizStorageId(lessonLikeQuizId);
+    const primaryRaw = localStorage.getItem(`quiz_${slug}_${resolved}`);
+    const fallbackRaw =
+      resolved !== lessonLikeQuizId
+        ? localStorage.getItem(`quiz_${slug}_${lessonLikeQuizId}`)
+        : null;
+
+    const raw = primaryRaw ?? fallbackRaw;
+    const score = raw != null ? Number(raw) : null;
+    if (score == null || Number.isNaN(score)) return null;
+    return score;
   };
 
   const getModuleGateQuizId = (module: any): string | null => {
@@ -299,10 +404,8 @@ const LessonViewer = () => {
     const gateQuizId = getModuleGateQuizId(previousModule);
     if (!gateQuizId) return;
 
-    const storageGateQuizId = resolveQuizStorageId(gateQuizId);
-    const scoreRaw = localStorage.getItem(`quiz_${slug}_${storageGateQuizId}`);
-    const score = scoreRaw != null ? Number(scoreRaw) : null;
-    const passed = score != null && !Number.isNaN(score) && score >= 70;
+    const score = getStoredQuizScore(gateQuizId);
+    const passed = score != null && score >= 70;
 
     if (passed) return;
 
@@ -342,10 +445,8 @@ const LessonViewer = () => {
       const previousModule = course.modules[targetModuleIndex - 1];
       const gateQuizId = getModuleGateQuizId(previousModule);
       if (gateQuizId) {
-        const storageGateQuizId = resolveQuizStorageId(gateQuizId);
-        const scoreRaw = localStorage.getItem(`quiz_${slug}_${storageGateQuizId}`);
-        const score = scoreRaw != null ? Number(scoreRaw) : null;
-        const passed = score != null && !Number.isNaN(score) && score >= 70;
+        const score = getStoredQuizScore(gateQuizId);
+        const passed = score != null && score >= 70;
 
         if (!passed) {
           window.alert("Complete the quiz (70%+) to unlock the next module.");
