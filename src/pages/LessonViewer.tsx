@@ -46,6 +46,36 @@ const LessonViewer = () => {
 
   const formatModuleId = (id: string) => id.replace(/^[a-z]+-/, "");
 
+  const resolveQuizStorageId = (lessonLikeQuizId: string): string => {
+    if (!slug) return lessonLikeQuizId;
+    return lessonLikeQuizId;
+  };
+
+  const getModuleGateQuizId = (module: any): string | null => {
+    if (!module) return null;
+
+    const lessons: any[] = Array.isArray(module.lessons) ? module.lessons : [];
+
+    if (module.quizId && lessons.some((l) => l?.id === module.quizId)) {
+      return module.quizId;
+    }
+
+    const quizLesson = lessons.find((l) => {
+      if (!l?.id || !l?.title) return false;
+      const looksNumericQuiz =
+        (/^[0-9]+\.[0-9]+$/.test(l.id) && l.id.split(".")[1] === "5") ||
+        String(l.title).toLowerCase().includes("quiz");
+
+      if (slug === "blue-team-soc-fundamentals" && l.id === "10.5") {
+        return false;
+      }
+
+      return looksNumericQuiz;
+    });
+
+    return quizLesson?.id ?? null;
+  };
+
   // Normalize backend slugs separately for course metadata vs lesson content
   // Course metadata (data/courses.ts) uses one set of IDs, while lessonContent
   // still uses a legacy ID for the SOC fundamentals course.
@@ -265,16 +295,19 @@ const LessonViewer = () => {
     if (currentModuleIndex <= 0) return;
 
     const previousModule = course.modules[currentModuleIndex - 1];
-    if (!previousModule?.quizId) return;
 
-    const scoreRaw = localStorage.getItem(`quiz_${slug}_${previousModule.quizId}`);
+    const gateQuizId = getModuleGateQuizId(previousModule);
+    if (!gateQuizId) return;
+
+    const storageGateQuizId = resolveQuizStorageId(gateQuizId);
+    const scoreRaw = localStorage.getItem(`quiz_${slug}_${storageGateQuizId}`);
     const score = scoreRaw != null ? Number(scoreRaw) : null;
     const passed = score != null && !Number.isNaN(score) && score >= 70;
 
     if (passed) return;
 
     // Redirect to the previous module quiz
-    const quizId = previousModule.quizId;
+    const quizId = gateQuizId;
     const isSocFundamentals = slug === "blue-team-soc-fundamentals";
     if (isSocFundamentals) {
       navigate(`/courses/${slug}/lesson/${quizId}`, { replace: true });
@@ -307,14 +340,16 @@ const LessonViewer = () => {
     );
     if (targetModuleIndex > 0) {
       const previousModule = course.modules[targetModuleIndex - 1];
-      if (previousModule?.quizId) {
-        const scoreRaw = localStorage.getItem(`quiz_${slug}_${previousModule.quizId}`);
+      const gateQuizId = getModuleGateQuizId(previousModule);
+      if (gateQuizId) {
+        const storageGateQuizId = resolveQuizStorageId(gateQuizId);
+        const scoreRaw = localStorage.getItem(`quiz_${slug}_${storageGateQuizId}`);
         const score = scoreRaw != null ? Number(scoreRaw) : null;
         const passed = score != null && !Number.isNaN(score) && score >= 70;
 
         if (!passed) {
           window.alert("Complete the quiz (70%+) to unlock the next module.");
-          const quizId = previousModule.quizId;
+          const quizId = gateQuizId;
           const isSocFundamentals = slug === "blue-team-soc-fundamentals";
           if (isSocFundamentals) {
             navigate(`/courses/${slug}/lesson/${quizId}`);

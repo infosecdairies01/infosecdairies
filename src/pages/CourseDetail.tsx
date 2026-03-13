@@ -541,6 +541,31 @@ const CourseDetail = () => {
     return lessonLikeQuizId;
   };
 
+  const getModuleGateQuizId = (module: any): string | null => {
+    if (!module) return null;
+
+    const lessons: any[] = Array.isArray(module.lessons) ? module.lessons : [];
+
+    if (module.quizId && lessons.some((l) => l?.id === module.quizId)) {
+      return module.quizId;
+    }
+
+    const quizLesson = lessons.find((l) => {
+      if (!l?.id || !l?.title) return false;
+      const looksNumericQuiz =
+        (/^[0-9]+\.[0-9]+$/.test(l.id) && l.id.split(".")[1] === "5") ||
+        String(l.title).toLowerCase().includes("quiz");
+
+      if (slug === "blue-team-soc-fundamentals" && l.id === "10.5") {
+        return false;
+      }
+
+      return looksNumericQuiz;
+    });
+
+    return quizLesson?.id ?? null;
+  };
+
   // Function to determine if a lesson should be unlocked
   const isLessonUnlocked = (lesson: any, moduleIndex: number, lessonIndex: number) => {
     if (!isCourseProgressEnabled) {
@@ -606,11 +631,14 @@ const CourseDetail = () => {
 
       // If the previous module has an explicit quizId, require passing it (>= 70%)
       // before unlocking the next module.
-      if (previousModule?.quizId) {
-        const prevQuizScore = effectiveQuizScores[previousModule.quizId];
+      const gateQuizId = getModuleGateQuizId(previousModule);
+      if (gateQuizId) {
+        const storageGateQuizId = resolveQuizStorageId(gateQuizId);
+        const prevQuizScore = effectiveQuizScores[storageGateQuizId];
         const passedPrevQuiz =
           (prevQuizScore != null && prevQuizScore >= 70) ||
-          effectiveCompletedLessonIds.includes(previousModule.quizId);
+          effectiveCompletedLessonIds.includes(storageGateQuizId) ||
+          effectiveCompletedLessonIds.includes(gateQuizId);
         if (!passedPrevQuiz) return false;
       }
 
@@ -836,39 +864,16 @@ const CourseDetail = () => {
       // Find the next uncompleted lesson
       let nextLesson = null;
       
-      for (const module of course.modules) {
-        for (const lesson of module.lessons) {
+      for (let moduleIndex = 0; moduleIndex < course.modules.length; moduleIndex++) {
+        const module = course.modules[moduleIndex];
+        for (let lessonIndex = 0; lessonIndex < module.lessons.length; lessonIndex++) {
+          const lesson = module.lessons[lessonIndex];
           const resolvedQuizId = resolveQuizStorageId(lesson.id);
           const isCompleted =
             completedLessonIds.includes(lesson.id) ||
             completedLessonIds.includes(resolvedQuizId);
-          const isQuiz = ((/^[0-9]+\.[0-9]+$/.test(lesson.id) && lesson.id.split('.')[1] === '5')) || 
-                         lesson.title.toLowerCase().includes('quiz');
-          
-          // For quiz lessons, check if the previous lesson is completed
-          let isUnlocked = true;
-          if (isQuiz) {
-            const lessonIndex = module.lessons.indexOf(lesson);
-            if (lessonIndex > 0) {
-              const previousLesson = module.lessons[lessonIndex - 1];
-              isUnlocked = completedLessonIds.includes(previousLesson.id);
-            } else {
-              isUnlocked = false;
-            }
-          }
-          
-          // For regular lessons after quiz, check if quiz was passed with 70%
-          if (!isQuiz && module.lessons.indexOf(lesson) > 0) {
-            const lessonIndex = module.lessons.indexOf(lesson);
-            const previousLesson = module.lessons[lessonIndex - 1];
-            const isPreviousQuiz = previousLesson.id.includes('.') && previousLesson.id.split('.')[1] === '5' ||
-                                  previousLesson.title.toLowerCase().includes('quiz');
-            
-            if (isPreviousQuiz) {
-              const quizScore = quizScores[resolveQuizStorageId(previousLesson.id)];
-              isUnlocked = quizScore !== undefined && quizScore >= 70;
-            }
-          }
+
+          const isUnlocked = isLessonUnlocked(lesson, moduleIndex, lessonIndex);
           
           // If this lesson is not completed and is unlocked, it's our next lesson
           if (!isCompleted && isUnlocked) {
