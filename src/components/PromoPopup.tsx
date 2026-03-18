@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Sparkles, Percent, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import siteLogo from "@/assets/infosecdairies-logo.png";
 
 const PROMO_CODE = "UGADI2026";
 const DISCOUNT_PERCENT = 50;
@@ -97,7 +98,11 @@ const PromoPopup = () => {
             onClick={handleClose}
             className="w-full bg-cyan-500 hover:bg-cyan-500/90 text-slate-950 font-semibold py-3"
           >
-            Start Learning
+            <img
+              src={siteLogo}
+              alt="InfosecDairies"
+              className="h-6 w-auto object-contain"
+            />
           </Button>
 
           {/* Expiry note */}
