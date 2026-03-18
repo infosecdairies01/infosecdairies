@@ -29,6 +29,8 @@ const CourseCheckout = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [cachedOrder, setCachedOrder] = useState<any | null>(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -65,12 +67,94 @@ const CourseCheckout = () => {
     });
   };
 
-  const applyPromoCode = () => {
+  const applyPromoCode = async () => {
     setPromoError(null);
+    setError(null);
     const trimmedCode = promoCode.trim().toUpperCase();
     if (!trimmedCode) return;
-    setPromoCode(trimmedCode);
-    setPromoApplied(true);
+
+    if (!slug || !course) return;
+    if (!name.trim()) {
+      setPromoError("Please enter your name first");
+      return;
+    }
+
+    let accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      navigate("/auth");
+      return;
+    }
+
+    const createOrder = async (token: string) =>
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/create-order/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          course_slug: slug,
+          full_name: name.trim(),
+          promo_code: trimmedCode,
+        }),
+      });
+
+    try {
+      setApplyingPromo(true);
+      let res = await createOrder(accessToken);
+
+      if (res.status === 401 || res.status === 403) {
+        const newAccess = await refreshAccessToken();
+        if (!newAccess) {
+          handleAuthFailure();
+          return;
+        }
+        accessToken = newAccess;
+        res = await createOrder(accessToken);
+      }
+
+      const data = await parseResponse(res);
+      if (!res.ok) {
+        const rawDetail = data?.detail;
+        const detail =
+          typeof rawDetail === "string" && rawDetail.trim().startsWith("<!doctype")
+            ? `API error: ${res.status} ${res.statusText} (server returned HTML - check backend URL/deploy)`
+            : rawDetail || `Error: ${res.status} ${res.statusText}`;
+        setPromoError(detail);
+        setPromoApplied(false);
+        setCachedOrder(null);
+        setDiscountPercent(0);
+        setDisplayAmountInr(originalPrice);
+        return;
+      }
+
+      if (data.free) {
+        setPromoCode(trimmedCode);
+        setPromoApplied(true);
+        setCachedOrder(null);
+        setDiscountPercent(typeof data.discount_percent === "number" ? data.discount_percent : 50);
+        setDisplayAmountInr(0);
+        return;
+      }
+
+      setPromoCode(trimmedCode);
+      setPromoApplied(true);
+      if (typeof data.amount_inr === "number") {
+        setDisplayAmountInr(data.amount_inr);
+      }
+      if (data.discount_percent) {
+        setDiscountPercent(data.discount_percent);
+      }
+      setCachedOrder(data);
+    } catch (err: any) {
+      setPromoError(err?.message || "Failed to apply promo code");
+      setPromoApplied(false);
+      setCachedOrder(null);
+      setDiscountPercent(0);
+      setDisplayAmountInr(originalPrice);
+    } finally {
+      setApplyingPromo(false);
+    }
   };
 
   const removePromoCode = () => {
@@ -78,9 +162,16 @@ const CourseCheckout = () => {
     setPromoCode("");
     setPromoError(null);
     setDiscountPercent(0);
+    setCachedOrder(null);
     // Reset to original price
     setDisplayAmountInr(originalPrice);
   };
+
+  useEffect(() => {
+    // If user changes inputs after applying promo, force a recalculation.
+    if (!promoApplied) return;
+    setCachedOrder(null);
+  }, [name, slug, promoApplied]);
 
   const refreshAccessToken = async (): Promise<string | null> => {
     const refreshToken = localStorage.getItem("refreshToken");
@@ -149,22 +240,29 @@ const CourseCheckout = () => {
           }),
         });
 
-      let res = await createOrder(accessToken);
+      let data: any = null;
+      let res: Response | null = null;
 
-      if (res.status === 401 || res.status === 403) {
-        const newAccess = await refreshAccessToken();
-        if (!newAccess) {
-          handleAuthFailure();
-          setSubmitting(false);
-          return;
-        }
-        accessToken = newAccess;
+      if (promoApplied && cachedOrder && promoCode.trim()) {
+        data = cachedOrder;
+      } else {
         res = await createOrder(accessToken);
+
+        if (res.status === 401 || res.status === 403) {
+          const newAccess = await refreshAccessToken();
+          if (!newAccess) {
+            handleAuthFailure();
+            setSubmitting(false);
+            return;
+          }
+          accessToken = newAccess;
+          res = await createOrder(accessToken);
+        }
+
+        data = await parseResponse(res);
       }
 
-      const data = await parseResponse(res);
-
-      if (!res.ok) {
+      if (res && !res.ok) {
         const rawDetail = data?.detail;
         const detail =
           typeof rawDetail === "string" && rawDetail.trim().startsWith("<!doctype")
@@ -401,9 +499,9 @@ const CourseCheckout = () => {
                       type="button"
                       variant="outline"
                       onClick={applyPromoCode}
-                      disabled={!promoCode.trim()}
+                      disabled={!promoCode.trim() || applyingPromo}
                     >
-                      Apply
+                      {applyingPromo ? "Applying..." : "Apply"}
                     </Button>
                   ) : (
                     <Button
@@ -418,7 +516,7 @@ const CourseCheckout = () => {
                 </div>
                 {promoError && <p className="text-sm text-red-500 mt-1">{promoError}</p>}
                 {promoApplied && (
-                  <p className="text-sm text-green-500 mt-1">Promo code will be applied at payment.</p>
+                  <p className="text-sm text-green-500 mt-1">Promo code applied.</p>
                 )}
               </div>
 
