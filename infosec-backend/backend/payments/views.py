@@ -74,27 +74,26 @@ def create_order(request):
     if not course_slug:
         return Response({"detail": "course_slug is required"}, status=400)
 
-    # Check promo code validity using PromoCode model with usage limits
+    # Check promo code validity using PromoCode model with usage limits.
+    # Supports a global promo code row with course_slug == "all".
     is_promo_valid = False
     promo_code_obj = None
     if promo_code:
-        try:
-            promo_code_obj = PromoCode.objects.get(
-                code=promo_code,
-                course_slug=course_slug,
-                is_active=True
-            )
-            if promo_code_obj.is_valid_for_user(request.user):
-                is_promo_valid = True
-            else:
-                if promo_code_obj.current_uses >= promo_code_obj.max_uses and promo_code_obj.max_uses > 0:
-                    return Response({"detail": "This promo code has reached its usage limit"}, status=400)
-                elif PromoCodeUsage.objects.filter(promo_code=promo_code_obj, user=request.user).exists() or PromoCodeUsage.objects.filter(code=promo_code, user=request.user, course_slug=course_slug).exists():
-                    return Response({"detail": "You have already used this promo code"}, status=400)
-                else:
-                    return Response({"detail": "Invalid or inactive promo code"}, status=400)
-        except PromoCode.DoesNotExist:
-            return Response({"detail": "Invalid promo code for this course"}, status=400)
+        promo_code_obj = (
+            PromoCode.objects.filter(code=promo_code, is_active=True, course_slug=course_slug).first()
+            or PromoCode.objects.filter(code=promo_code, is_active=True, course_slug="all").first()
+        )
+        if not promo_code_obj:
+            return Response({"detail": "Invalid promo code"}, status=400)
+
+        if promo_code_obj.is_valid_for_user(request.user, target_course_slug=course_slug):
+            is_promo_valid = True
+        else:
+            if promo_code_obj.current_uses >= promo_code_obj.max_uses and promo_code_obj.max_uses > 0:
+                return Response({"detail": "This promo code has reached its usage limit"}, status=400)
+            if PromoCodeUsage.objects.filter(code=promo_code, user=request.user, course_slug=course_slug).exists():
+                return Response({"detail": "You have already used this promo code"}, status=400)
+            return Response({"detail": "Invalid or inactive promo code"}, status=400)
 
     is_bundle = course_slug == ALL_COURSES_BUNDLE_SLUG
     course = None
@@ -104,9 +103,13 @@ def create_order(request):
     else:
         amount_inr = _bundle_price_inr()
 
-    # If promo code is valid, make it free
-    if is_promo_valid:
-        amount_inr = 0
+    # If promo code is valid, apply discount
+    if is_promo_valid and promo_code_obj:
+        amount_inr = promo_code_obj.calculate_discounted_price(amount_inr)
+
+        # Record usage early so the code can't be reused if the user retries checkout.
+        # This trades off some false-positives (abandoned payments) for simplicity.
+        promo_code_obj.record_usage(request.user, course_slug)
 
     if amount_inr == 0:
         # Free access (promo code or free course): create enrollment directly
@@ -133,11 +136,14 @@ def create_order(request):
                     enrollment.is_paid = True
                     enrollment.save(update_fields=["is_paid"])
         
-        # Record promo code usage if applicable
-        if is_promo_valid and promo_code_obj:
-            promo_code_obj.record_usage(request.user, course_slug)
-        
-        return Response({"free": True, "course_slug": course_slug, "amount_inr": 0})
+        return Response(
+            {
+                "free": True,
+                "course_slug": course_slug,
+                "amount_inr": 0,
+                "discount_percent": promo_code_obj.discount_percent if promo_code_obj else None,
+            }
+        )
 
     existing_paid = CoursePurchase.objects.filter(
         user=request.user,
@@ -225,6 +231,7 @@ def create_order(request):
             "currency": "INR",
             "course_slug": course_slug,
             "amount_inr": amount_inr,
+            "discount_percent": promo_code_obj.discount_percent if promo_code_obj else None,
         }
     )
 

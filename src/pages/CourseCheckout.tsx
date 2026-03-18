@@ -24,6 +24,8 @@ const CourseCheckout = () => {
   const [name, setName] = useState(user?.fullName || user?.email?.split("@")[0] || "");
   const [error, setError] = useState<string | null>(null);
   const [displayAmountInr, setDisplayAmountInr] = useState<number | null>(null);
+  const [originalPrice, setOriginalPrice] = useState<number | null>(null);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -36,15 +38,16 @@ const CourseCheckout = () => {
         difficulty: "easy",
       });
       setDisplayAmountInr(ALL_COURSES_BUNDLE_PRICE_INR);
+      setOriginalPrice(ALL_COURSES_BUNDLE_PRICE_INR);
       setLoading(false);
       return;
     }
 
     const staticCourse = getCourseBySlug(slug);
+    const price = staticCourse ? getCoursePriceInr(slug, staticCourse.difficulty) : null;
     setCourse(staticCourse);
-    setDisplayAmountInr(
-      staticCourse ? getCoursePriceInr(slug, staticCourse.difficulty) : null,
-    );
+    setDisplayAmountInr(price);
+    setOriginalPrice(price);
     setLoading(false);
   }, [slug]);
 
@@ -64,7 +67,9 @@ const CourseCheckout = () => {
 
   const applyPromoCode = () => {
     setPromoError(null);
-    if (!promoCode.trim()) return;
+    const trimmedCode = promoCode.trim().toUpperCase();
+    if (!trimmedCode) return;
+    setPromoCode(trimmedCode);
     setPromoApplied(true);
   };
 
@@ -72,12 +77,9 @@ const CourseCheckout = () => {
     setPromoApplied(false);
     setPromoCode("");
     setPromoError(null);
+    setDiscountPercent(0);
     // Reset to original price
-    if (slug === ALL_COURSES_BUNDLE_SLUG) {
-      setDisplayAmountInr(ALL_COURSES_BUNDLE_PRICE_INR);
-    } else if (course) {
-      setDisplayAmountInr(getCoursePriceInr(slug, course.difficulty));
-    }
+    setDisplayAmountInr(originalPrice);
   };
 
   const handlePay = async () => {
@@ -114,13 +116,22 @@ const CourseCheckout = () => {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.detail || `Error: ${res.status} ${res.statusText}`);
+        const detail = data.detail || `Error: ${res.status} ${res.statusText}`;
+        setError(detail);
+        if ((detail as string).toLowerCase().includes("promo")) {
+          setPromoError(detail);
+          setPromoApplied(false);
+        }
         setSubmitting(false);
         return;
       }
 
       if (typeof data.amount_inr === "number") {
         setDisplayAmountInr(data.amount_inr);
+        // Calculate discount percentage from response if available
+        if (data.discount_percent) {
+          setDiscountPercent(data.discount_percent);
+        }
       }
 
       if (data.free) {
@@ -288,43 +299,41 @@ const CourseCheckout = () => {
               </div>
 
               {/* Promo Code Section */}
-              {slug !== ALL_COURSES_BUNDLE_SLUG && typeof displayAmountInr === "number" && displayAmountInr > 0 && (
-                <div className="pt-2 border-t border-border">
-                  <label className="text-sm font-medium text-muted-foreground">Promo Code</label>
-                  <div className="flex gap-2 mt-1">
-                    <Input
-                      placeholder="Enter promo code"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      disabled={promoApplied}
-                      className="flex-1"
-                    />
-                    {!promoApplied ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={applyPromoCode}
-                        disabled={!promoCode.trim()}
-                      >
-                        Apply
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={removePromoCode}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                  {promoError && <p className="text-sm text-red-500 mt-1">{promoError}</p>}
-                  {promoApplied && (
-                    <p className="text-sm text-green-500 mt-1">Promo code applied! You can proceed to checkout.</p>
+              <div className="pt-2 border-t border-border">
+                <label className="text-sm font-medium text-muted-foreground">Promo Code</label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    placeholder="Enter promo code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    disabled={promoApplied}
+                    className="flex-1"
+                  />
+                  {!promoApplied ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={applyPromoCode}
+                      disabled={!promoCode.trim()}
+                    >
+                      Apply
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={removePromoCode}
+                      className="text-red-500 hover:text-red-600"
+                    >
+                      Remove
+                    </Button>
                   )}
                 </div>
-              )}
+                {promoError && <p className="text-sm text-red-500 mt-1">{promoError}</p>}
+                {promoApplied && (
+                  <p className="text-sm text-green-500 mt-1">Promo code will be applied at payment.</p>
+                )}
+              </div>
 
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button
@@ -338,7 +347,7 @@ const CourseCheckout = () => {
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing...
                   </>
-                ) : promoApplied ? (
+                ) : promoApplied && displayAmountInr === 0 ? (
                   "Get Free Access"
                 ) : (
                   `Pay ${typeof displayAmountInr === "number" ? `₹${displayAmountInr}` : ""}`
@@ -358,12 +367,24 @@ const CourseCheckout = () => {
               </div>
               <div className="flex justify-between">
                 <span>Price</span>
-                <span className="font-medium">
-                  {typeof displayAmountInr === "number" ? `₹${displayAmountInr}` : "-"}
+                <span className="font-medium line-through text-muted-foreground">
+                  ₹{originalPrice || 0}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Total</span>
+                <span>Discounted Price</span>
+                <span className="font-medium text-green-600">
+                  {typeof displayAmountInr === "number" ? `₹${displayAmountInr}` : "-"}
+                </span>
+              </div>
+              {promoApplied && originalPrice && displayAmountInr !== originalPrice && (
+                <div className="flex justify-between text-green-600 text-sm">
+                  <span>You save ({discountPercent || 50}% off)</span>
+                  <span className="font-medium">-₹{originalPrice - displayAmountInr}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <span className="font-bold">Total</span>
                 <span className="font-bold text-lg">
                   {typeof displayAmountInr === "number" ? `₹${displayAmountInr}` : "-"}
                 </span>

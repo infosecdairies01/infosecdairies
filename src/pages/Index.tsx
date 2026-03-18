@@ -7,11 +7,13 @@ import LearningPath from "@/components/LearningPath";
 import Certifications from "@/components/Certifications";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
+import PromoPopup from "@/components/PromoPopup";
 
 const Index = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
+      <PromoPopup />
       <Hero />
       <Topics />
       <SOCLabs />
