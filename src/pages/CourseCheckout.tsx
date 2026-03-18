@@ -17,7 +17,7 @@ declare global {
 const CourseCheckout = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -82,6 +82,40 @@ const CourseCheckout = () => {
     setDisplayAmountInr(originalPrice);
   };
 
+  const refreshAccessToken = async (): Promise<string | null> => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) return null;
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/token/refresh/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh: refreshToken }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.access) return null;
+    localStorage.setItem("accessToken", data.access);
+    if (data.refresh) {
+      localStorage.setItem("refreshToken", data.refresh);
+    }
+    return data.access as string;
+  };
+
+  const handleAuthFailure = () => {
+    logout();
+    navigate("/auth");
+  };
+
+  const parseResponse = async (res: Response): Promise<any> => {
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      return await res.json();
+    }
+    const text = await res.text();
+    return { detail: text };
+  };
+
   const handlePay = async () => {
     if (!slug || !course) return;
     if (!name.trim()) {
@@ -92,7 +126,7 @@ const CourseCheckout = () => {
     setSubmitting(true);
     setError(null);
 
-    const accessToken = localStorage.getItem("accessToken");
+    let accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
       navigate("/auth");
       setSubmitting(false);
@@ -101,27 +135,34 @@ const CourseCheckout = () => {
 
     try {
       // 1) Create order
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/create-order/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ 
-          course_slug: slug, 
-          full_name: name.trim(),
-          promo_code: promoApplied ? promoCode.trim().toUpperCase() : undefined,
-        }),
-      });
+      const createOrder = async (token: string) =>
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/create-order/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            course_slug: slug,
+            full_name: name.trim(),
+            promo_code: promoApplied ? promoCode.trim().toUpperCase() : undefined,
+          }),
+        });
 
-      const contentType = res.headers.get("content-type") || "";
-      let data: any = null;
-      if (contentType.includes("application/json")) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        data = { detail: text };
+      let res = await createOrder(accessToken);
+
+      if (res.status === 401 || res.status === 403) {
+        const newAccess = await refreshAccessToken();
+        if (!newAccess) {
+          handleAuthFailure();
+          setSubmitting(false);
+          return;
+        }
+        accessToken = newAccess;
+        res = await createOrder(accessToken);
       }
+
+      const data = await parseResponse(res);
 
       if (!res.ok) {
         const rawDetail = data?.detail;
@@ -130,6 +171,9 @@ const CourseCheckout = () => {
             ? `API error: ${res.status} ${res.statusText} (server returned HTML - check backend URL/deploy)`
             : rawDetail || `Error: ${res.status} ${res.statusText}`;
         setError(detail);
+        if ((detail as string).toLowerCase().includes("token") || (detail as string).toLowerCase().includes("credential")) {
+          handleAuthFailure();
+        }
         if ((detail as string).toLowerCase().includes("promo")) {
           setPromoError(detail);
           setPromoApplied(false);
@@ -140,14 +184,12 @@ const CourseCheckout = () => {
 
       if (typeof data.amount_inr === "number") {
         setDisplayAmountInr(data.amount_inr);
-        // Calculate discount percentage from response if available
         if (data.discount_percent) {
           setDiscountPercent(data.discount_percent);
         }
       }
 
       if (data.free) {
-        // Free course: redirect to course page
         navigate(`/courses/${slug}`);
         setSubmitting(false);
         return;
@@ -155,27 +197,33 @@ const CourseCheckout = () => {
 
       // Test mode: skip Razorpay and auto-verify
       if (data.test_mode) {
-        const verifyRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/verify/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            razorpay_order_id: data.order_id,
-            razorpay_payment_id: "generic_payment_id",
-            razorpay_signature: "generic_signature",
-          }),
-        });
+        const verify = async (token: string) =>
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/verify/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              razorpay_order_id: data.order_id,
+              razorpay_payment_id: "generic_payment_id",
+              razorpay_signature: "generic_signature",
+            }),
+          });
 
-        const verifyContentType = verifyRes.headers.get("content-type") || "";
-        let verifyData: any = null;
-        if (verifyContentType.includes("application/json")) {
-          verifyData = await verifyRes.json();
-        } else {
-          const text = await verifyRes.text();
-          verifyData = { detail: text };
+        let verifyRes = await verify(accessToken);
+        if (verifyRes.status === 401 || verifyRes.status === 403) {
+          const newAccess = await refreshAccessToken();
+          if (!newAccess) {
+            handleAuthFailure();
+            setSubmitting(false);
+            return;
+          }
+          accessToken = newAccess;
+          verifyRes = await verify(accessToken);
         }
+
+        const verifyData = await parseResponse(verifyRes);
         if (!verifyRes.ok) {
           const rawDetail = verifyData?.detail;
           const detail =
@@ -187,7 +235,6 @@ const CourseCheckout = () => {
           return;
         }
 
-        // Success: redirect
         if (slug === ALL_COURSES_BUNDLE_SLUG) {
           navigate("/courses");
         } else {
@@ -214,28 +261,33 @@ const CourseCheckout = () => {
         description: "Enrollment payment",
         order_id: data.order_id,
         handler: async (response: any) => {
-          // 4) Verify payment
-          const verifyRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/verify/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            }),
-          });
+          const verify = async (token: string) =>
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/verify/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
 
-          const verifyContentType = verifyRes.headers.get("content-type") || "";
-          let verifyData: any = null;
-          if (verifyContentType.includes("application/json")) {
-            verifyData = await verifyRes.json();
-          } else {
-            const text = await verifyRes.text();
-            verifyData = { detail: text };
+          let verifyRes = await verify(accessToken as string);
+          if (verifyRes.status === 401 || verifyRes.status === 403) {
+            const newAccess = await refreshAccessToken();
+            if (!newAccess) {
+              handleAuthFailure();
+              setSubmitting(false);
+              return;
+            }
+            accessToken = newAccess;
+            verifyRes = await verify(accessToken);
           }
+
+          const verifyData = await parseResponse(verifyRes);
           if (!verifyRes.ok) {
             const rawDetail = verifyData?.detail;
             const detail =
@@ -247,7 +299,6 @@ const CourseCheckout = () => {
             return;
           }
 
-          // Success: redirect to course page (or courses list for bundle)
           if (slug === ALL_COURSES_BUNDLE_SLUG) {
             navigate("/courses");
           } else {
