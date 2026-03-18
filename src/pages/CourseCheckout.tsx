@@ -114,9 +114,21 @@ const CourseCheckout = () => {
         }),
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get("content-type") || "";
+      let data: any = null;
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        data = { detail: text };
+      }
+
       if (!res.ok) {
-        const detail = data.detail || `Error: ${res.status} ${res.statusText}`;
+        const rawDetail = data?.detail;
+        const detail =
+          typeof rawDetail === "string" && rawDetail.trim().startsWith("<!doctype")
+            ? `API error: ${res.status} ${res.statusText} (server returned HTML - check backend URL/deploy)`
+            : rawDetail || `Error: ${res.status} ${res.statusText}`;
         setError(detail);
         if ((detail as string).toLowerCase().includes("promo")) {
           setPromoError(detail);
@@ -156,9 +168,21 @@ const CourseCheckout = () => {
           }),
         });
 
-        const verifyData = await verifyRes.json();
+        const verifyContentType = verifyRes.headers.get("content-type") || "";
+        let verifyData: any = null;
+        if (verifyContentType.includes("application/json")) {
+          verifyData = await verifyRes.json();
+        } else {
+          const text = await verifyRes.text();
+          verifyData = { detail: text };
+        }
         if (!verifyRes.ok) {
-          setError(verifyData.detail || "Payment verification failed");
+          const rawDetail = verifyData?.detail;
+          const detail =
+            typeof rawDetail === "string" && rawDetail.trim().startsWith("<!doctype")
+              ? `API error: ${verifyRes.status} ${verifyRes.statusText} (server returned HTML - check backend URL/deploy)`
+              : rawDetail || "Payment verification failed";
+          setError(detail);
           setSubmitting(false);
           return;
         }
@@ -204,9 +228,21 @@ const CourseCheckout = () => {
             }),
           });
 
-          const verifyData = await verifyRes.json();
+          const verifyContentType = verifyRes.headers.get("content-type") || "";
+          let verifyData: any = null;
+          if (verifyContentType.includes("application/json")) {
+            verifyData = await verifyRes.json();
+          } else {
+            const text = await verifyRes.text();
+            verifyData = { detail: text };
+          }
           if (!verifyRes.ok) {
-            setError(verifyData.detail || "Payment verification failed");
+            const rawDetail = verifyData?.detail;
+            const detail =
+              typeof rawDetail === "string" && rawDetail.trim().startsWith("<!doctype")
+                ? `API error: ${verifyRes.status} ${verifyRes.statusText} (server returned HTML - check backend URL/deploy)`
+                : rawDetail || "Payment verification failed";
+            setError(detail);
             setSubmitting(false);
             return;
           }
