@@ -49,6 +49,11 @@ const PromoPopup = () => {
 
         {/* Content */}
         <div className="relative p-7 text-center">
+          <img
+            src={siteLogo}
+            alt="InfosecDairies"
+            className="mx-auto h-9 w-auto object-contain mb-4"
+          />
           {/* Icon */}
           <div className="mx-auto w-14 h-14 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mb-4">
             <Sparkles className="w-7 h-7 text-cyan-300" />
@@ -98,16 +103,12 @@ const PromoPopup = () => {
             onClick={handleClose}
             className="w-full bg-cyan-500 hover:bg-cyan-500/90 text-slate-950 font-semibold py-3"
           >
-            <img
-              src={siteLogo}
-              alt="InfosecDairies"
-              className="h-6 w-auto object-contain"
-            />
+            Start Learning
           </Button>
 
           {/* Expiry note */}
           <p className="text-white/50 text-xs mt-4">
-            Limited time offer. Valid until April 30, 2026.
+            Limited time offer
           </p>
         </div>
       </div>
