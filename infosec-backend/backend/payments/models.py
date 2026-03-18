@@ -3,12 +3,13 @@ from django.db import models
 
 
 class PromoCode(models.Model):
-    """Promo codes with usage limits per course."""
+    """Promo codes with usage limits and discount percentage per course."""
     code = models.CharField(max_length=50, db_index=True)
     course_slug = models.SlugField(db_index=True)
     max_uses = models.PositiveIntegerField(default=0, help_text="Maximum unique users allowed (0 = unlimited)")
     current_uses = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    discount_percent = models.PositiveIntegerField(default=100, help_text="Discount percentage (0-100). 100 = free, 50 = 50% off")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -29,19 +30,38 @@ class PromoCode(models.Model):
             self.course_slug = self.course_slug.strip()
         super().save(*args, **kwargs)
 
-    def is_valid_for_user(self, user) -> bool:
+    def is_valid_for_user(self, user, *, target_course_slug: str | None = None) -> bool:
         """Check if promo code can be used by this user."""
         if not self.is_active:
             return False
         if self.max_uses > 0 and self.current_uses >= self.max_uses:
             return False
-        # Check if user already used this code
-        if PromoCodeUsage.objects.filter(promo_code=self, user=user).exists():
-            return False
-        # Backward compat: old usage rows stored by code/course_slug only
-        if PromoCodeUsage.objects.filter(code=self.code, course_slug=self.course_slug, user=user).exists():
-            return False
+
+        # Global promo code (course_slug == "all") is reusable for the same user,
+        # but only once per target course/bundle.
+        if self.course_slug == "all":
+            if not target_course_slug:
+                return False
+            if PromoCodeUsage.objects.filter(code=self.code, course_slug=target_course_slug, user=user).exists():
+                return False
+        else:
+            # Check if user already used this code for this promo row
+            if PromoCodeUsage.objects.filter(promo_code=self, user=user).exists():
+                return False
+            # Backward compat: old usage rows stored by code/course_slug only
+            if PromoCodeUsage.objects.filter(code=self.code, course_slug=self.course_slug, user=user).exists():
+                return False
+
         return True
+
+    def calculate_discounted_price(self, original_price: int) -> int:
+        """Calculate price after applying discount."""
+        if self.discount_percent >= 100:
+            return 0
+        if self.discount_percent <= 0:
+            return original_price
+        discount_amount = int(original_price * self.discount_percent / 100)
+        return max(0, original_price - discount_amount)
 
     def record_usage(self, user, course_slug: str):
         """Record that a user used this promo code."""
