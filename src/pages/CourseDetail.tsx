@@ -51,16 +51,7 @@ const courseBackgrounds: Record<string, string> = {
 };
 
 const certificateTemplatesBySlug: Record<string, string> = {
-  "blue-team-soc-fundamentals": "/certs/blue team soc analyst.jpeg",
-  "detection-engineering-basics": "/certs/Detection Engineering Basics course copy.jpg.jpeg",
-  "incident-response-fundamentals": "/certs/Incident Response course copy.jpg.jpeg",
-  "log-analysis-for-beginners": "/certs/Log Analysis for Beginners course copy FINAL.jpg",
-  "malware-analysis-fundamentals": "/certs/Malware Analysis Fundamentals Courses copy.jpg.jpeg",
-  "network-fundamentals": "/certs/network fundaments.jpeg",
-  "network-security-monitoring": "/certs/Network Security Monitoring course copy.jpg.jpeg",
-  "siem-fundamentals": "/certs/SIEM Fundamentals course copy.jpg.jpeg",
-  "soc-analyst-path": "/certs/soc analyst learing path.jpeg",
-  "threat-hunting-fundamentals": "/certs/Threat Hunting Fundamentals course copy.jpg.jpeg",
+  "log-analysis-for-beginners": "/certs/Log Analysis for Beginners course copy.jpg.jpeg",
 };
 
 const wrapText = (
@@ -680,7 +671,8 @@ const CourseDetail = () => {
   const isCourseCompleted = totalLessons > 0 && completedLessons >= totalLessons;
 
   const generateCertificatePngDataUrl = async () => {
-    if (!course) return null;
+    try {
+      if (!course) return null;
 
     const displayName = (user?.fullName || user?.email || "Student").trim();
     const issueDate = new Date().toLocaleDateString("en-GB", {
@@ -689,16 +681,16 @@ const CourseDetail = () => {
       year: "numeric",
     });
 
-    const img = new Image();
-    img.crossOrigin = "anonymous";
+      const img = new Image();
+      img.crossOrigin = "anonymous";
 
-    const imageSrc = certificateTemplatesBySlug[slug || ""] || "/certs/template11.jpg";
+      const imageSrc = certificateTemplatesBySlug[slug || ""] || "/certs/template11.jpg";
 
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error("Failed to load certificate template"));
-      img.src = encodeURI(imageSrc);
-    });
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Failed to load certificate template"));
+        img.src = encodeURI(imageSrc);
+      });
 
     if (document.fonts) {
       try {
@@ -782,14 +774,17 @@ const CourseDetail = () => {
     const safeTitle = course.title.replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "");
     const fileName = `${safeTitle}-certificate.png`;
 
-    const dataUrl = canvas.toDataURL("image/png");
+      const dataUrl = canvas.toDataURL("image/png");
 
-    return {
-      dataUrl,
-      fileName,
-      displayName,
-      issueDate,
-    };
+      return {
+        dataUrl,
+        fileName,
+        displayName,
+        issueDate,
+      };
+    } catch {
+      return null;
+    }
   };
 
   const handleShareOnLinkedIn = async () => {
@@ -849,15 +844,22 @@ const CourseDetail = () => {
   };
 
   const handleDownloadCertificate = async () => {
-    const cert = await generateCertificatePngDataUrl();
-    if (!cert) return;
+    try {
+      const cert = await generateCertificatePngDataUrl();
+      if (!cert) {
+        setEnrollError("Could not generate certificate. Please try again.");
+        return;
+      }
 
-    const a = document.createElement("a");
-    a.href = cert.dataUrl;
-    a.download = cert.fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+      const a = document.createElement("a");
+      a.href = cert.dataUrl;
+      a.download = cert.fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch {
+      setEnrollError("Could not generate certificate. Please try again.");
+    }
   };
 
   const handlePrimaryCta = async () => {
