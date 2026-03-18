@@ -51,7 +51,16 @@ const courseBackgrounds: Record<string, string> = {
 };
 
 const certificateTemplatesBySlug: Record<string, string> = {
+  "blue-team-soc-fundamentals": "/certs/blue team soc analyst.jpeg",
+  "detection-engineering-basics": "/certs/Detection Engineering Basics course copy.jpg.jpeg",
+  "incident-response-fundamentals": "/certs/Incident Response course copy.jpg.jpeg",
   "log-analysis-for-beginners": "/certs/Log Analysis for Beginners course copy.jpg.jpeg",
+  "malware-analysis-fundamentals": "/certs/Malware Analysis Fundamentals Courses copy.jpg.jpeg",
+  "network-fundamentals": "/certs/network fundaments.jpeg",
+  "network-security-monitoring": "/certs/Network Security Monitoring course copy.jpg.jpeg",
+  "siem-fundamentals": "/certs/SIEM Fundamentals course copy.jpg.jpeg",
+  "soc-analyst-path": "/certs/soc analyst learing path.jpeg",
+  "threat-hunting-fundamentals": "/certs/Threat Hunting Fundamentals course copy.jpg.jpeg",
 };
 
 const wrapText = (
