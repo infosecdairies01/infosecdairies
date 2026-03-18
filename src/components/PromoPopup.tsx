@@ -30,13 +30,19 @@ const PromoPopup = () => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 border border-white/10 bg-slate-950/90">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={handleClose}
+    >
+      <div
+        className="relative w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 border border-white/10 bg-slate-950/90"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="h-1.5 bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500" />
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
           <X className="w-5 h-5 text-white/80" />
         </button>

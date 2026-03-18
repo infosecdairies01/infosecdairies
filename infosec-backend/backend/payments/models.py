@@ -37,6 +37,10 @@ class PromoCode(models.Model):
         if self.max_uses > 0 and self.current_uses >= self.max_uses:
             return False
 
+        # UGADI2026 is intentionally reusable unlimited times per user.
+        if self.code == "UGADI2026":
+            return True
+
         # Global promo code (course_slug == "all") is reusable for the same user,
         # but only once per target course/bundle.
         if self.course_slug == "all":
@@ -65,6 +69,10 @@ class PromoCode(models.Model):
 
     def record_usage(self, user, course_slug: str):
         """Record that a user used this promo code."""
+        # UGADI2026 is intentionally reusable unlimited times per user.
+        # Skip recording usage to avoid uniqueness conflicts.
+        if self.code == "UGADI2026":
+            return
         PromoCodeUsage.objects.get_or_create(
             promo_code=self,
             code=self.code,
