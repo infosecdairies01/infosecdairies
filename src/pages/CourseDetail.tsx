@@ -674,7 +674,7 @@ const CourseDetail = () => {
     try {
       if (!course) return null;
 
-    const displayName = (user?.fullName || user?.email || "Student").trim();
+    const displayName = (user?.fullName || "Student").trim();
     const issueDate = new Date().toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "long",
@@ -740,11 +740,6 @@ const CourseDetail = () => {
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.font = `500 ${Math.round(h * 0.028)}px "Montserrat", Inter, Arial, sans-serif`;
     ctx.fillText(issueDate, xLeft, Math.round(h * 0.835));
-
-    // Date of Issue label (below the date)
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
-    ctx.font = `400 ${Math.round(h * 0.022)}px "Montserrat", Inter, Arial, sans-serif`;
-    ctx.fillText("Date of Issue", xLeft, Math.round(h * 0.875));
 
     // QR Code (bottom right) - link to course page
     try {
