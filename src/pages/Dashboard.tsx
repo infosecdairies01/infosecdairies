@@ -11,6 +11,8 @@ import {
   Target,
   Calendar,
   Pencil,
+  FileQuestion,
+  Award,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,47 @@ const recentActivity: {
   color: string;
 }[] = [];
 
+interface ActivityItem {
+  type: 'lesson' | 'quiz' | 'course_complete';
+  title: string;
+  courseTitle: string;
+  timestamp: number;
+}
+
+const getRecentActivity = (): ActivityItem[] => {
+  try {
+    const stored = localStorage.getItem('user_activity_log');
+    if (!stored) return [];
+    const parsed = JSON.parse(stored) as ActivityItem[];
+    return parsed
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 5); // Get last 5 activities
+  } catch {
+    return [];
+  }
+};
+
+export const logActivity = (type: ActivityItem['type'], title: string, courseTitle: string) => {
+  try {
+    const existing = getRecentActivity();
+    const newActivity: ActivityItem = {
+      type,
+      title,
+      courseTitle,
+      timestamp: Date.now(),
+    };
+    // Remove duplicates (same type + title within last hour)
+    const filtered = existing.filter(
+      (a) =>
+        !(a.type === type && a.title === title && Date.now() - a.timestamp < 3600000)
+    );
+    const updated = [newActivity, ...filtered].slice(0, 10);
+    localStorage.setItem('user_activity_log', JSON.stringify(updated));
+  } catch {
+    // Silently fail
+  }
+};
+
 const getDifficultyColor = (difficulty: string) => {
   switch (difficulty) {
     case "Easy": return "bg-blue-500/20 text-blue-400";
@@ -64,6 +107,8 @@ const Dashboard = () => {
   );
   const [nameSaving, setNameSaving] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
+
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
 
   const displayFirstName = (user?.fullName || "").trim().split(/\s+/)[0] || (user?.email ? user.email.split("@")[0] : "");
 
@@ -164,6 +209,7 @@ const Dashboard = () => {
 
             // Fetch backend lesson progress for this course
             let completedLessons = 0;
+            let lastAccessedTime = Date.now();
             try {
               const progressRes = await fetch(
                 apiUrl(`/api/courses/${course.slug}/progress/`),
@@ -183,10 +229,24 @@ const Dashboard = () => {
                     item && item.lesson_id != null ? String(item.lesson_id) : null,
                   )
                   .filter((id: string | null): id is string => Boolean(id));
-              } else {
-                const completedKey = `completed_lessons_${course.slug}`;
-                completedIds = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
+                
+                // Track most recent completion time for "last accessed"
+                const timestamps = progressData
+                  .map((item) => item?.completed_at ? new Date(item.completed_at).getTime() : 0)
+                  .filter((t: number) => t > 0);
+                if (timestamps.length > 0) {
+                  lastAccessedTime = Math.max(...timestamps);
+                }
               }
+
+              // Always merge with localStorage to ensure we don't lose progress
+              const completedKey = `completed_lessons_${course.slug}`;
+              const localIds = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
+              const merged = Array.from(new Set([...completedIds, ...localIds]));
+              completedIds = merged;
+              
+              // Update localStorage with merged data
+              localStorage.setItem(completedKey, JSON.stringify(completedIds));
 
               if (staticCourse) {
                 const allLessonIds = staticCourse.modules.flatMap((m) =>
@@ -199,8 +259,34 @@ const Dashboard = () => {
                 completedLessons = completedIds.length;
               }
             } catch {
-              // best-effort; leave completedLessons at 0 on failure
+              // Fallback to localStorage on error
+              const completedKey = `completed_lessons_${course.slug}`;
+              const localIds = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
+              if (staticCourse) {
+                const allLessonIds = staticCourse.modules.flatMap((m) =>
+                  m.lessons.map((l) => l.id),
+                );
+                completedLessons = allLessonIds.filter((id) =>
+                  localIds.includes(id),
+                ).length;
+              } else {
+                completedLessons = localIds.length;
+              }
             }
+
+            const formatLastAccessed = (timestamp: number): string => {
+              const now = Date.now();
+              const diff = now - timestamp;
+              const minutes = Math.floor(diff / 60000);
+              const hours = Math.floor(diff / 3600000);
+              const days = Math.floor(diff / 86400000);
+              
+              if (minutes < 1) return 'just now';
+              if (minutes < 60) return `${minutes}m ago`;
+              if (hours < 24) return `${hours}h ago`;
+              if (days < 7) return `${days}d ago`;
+              return new Date(timestamp).toLocaleDateString();
+            };
 
             const enrolled: EnrolledCourse = {
               id: course.slug,
@@ -209,7 +295,7 @@ const Dashboard = () => {
               completedLessons,
               totalLessons,
               progress: totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0,
-              lastAccessed: "just now", // placeholder for now
+              lastAccessed: formatLastAccessed(lastAccessedTime),
             };
 
             return enrolled;
@@ -225,6 +311,7 @@ const Dashboard = () => {
     };
 
     fetchEnrollments();
+    setRecentActivity(getRecentActivity());
   }, []);
 
   const enrolledCount = enrolledCourses.length;
@@ -234,6 +321,7 @@ const Dashboard = () => {
   );
   const totalPoints = completedLessonsCount * 100; // simple placeholder formula
   const achievementsCount = useMemo(() => {
+    // Count courses that are 100% complete as achievements/certifications
     return enrolledCourses.filter(
       (c) => c.totalLessons > 0 && c.completedLessons >= c.totalLessons,
     ).length;
@@ -493,17 +581,54 @@ const Dashboard = () => {
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div className="mt-0.5">
-                        <activity.icon className={`w-4 h-4 ${activity.color}`} />
+                  {recentActivity.map((activity, index) => {
+                    const getActivityIcon = (type: string) => {
+                      switch (type) {
+                        case 'lesson': return <BookOpen className="w-4 h-4 text-primary" />;
+                        case 'quiz': return <FileQuestion className="w-4 h-4 text-orange-400" />;
+                        case 'course_complete': return <Award className="w-4 h-4 text-yellow-400" />;
+                        default: return <CheckCircle className="w-4 h-4 text-muted-foreground" />;
+                      }
+                    };
+                    
+                    const getActivityText = (type: string) => {
+                      switch (type) {
+                        case 'lesson': return 'Completed lesson';
+                        case 'quiz': return 'Completed quiz';
+                        case 'course_complete': return 'Completed course';
+                        default: return 'Activity';
+                      }
+                    };
+
+                    const formatTime = (timestamp: number) => {
+                      const diff = Date.now() - timestamp;
+                      const minutes = Math.floor(diff / 60000);
+                      const hours = Math.floor(diff / 3600000);
+                      const days = Math.floor(diff / 86400000);
+                      
+                      if (minutes < 1) return 'just now';
+                      if (minutes < 60) return `${minutes}m ago`;
+                      if (hours < 24) return `${hours}h ago`;
+                      if (days < 7) return `${days}d ago`;
+                      return new Date(timestamp).toLocaleDateString();
+                    };
+                    
+                    return (
+                      <div key={index} className="flex items-start gap-3">
+                        <div className="mt-0.5">
+                          {getActivityIcon(activity.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">
+                            {getActivityText(activity.type)}: <span className="font-medium">{activity.title}</span>
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {activity.courseTitle} · {formatTime(activity.timestamp)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm truncate">{activity.title}</p>
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { getCourseById } from "@/data/courses";
 import { getQuizById, QuizData, QuizQuestion } from "@/data/quizData";
 import { Button } from "@/components/ui/button";
+import { logActivity } from "./Dashboard";
 
 type QuizState = "intro" | "active" | "review" | "results";
 
@@ -283,6 +284,11 @@ const QuizPage = () => {
       
       // Always save to database (both passed and failed)
       saveQuizScoreToDatabase(quizId, score.percentage);
+      
+      // Log activity for dashboard when quiz is passed
+      if (passed && course) {
+        logActivity('quiz', quiz.title, course.title);
+      }
       
       // Trigger a custom event to notify course detail of progress update
       window.dispatchEvent(new CustomEvent('quizCompleted', { 
