@@ -12,6 +12,7 @@ import { getLessonContent, LessonContent } from "@/data/lessonContent";
 import { getLessonContentFromPerCourse } from "@/data/lessons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiUrl } from "@/services/api";
+import { logActivity } from "./Dashboard";
 
 // Import course backgrounds
 import socFundamentalsBg from "@/assets/soc-course-bg.jpg";
@@ -503,6 +504,12 @@ const LessonViewer = () => {
       setCompletedLessonIds((prev) =>
         prev.includes(lessonId) ? prev : [...prev, lessonId]
       );
+      
+      // Log activity for dashboard
+      if (course && currentLesson) {
+        logActivity('lesson', currentLesson.title, course.title);
+      }
+      
       return true;
     } catch (err) {
       return false;
