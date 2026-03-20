@@ -160,13 +160,13 @@ A well-functioning SOC requires a diverse team with clearly defined roles. Under
 ### Typical Day:
 | Time | Activity |
 |------|----------|
-| 0800 | Shift handover, review overnight alerts |
-| 0830 | Begin alert queue processing |
-| 1000 | Document and escalate high-priority alert |
-| 1200 | Lunch break |
-| 1300 | Continue monitoring and triage |
-| 1500 | Update ticket documentation |
-| 1600 | Prepare shift handover notes |
+| 08:00 | Shift handover, review overnight alerts |
+| 08:30 | Begin alert queue processing |
+| 10:00 | Document and escalate high-priority alert |
+| 12:00 | Lunch break |
+| 13:00 | Continue monitoring and triage |
+| 15:00 | Update ticket documentation |
+| 16:00 | Prepare shift handover notes |
 
 ## Tier 2: Incident Responder
 
