@@ -214,8 +214,8 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     # How long a user stays logged in before the access token expires.
     # Increase this so the app does not "log out" after ~10-15 minutes.
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
 }
