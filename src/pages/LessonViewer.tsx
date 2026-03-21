@@ -673,7 +673,7 @@ const LessonViewer = () => {
       if (line.startsWith('# ')) {
         flushList();
         elements.push(
-          <h1 key={`h1-${lineIdx}`} className="text-2xl md:text-3xl font-bold text-foreground mt-8 mb-4 first:mt-0">
+          <h1 key={`h1-${lineIdx}`} className="text-2xl md:text-3xl font-bold text-foreground mt-5 mb-2 first:mt-0">
             {line.slice(2)}
           </h1>
         );
@@ -682,7 +682,7 @@ const LessonViewer = () => {
       if (line.startsWith('## ')) {
         flushList();
         elements.push(
-          <h2 key={`h2-${lineIdx}`} className="text-xl md:text-2xl font-semibold text-foreground mt-8 mb-3 border-b border-white/10 pb-2">
+          <h2 key={`h2-${lineIdx}`} className="text-xl md:text-2xl font-semibold text-foreground mt-5 mb-2 border-b border-white/10 pb-2">
             {line.slice(3)}
           </h2>
         );
@@ -691,7 +691,7 @@ const LessonViewer = () => {
       if (line.startsWith('### ')) {
         flushList();
         elements.push(
-          <h3 key={`h3-${lineIdx}`} className="text-lg font-semibold text-foreground mt-6 mb-2">
+          <h3 key={`h3-${lineIdx}`} className="text-lg font-semibold text-foreground mt-4 mb-1.5">
             {line.slice(4)}
           </h3>
         );
@@ -737,7 +737,7 @@ const LessonViewer = () => {
         elements.push(
           <p 
             key={`p-${lineIdx}`} 
-            className="text-muted-foreground leading-relaxed my-3"
+            className="text-muted-foreground leading-relaxed my-2"
             dangerouslySetInnerHTML={{ __html: parseInlineFormatting(line) }}
           />
         );
