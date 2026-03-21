@@ -319,8 +319,78 @@ const LessonViewer = () => {
   console.log('Current lesson index:', currentLessonIndex);
   console.log('Current lesson:', currentLesson);
 
-  const prevLesson = currentLessonIndex > 0 ? allLessons[currentLessonIndex - 1] : null;
-  const nextLesson = currentLessonIndex < allLessons.length - 1 ? allLessons[currentLessonIndex + 1] : null;
+  // Find next non-quiz lesson for navigation
+  const findNextNonQuizLesson = (startIndex: number) => {
+    for (let i = startIndex + 1; i < allLessons.length; i++) {
+      const lesson = allLessons[i];
+      if (!lesson) return null;
+      
+      // Check if this lesson is a quiz
+      let isQuizLesson = Boolean(lesson.title?.toLowerCase().includes("quiz"));
+      
+      // Apply the same quiz detection logic as in the render
+      if (!isQuizLesson && lesson.id && /^\d+\.\d+$/.test(lesson.id) && lesson.id.split('.')[1] === '5') {
+        isQuizLesson = true;
+      }
+      
+      // Apply special cases
+      if (slug === "blue-team-soc-fundamentals" && lesson.id === "10.5") {
+        isQuizLesson = false;
+      }
+      if (slug === "blue-team-soc-fundamentals" && lesson.id === "4.5") {
+        isQuizLesson = false;
+      }
+      if (slug === "blue-team-soc-fundamentals" && lesson.id === "5.5") {
+        isQuizLesson = false;
+      }
+      if (slug === "network-fundamentals" && (lesson.id === "nf-2.5" || lesson.id === "nf-3.5" || lesson.id === "nf-4.5")) {
+        isQuizLesson = false;
+      }
+      
+      if (!isQuizLesson) {
+        return lesson;
+      }
+    }
+    return null;
+  };
+  
+  // Find previous non-quiz lesson for navigation
+  const findPrevNonQuizLesson = (startIndex: number) => {
+    for (let i = startIndex - 1; i >= 0; i--) {
+      const lesson = allLessons[i];
+      if (!lesson) return null;
+      
+      // Check if this lesson is a quiz
+      let isQuizLesson = Boolean(lesson.title?.toLowerCase().includes("quiz"));
+      
+      // Apply the same quiz detection logic as in the render
+      if (!isQuizLesson && lesson.id && /^\d+\.\d+$/.test(lesson.id) && lesson.id.split('.')[1] === '5') {
+        isQuizLesson = true;
+      }
+      
+      // Apply special cases
+      if (slug === "blue-team-soc-fundamentals" && lesson.id === "10.5") {
+        isQuizLesson = false;
+      }
+      if (slug === "blue-team-soc-fundamentals" && lesson.id === "4.5") {
+        isQuizLesson = false;
+      }
+      if (slug === "blue-team-soc-fundamentals" && lesson.id === "5.5") {
+        isQuizLesson = false;
+      }
+      if (slug === "network-fundamentals" && (lesson.id === "nf-2.5" || lesson.id === "nf-3.5" || lesson.id === "nf-4.5")) {
+        isQuizLesson = false;
+      }
+      
+      if (!isQuizLesson) {
+        return lesson;
+      }
+    }
+    return null;
+  };
+  
+  const nextLesson = findNextNonQuizLesson(currentLessonIndex);
+  const prevLesson = findPrevNonQuizLesson(currentLessonIndex);
 
   // Only some courses have full lesson navigation/progress enabled
   const isCourseProgressEnabled = useMemo(() => {
