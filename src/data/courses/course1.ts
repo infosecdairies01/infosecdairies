@@ -221,7 +221,7 @@ export const courses: Course[] = [
       {
         id: "6",
         title: "Threat Intelligence Basics",
-        quizId: "q4",
+        quizId: "q5",
         lessons: [
           { 
             id: "6.1", 
@@ -263,7 +263,7 @@ export const courses: Course[] = [
       {
         id: "7",
         title: "Incident Response Introduction",
-        quizId: "q5",
+        quizId: "q6",
         lessons: [
           { 
             id: "7.1", 
@@ -305,7 +305,7 @@ export const courses: Course[] = [
       {
         id: "8",
         title: "Endpoint Detection & Response",
-        quizId: "q5",
+        quizId: "q7",
         lessons: [
           { 
             id: "8.1", 
@@ -347,7 +347,7 @@ export const courses: Course[] = [
       {
         id: "9",
         title: "Network Security Monitoring",
-        quizId: "q6",
+        quizId: "q8",
         lessons: [
           { 
             id: "9.1", 
@@ -389,7 +389,7 @@ export const courses: Course[] = [
       {
         id: "10",
         title: "SOC Analyst Best Practices",
-        quizId: "q6",
+        quizId: "q9",
         lessons: [
           { 
             id: "10.1", 

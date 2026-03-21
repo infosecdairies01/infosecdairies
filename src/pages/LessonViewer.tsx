@@ -929,6 +929,11 @@ const LessonViewer = () => {
                       isQuizLesson = false;
                     }
 
+                    // Special case: SOC Fundamentals lesson 6.5 IS a quiz
+                    if (slug === "blue-team-soc-fundamentals" && lessonId === "6.5") {
+                      isQuizLesson = true;
+                    }
+
                     return isQuizLesson;
                   })() && (
                     <div className="mt-8 p-6 rounded-xl bg-orange-500/10 border border-orange-500/20">
