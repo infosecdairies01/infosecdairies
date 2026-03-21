@@ -180,7 +180,6 @@ export const courses: Course[] = [
       {
         id: "5",
         title: "Alert Triage & Analysis",
-        quizId: "q4",
         lessons: [
           { 
             id: "5.1", 
@@ -222,6 +221,7 @@ export const courses: Course[] = [
       {
         id: "6",
         title: "Threat Intelligence Basics",
+        quizId: "q4",
         lessons: [
           { 
             id: "6.1", 
@@ -305,6 +305,7 @@ export const courses: Course[] = [
       {
         id: "8",
         title: "Endpoint Detection & Response",
+        quizId: "q5",
         lessons: [
           { 
             id: "8.1", 
@@ -346,6 +347,7 @@ export const courses: Course[] = [
       {
         id: "9",
         title: "Network Security Monitoring",
+        quizId: "q6",
         lessons: [
           { 
             id: "9.1", 

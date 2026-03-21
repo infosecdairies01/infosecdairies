@@ -325,16 +325,35 @@ const QuizPage = () => {
     }
   };
 
-  // Get next lesson after quiz
+  // Get next lesson after quiz - uses the NEXT MODULE's first lesson
   const getNextLessonAfterQuiz = (storageQuizId: string): string | null => {
     if (!course) return null;
 
-    const moduleIndex = course.modules.findIndex((m) => m.quizId === storageQuizId);
+    // Find which module contains this quiz by checking if quizId matches
+    // or if the lesson ID ends with .5 (quiz lessons)
+    let moduleIndex = -1;
+    
+    // First try to find by quizId
+    moduleIndex = course.modules.findIndex((m) => m.quizId === storageQuizId);
+    
+    // If not found, try to find by lesson ID pattern (e.g., "4.5" means module 4's quiz)
+    if (moduleIndex < 0 && storageQuizId.includes('.')) {
+      const moduleNum = parseInt(storageQuizId.split('.')[0], 10);
+      if (!isNaN(moduleNum)) {
+        moduleIndex = course.modules.findIndex((m) => parseInt(m.id, 10) === moduleNum);
+      }
+    }
+    
     if (moduleIndex < 0) return null;
 
+    // Get the NEXT module (not current)
     const nextModule = course.modules[moduleIndex + 1];
-    const nextLesson = nextModule?.lessons?.[0];
-    return nextLesson?.id ?? null;
+    if (!nextModule || !nextModule.lessons || nextModule.lessons.length === 0) {
+      return null;
+    }
+    
+    // Return the FIRST lesson of the next module
+    return nextModule.lessons[0]?.id ?? null;
   };
 
   return (
