@@ -280,6 +280,42 @@ const LessonViewer = () => {
   const currentLesson =
     currentLessonIndex >= 0 ? allLessons[currentLessonIndex] : null;
 
+  const displayedLessonContent = useMemo(() => {
+    if (!lessonContent?.content) return lessonContent;
+    if (!currentLesson?.title) return lessonContent;
+
+    const normalize = (value: string) =>
+      value
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .replace(/\s*[:\-–—]+\s*$/g, "")
+        .trim();
+
+    const lines = lessonContent.content.split("\n");
+    const firstNonEmptyIndex = lines.findIndex((line) => line.trim().length > 0);
+    if (firstNonEmptyIndex < 0) return lessonContent;
+
+    const firstLine = lines[firstNonEmptyIndex];
+    const headingMatch = firstLine.match(/^#{1,6}\s+(.+)$/);
+    if (!headingMatch) return lessonContent;
+
+    const headingText = headingMatch[1].trim();
+    if (normalize(headingText) !== normalize(currentLesson.title)) return lessonContent;
+
+    const nextIndex = firstNonEmptyIndex + 1;
+    const shouldRemoveNextBlank = nextIndex < lines.length && lines[nextIndex].trim() === "";
+    const filtered = lines.filter((_, idx) => {
+      if (idx === firstNonEmptyIndex) return false;
+      if (shouldRemoveNextBlank && idx === nextIndex) return false;
+      return true;
+    });
+
+    return {
+      ...lessonContent,
+      content: filtered.join("\n"),
+    };
+  }, [lessonContent, currentLesson?.title]);
+
   console.log('Current lesson index:', currentLessonIndex);
   console.log('Current lesson:', currentLesson);
 
@@ -849,7 +885,7 @@ const LessonViewer = () => {
                 <>
                   {/* Main Content */}
                   <div className="prose prose-invert max-w-none">
-                    {renderContent(lessonContent.content)}
+                    {renderContent(displayedLessonContent?.content || "")}
                   </div>
 
                   {/* Quiz Button for Quiz Lessons */}
