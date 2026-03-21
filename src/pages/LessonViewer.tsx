@@ -919,6 +919,16 @@ const LessonViewer = () => {
                       isQuizLesson = false;
                     }
 
+                    // Special case: SOC Fundamentals lesson 4.5 is a hands-on lab, not a quiz
+                    if (slug === "blue-team-soc-fundamentals" && lessonId === "4.5") {
+                      isQuizLesson = false;
+                    }
+
+                    // Special case: SOC Fundamentals lesson 5.5 is documentation, not a quiz
+                    if (slug === "blue-team-soc-fundamentals" && lessonId === "5.5") {
+                      isQuizLesson = false;
+                    }
+
                     return isQuizLesson;
                   })() && (
                     <div className="mt-8 p-6 rounded-xl bg-orange-500/10 border border-orange-500/20">
