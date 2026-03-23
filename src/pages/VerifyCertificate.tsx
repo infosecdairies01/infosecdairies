@@ -24,6 +24,12 @@ export default function VerifyCertificate() {
   const [inputCertId, setInputCertId] = useState("");
 
   useEffect(() => {
+    // If no certId, slug, or emailHash provided, show the form immediately
+    if (!certId && !slug && !emailHash) {
+      setLoading(false);
+      return;
+    }
+
     const verifyCertificate = async () => {
       try {
         // If certId is provided, use the new verification endpoint
