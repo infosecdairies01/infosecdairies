@@ -487,16 +487,22 @@ const LessonViewer = () => {
       m.lessons.some((l) => l.id === newLessonId),
     );
     if (targetModuleIndex > 0) {
-      const previousModule = course.modules[targetModuleIndex - 1];
-      const gateQuizId = getModuleGateQuizId(previousModule);
-      if (gateQuizId) {
-        const score = getStoredQuizScore(gateQuizId);
-        const passed = score != null && score >= 70;
+      // Only check previous module's quiz when moving to a DIFFERENT module
+      // (not when clicking Next within the same module)
+      const isMovingToDifferentModule = targetModuleIndex !== currentModuleIndex;
 
-        if (!passed) {
-          window.alert("Complete the quiz (70%+) to unlock the next module.");
-          navigate(`/courses/${slug}/quiz/${gateQuizId}`);
-          return false;
+      if (isMovingToDifferentModule) {
+        const previousModule = course.modules[targetModuleIndex - 1];
+        const gateQuizId = getModuleGateQuizId(previousModule);
+        if (gateQuizId) {
+          const score = getStoredQuizScore(gateQuizId);
+          const passed = score != null && score >= 70;
+
+          if (!passed) {
+            window.alert("Complete the quiz (70%+) to unlock the next module.");
+            navigate(`/courses/${slug}/quiz/${gateQuizId}`);
+            return false;
+          }
         }
       }
     }
@@ -1092,7 +1098,7 @@ const LessonViewer = () => {
                   nextLesson ? (
                     <button
                       onClick={() => {
-                        // Within a module: go to next lesson.
+                        // Within a module: go to next lesson (including quiz lessons like 1.5).
                         if (nextLessonInModule?.id) {
                           const didNavigate = navigateToLesson(nextLessonInModule.id);
                           if (didNavigate) {
@@ -1102,7 +1108,27 @@ const LessonViewer = () => {
                           return;
                         }
 
-                        // End of module: require taking the module quiz (if any) before moving to next module.
+                        // End of module: check if module has a quiz lesson (e.g., *.5) before jumping to quiz page.
+                        // If quiz lesson exists, go there first so user sees quiz intro.
+                        const quizLessonInModule = currentModule?.lessons?.find((l) => {
+                          const looksLikeQuizLesson = /^\d+\.5$/.test(l.id);
+                          // SOC exceptions where *.5 is NOT a quiz
+                          if (slug === "blue-team-soc-fundamentals" && (l.id === "4.5" || l.id === "5.5")) {
+                            return false;
+                          }
+                          return looksLikeQuizLesson;
+                        });
+
+                        if (quizLessonInModule?.id) {
+                          // Go to the quiz lesson first (e.g., 1.5) which has the Start Quiz button
+                          const didNavigate = navigateToLesson(quizLessonInModule.id);
+                          if (didNavigate) {
+                            void markLessonComplete();
+                          }
+                          return;
+                        }
+
+                        // No quiz lesson in module; if module has quizId and not passed, go to quiz page.
                         if (moduleQuizId && !hasPassedModuleQuiz) {
                           void markLessonComplete();
                           navigate(`/courses/${slug}/quiz/${moduleQuizId}`);
