@@ -329,6 +329,23 @@ const QuizPage = () => {
   const getNextLessonAfterQuiz = (storageQuizId: string): string | null => {
     if (!course) return null;
 
+    const isQuizLikeLessonId = (courseSlug: string | undefined, lessonId: string): boolean => {
+      // Only treat purely numeric x.y as candidates for the *.5 quiz convention.
+      // Avoid misclassifying prefixed IDs like nf-2.5.
+      if (!/^\d+\.\d+$/.test(lessonId)) return false;
+      const parts = lessonId.split(".");
+      if (parts.length !== 2) return false;
+      if (parts[1] !== "5") return false;
+
+      // Course-specific exceptions (some *.5 lessons are NOT quizzes)
+      if (courseSlug === "blue-team-soc-fundamentals") {
+        if (lessonId === "4.5") return false;
+        if (lessonId === "5.5") return false;
+      }
+
+      return true;
+    };
+
     // Find which module contains this quiz by checking if quizId matches
     // or if the lesson ID ends with .5 (quiz lessons)
     let moduleIndex = -1;
@@ -351,8 +368,13 @@ const QuizPage = () => {
     if (!nextModule || !nextModule.lessons || nextModule.lessons.length === 0) {
       return null;
     }
-    
-    // Return the FIRST lesson of the next module
+
+    // Return the FIRST non-quiz lesson of the next module.
+    // This fixes the bug where the next module's first item can be a quiz-lesson (e.g. *.5).
+    const firstNonQuizLesson = nextModule.lessons.find((l) => !isQuizLikeLessonId(slug, l.id));
+    if (firstNonQuizLesson?.id) return firstNonQuizLesson.id;
+
+    // Fallback: if the next module only contains quiz-like lessons (rare), return the first.
     return nextModule.lessons[0]?.id ?? null;
   };
 
