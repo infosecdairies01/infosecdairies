@@ -965,7 +965,7 @@ export const quizzes: QuizData[] = [
       },
       {
         id: "q6-3",
-        question: "Which severity level requires immediate response for active ransomware?",
+        question: "",
         options: [
           "Low",
           "Medium",
@@ -2344,7 +2344,7 @@ export const quizzes: QuizData[] = [
     questions: [
       {
         id: "siem-q1-1",
-        question: "What does SIEM stand for?",
+        question: "for?",
         options: [
           "Security Intelligence and Event Monitoring",
           "Security Information and Event Management",

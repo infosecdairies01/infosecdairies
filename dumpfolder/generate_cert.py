@@ -6,6 +6,7 @@ Cert ID: INFOD-SOC-2025-001
 """
 from PIL import Image, ImageDraw, ImageFont
 import os
+import qrcode
 
 # Config for RAKESH JIMMIDI
 TEMPLATE_PATH = "certs/live_training_tempjpg.jpeg"
@@ -13,6 +14,7 @@ OUTPUT_PATH = "dumpfolder/certificate_RAKESH_JIMMIDI.png"
 STUDENT_NAME = "RAKESH JIMMIDI"
 ISSUE_DATE = "5th October 2025"
 CERT_ID = "INFOD-SOC-2025-001"
+VERIFY_URL = f"https://www.infosecdairies.io/Verify/{CERT_ID}"
 
 # Load template
 template = Image.open(TEMPLATE_PATH)
@@ -48,6 +50,31 @@ cert_x = int(width * 0.350)
 cert_y = int(height * 0.772)
 draw.text((cert_x, cert_y), CERT_ID, fill=COLOR_OLIVE, font=font_details)
 
+# ── 4. QR CODE ──────────────────────────────────────────────────────────────
+# Generate QR code for verification URL
+qr = qrcode.QRCode(
+    version=1,
+    error_correction=qrcode.constants.ERROR_CORRECT_H,
+    box_size=10,
+    border=2,
+)
+qr.add_data(VERIFY_URL)
+qr.make(fit=True)
+
+# Create QR code image with white background
+qr_img = qr.make_image(fill_color="black", back_color="white")
+
+# Resize QR code to fit nicely (about 12% of certificate width)
+qr_size = int(width * 0.12)
+qr_img = qr_img.resize((qr_size, qr_size), Image.Resampling.LANCZOS)
+
+# Position in bottom right corner
+qr_x = int(width * 0.82)  # 82% from left
+qr_y = int(height * 0.75)  # 75% from top
+
+# Paste QR code onto certificate
+template.paste(qr_img, (qr_x, qr_y))
+
 # ── Save ──────────────────────────────────────────────────────────────────────
 os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 template.save(OUTPUT_PATH)
@@ -55,3 +82,4 @@ print(f"✅ Certificate saved to: {OUTPUT_PATH}")
 print(f"   Name:    {STUDENT_NAME}")
 print(f"   Date:    {ISSUE_DATE}")
 print(f"   Cert ID: {CERT_ID}")
+print(f"   QR Code: {VERIFY_URL}")
