@@ -59,12 +59,11 @@ const App = () => (
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/verify/:slug/:emailHash" element={<VerifyCertificate />} />
-            <Route path="/cert/:certId" element={<VerifyCertificate />} />
             <Route path="/verify" element={<VerifyCertificate />} />
             <Route path="/Verify" element={<VerifyCertificate />} />
-            <Route path="/VerifyCertificate" element={<Navigate to="/verify" replace />} />
-            <Route path="/verify-certificate/:certId" element={<Navigate to="/cert/:certId" replace />} />
-            <Route path="/verify-certificate" element={<Navigate to="/verify" replace />} />
+            <Route path="/VerifyCertificate" element={<Navigate to="/Verify" replace />} />
+            <Route path="/verify-certificate/*" element={<Navigate to="/Verify" replace />} />
+            <Route path="/cert/*" element={<Navigate to="/Verify" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
