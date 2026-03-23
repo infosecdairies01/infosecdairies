@@ -4308,6 +4308,504 @@ _[What happened? Impact? Contained? Current status?]_
 **Author:** _[Name]_ | **Classification:** _[TLP]_
 `,
   },
+  // ==========================================
+  // NETWORK FUNDAMENTALS RESOURCES
+  // ==========================================
+  {
+    id: "nf-r1",
+    courseId: "network-fundamentals",
+    title: "Network Protocols Cheat Sheet",
+    type: "cheatsheet",
+    content: `
+## Network Protocols Quick Reference
+
+### Common Protocols & Port Numbers
+
+| Protocol | Port(s) | Transport | Description |
+|----------|---------|-----------|-------------|
+| **FTP** | 20 (data), 21 (control) | TCP | File Transfer Protocol |
+| **SSH** | 22 | TCP | Secure Shell — encrypted remote access |
+| **Telnet** | 23 | TCP | Unencrypted remote access (deprecated) |
+| **SMTP** | 25 / 587 | TCP | Simple Mail Transfer Protocol |
+| **DNS** | 53 | UDP/TCP | Domain Name System |
+| **DHCP** | 67 (server), 68 (client) | UDP | Dynamic Host Configuration Protocol |
+| **TFTP** | 69 | UDP | Trivial File Transfer Protocol |
+| **HTTP** | 80 | TCP | Hypertext Transfer Protocol |
+| **POP3** | 110 | TCP | Post Office Protocol v3 |
+| **NTP** | 123 | UDP | Network Time Protocol |
+| **IMAP** | 143 | TCP | Internet Message Access Protocol |
+| **SNMP** | 161/162 | UDP | Simple Network Management Protocol |
+| **LDAP** | 389 | TCP/UDP | Lightweight Directory Access Protocol |
+| **HTTPS** | 443 | TCP | HTTP Secure (TLS/SSL) |
+| **SMB** | 445 | TCP | Server Message Block |
+| **Syslog** | 514 | UDP | System Logging |
+| **LDAPS** | 636 | TCP | LDAP over SSL |
+| **IMAPS** | 993 | TCP | IMAP over SSL |
+| **POP3S** | 995 | TCP | POP3 over SSL |
+| **RDP** | 3389 | TCP/UDP | Remote Desktop Protocol |
+
+### OSI Model Quick Reference
+
+| Layer | Name | PDU | Devices | Key Protocols |
+|-------|------|-----|---------|---------------|
+| **7** | Application | Data | Gateways | HTTP, DNS, SMTP, FTP |
+| **6** | Presentation | Data | — | SSL/TLS, JPEG, ASCII |
+| **5** | Session | Data | — | NetBIOS, RPC |
+| **4** | Transport | Segment | — | TCP, UDP |
+| **3** | Network | Packet | Router | IP, ICMP, ARP, OSPF |
+| **2** | Data Link | Frame | Switch, Bridge | Ethernet, 802.1Q, STP |
+| **1** | Physical | Bit | Hub, Repeater | Cables, Wi-Fi signals |
+
+### TCP vs UDP Comparison
+
+| Feature | TCP | UDP |
+|---------|-----|-----|
+| **Connection** | Connection-oriented (3-way handshake) | Connectionless |
+| **Reliability** | Guaranteed delivery, ordering | No guarantee |
+| **Speed** | Slower (overhead) | Faster (no overhead) |
+| **Header Size** | 20-60 bytes | 8 bytes |
+| **Use Cases** | HTTP, FTP, SSH, Email | DNS, VoIP, Streaming, Gaming |
+| **Flow Control** | Sliding window | None |
+| **Error Recovery** | Retransmission | None |
+
+### TCP Three-Way Handshake
+
+1. **SYN** → Client sends SYN (seq=x)
+2. **SYN-ACK** → Server responds SYN-ACK (seq=y, ack=x+1)
+3. **ACK** → Client sends ACK (ack=y+1)
+
+### TCP Four-Way Teardown
+
+1. **FIN** → Initiator sends FIN
+2. **ACK** → Receiver acknowledges
+3. **FIN** → Receiver sends FIN
+4. **ACK** → Initiator acknowledges
+
+### ICMP Message Types
+
+| Type | Code | Description |
+|------|------|-------------|
+| 0 | 0 | Echo Reply (ping response) |
+| 3 | 0 | Destination Network Unreachable |
+| 3 | 1 | Destination Host Unreachable |
+| 3 | 3 | Destination Port Unreachable |
+| 8 | 0 | Echo Request (ping) |
+| 11 | 0 | TTL Exceeded (traceroute) |
+
+### Port Ranges
+
+- **Well-Known:** 0 – 1023 (assigned to standard services)
+- **Registered:** 1024 – 49151 (used by applications)
+- **Dynamic/Ephemeral:** 49152 – 65535 (temporary client ports)
+`,
+  },
+  {
+    id: "nf-r2",
+    courseId: "network-fundamentals",
+    title: "Subnetting Quick Reference",
+    type: "cheatsheet",
+    content: `
+## Subnetting Quick Reference
+
+### Subnet Mask Table
+
+| CIDR | Subnet Mask | # Hosts | # Usable | Block Size |
+|------|-------------|---------|----------|------------|
+| /32 | 255.255.255.255 | 1 | 1 | 1 |
+| /31 | 255.255.255.254 | 2 | 2* | 2 |
+| /30 | 255.255.255.252 | 4 | 2 | 4 |
+| /29 | 255.255.255.248 | 8 | 6 | 8 |
+| /28 | 255.255.255.240 | 16 | 14 | 16 |
+| /27 | 255.255.255.224 | 32 | 30 | 32 |
+| /26 | 255.255.255.192 | 64 | 62 | 64 |
+| /25 | 255.255.255.128 | 128 | 126 | 128 |
+| /24 | 255.255.255.0 | 256 | 254 | 256 |
+| /23 | 255.255.254.0 | 512 | 510 | 512 |
+| /22 | 255.255.252.0 | 1,024 | 1,022 | 1,024 |
+| /21 | 255.255.248.0 | 2,048 | 2,046 | 2,048 |
+| /20 | 255.255.240.0 | 4,096 | 4,094 | 4,096 |
+| /16 | 255.255.0.0 | 65,536 | 65,534 | 65,536 |
+| /8 | 255.0.0.0 | 16,777,216 | 16,777,214 | 16,777,216 |
+
+**/31 is used for point-to-point links (RFC 3021)*
+
+### Powers of 2 (Essential for Subnetting)
+
+| 2^n | Value | | 2^n | Value |
+|-----|-------|-|-----|-------|
+| 2^0 | 1 | | 2^8 | 256 |
+| 2^1 | 2 | | 2^9 | 512 |
+| 2^2 | 4 | | 2^10 | 1,024 |
+| 2^3 | 8 | | 2^11 | 2,048 |
+| 2^4 | 16 | | 2^12 | 4,096 |
+| 2^5 | 32 | | 2^13 | 8,192 |
+| 2^6 | 64 | | 2^14 | 16,384 |
+| 2^7 | 128 | | 2^16 | 65,536 |
+
+### Subnetting Steps
+
+1. **Convert** the subnet mask to binary
+2. **Count** the host bits (zeros in the mask)
+3. **Calculate** total addresses: 2^(host bits)
+4. **Subtract 2** for network ID and broadcast: usable = total - 2
+5. **Find block size**: 256 - last non-zero octet of mask
+6. **List networks**: Start at 0, increment by block size
+
+### Example: Subnet 192.168.1.0/26
+
+- **Mask:** 255.255.255.192
+- **Block size:** 256 - 192 = 64
+- **Subnets:**
+  - 192.168.1.0 – 192.168.1.63 (broadcast: .63)
+  - 192.168.1.64 – 192.168.1.127 (broadcast: .127)
+  - 192.168.1.128 – 192.168.1.191 (broadcast: .191)
+  - 192.168.1.192 – 192.168.1.255 (broadcast: .255)
+- **Usable hosts per subnet:** 62
+
+### Private IP Address Ranges (RFC 1918)
+
+| Class | Range | CIDR | # Addresses |
+|-------|-------|------|-------------|
+| A | 10.0.0.0 – 10.255.255.255 | 10.0.0.0/8 | 16,777,216 |
+| B | 172.16.0.0 – 172.31.255.255 | 172.16.0.0/12 | 1,048,576 |
+| C | 192.168.0.0 – 192.168.255.255 | 192.168.0.0/16 | 65,536 |
+
+### Special Addresses
+
+| Address | Purpose |
+|---------|---------|
+| 0.0.0.0 | Default route / unspecified |
+| 127.0.0.1 | Loopback (localhost) |
+| 169.254.x.x | APIPA (DHCP failure) |
+| 224.0.0.0/4 | Multicast |
+| 255.255.255.255 | Limited broadcast |
+`,
+  },
+  {
+    id: "nf-r3",
+    courseId: "network-fundamentals",
+    title: "Wireshark Display Filters Guide",
+    type: "cheatsheet",
+    content: `
+## Wireshark Display Filters Quick Reference
+
+### Basic Protocol Filters
+
+| Filter | Description |
+|--------|-------------|
+| \`http\` | Show HTTP traffic |
+| \`dns\` | Show DNS queries and responses |
+| \`tcp\` | Show all TCP traffic |
+| \`udp\` | Show all UDP traffic |
+| \`icmp\` | Show ICMP (ping/traceroute) |
+| \`arp\` | Show ARP requests/replies |
+| \`dhcp\` | Show DHCP transactions |
+| \`tls\` | Show TLS/SSL traffic |
+| \`ssh\` | Show SSH traffic |
+| \`ftp\` | Show FTP control traffic |
+| \`smtp\` | Show SMTP email traffic |
+
+### IP Address Filters
+
+| Filter | Description |
+|--------|-------------|
+| \`ip.addr == 192.168.1.1\` | Traffic to/from specific IP |
+| \`ip.src == 10.0.0.5\` | Traffic from source IP |
+| \`ip.dst == 8.8.8.8\` | Traffic to destination IP |
+| \`ip.addr == 192.168.1.0/24\` | Traffic to/from a subnet |
+| \`!ip.addr == 10.0.0.1\` | Exclude specific IP |
+
+### Port Filters
+
+| Filter | Description |
+|--------|-------------|
+| \`tcp.port == 80\` | TCP port 80 (src or dst) |
+| \`tcp.dstport == 443\` | Destination port 443 |
+| \`tcp.srcport == 22\` | Source port 22 |
+| \`udp.port == 53\` | UDP port 53 (DNS) |
+| \`tcp.port in {80, 443, 8080}\` | Multiple ports |
+
+### TCP Analysis Filters
+
+| Filter | Description |
+|--------|-------------|
+| \`tcp.flags.syn == 1\` | SYN packets (connection attempts) |
+| \`tcp.flags.syn == 1 && tcp.flags.ack == 0\` | Initial SYN only |
+| \`tcp.flags.rst == 1\` | RST packets (connection resets) |
+| \`tcp.flags.fin == 1\` | FIN packets (connection teardown) |
+| \`tcp.analysis.retransmission\` | Retransmitted packets |
+| \`tcp.analysis.duplicate_ack\` | Duplicate ACKs |
+| \`tcp.analysis.zero_window\` | Zero window (flow control) |
+| \`tcp.stream eq 5\` | Follow specific TCP stream |
+
+### HTTP Filters
+
+| Filter | Description |
+|--------|-------------|
+| \`http.request\` | HTTP requests only |
+| \`http.response\` | HTTP responses only |
+| \`http.request.method == "POST"\` | POST requests |
+| \`http.request.method == "GET"\` | GET requests |
+| \`http.response.code == 404\` | 404 Not Found responses |
+| \`http.response.code >= 400\` | All error responses |
+| \`http.host contains "example"\` | Requests to specific host |
+| \`http.request.uri contains "login"\` | URLs containing "login" |
+
+### DNS Filters
+
+| Filter | Description |
+|--------|-------------|
+| \`dns.qry.name == "example.com"\` | Queries for specific domain |
+| \`dns.qry.type == 1\` | A record queries |
+| \`dns.qry.type == 28\` | AAAA record queries |
+| \`dns.flags.response == 1\` | DNS responses only |
+| \`dns.flags.rcode == 3\` | NXDOMAIN (name not found) |
+
+### Combining Filters
+
+| Operator | Example |
+|----------|---------|
+| **AND** (\`&&\`) | \`ip.addr == 10.0.0.1 && tcp.port == 80\` |
+| **OR** (\`||\`) | \`dns || http\` |
+| **NOT** (\`!\`) | \`!arp && !dns\` |
+| **Grouping** | \`(http || dns) && ip.addr == 10.0.0.1\` |
+
+### Useful Compound Filters
+
+- **All web traffic:** \`http || tls\`
+- **Failed connections:** \`tcp.flags.rst == 1 || icmp.type == 3\`
+- **Suspicious DNS:** \`dns.qry.name contains ".ru" || dns.qry.name contains ".cn"\`
+- **Large packets:** \`frame.len > 1500\`
+- **Slow responses:** \`tcp.time_delta > 1\`
+- **Non-standard ports:** \`tcp.port > 1024 && tcp.port < 49152\`
+
+### Capture Filter vs Display Filter
+
+| Feature | Capture Filter | Display Filter |
+|---------|---------------|----------------|
+| **When** | During capture | After capture |
+| **Syntax** | BPF (Berkeley Packet Filter) | Wireshark-specific |
+| **Example** | \`host 10.0.0.1\` | \`ip.addr == 10.0.0.1\` |
+| **Performance** | Reduces file size | Searches full capture |
+`,
+  },
+  {
+    id: "nf-r4",
+    courseId: "network-fundamentals",
+    title: "OSI Model Reference Poster",
+    type: "pdf",
+    content: `
+## OSI Model — Complete Reference
+
+### Layer 7: Application
+
+- **Function:** Provides network services directly to user applications
+- **Protocols:** HTTP, HTTPS, FTP, SMTP, POP3, IMAP, DNS, DHCP, SNMP, SSH, Telnet
+- **Devices:** Application gateways, proxy servers
+- **PDU:** Data
+- **Key Concepts:** User authentication, network services, API communication
+
+### Layer 6: Presentation
+
+- **Function:** Data formatting, encryption, compression, character encoding
+- **Protocols/Standards:** SSL/TLS, JPEG, PNG, GIF, MPEG, ASCII, Unicode, MIME
+- **Devices:** —
+- **PDU:** Data
+- **Key Concepts:** Data translation between formats, encryption/decryption
+
+### Layer 5: Session
+
+- **Function:** Manages communication sessions (establish, maintain, terminate)
+- **Protocols:** NetBIOS, RPC, PPTP, SIP
+- **Devices:** —
+- **PDU:** Data
+- **Key Concepts:** Dialog control (simplex, half-duplex, full-duplex), synchronization
+
+### Layer 4: Transport
+
+- **Function:** End-to-end communication, segmentation, flow control, error recovery
+- **Protocols:** TCP, UDP
+- **Devices:** —
+- **PDU:** Segment (TCP) / Datagram (UDP)
+- **Key Concepts:** Port numbers, 3-way handshake, windowing, multiplexing
+
+### Layer 3: Network
+
+- **Function:** Logical addressing, routing, path determination
+- **Protocols:** IP (IPv4/IPv6), ICMP, ARP, OSPF, BGP, EIGRP, RIP
+- **Devices:** Router, Layer 3 Switch
+- **PDU:** Packet
+- **Key Concepts:** IP addressing, subnetting, routing tables, NAT
+
+### Layer 2: Data Link
+
+- **Function:** Physical addressing, framing, error detection, media access control
+- **Sub-layers:** LLC (Logical Link Control) + MAC (Media Access Control)
+- **Protocols:** Ethernet (802.3), Wi-Fi (802.11), 802.1Q (VLANs), STP, PPP
+- **Devices:** Switch, Bridge, NIC
+- **PDU:** Frame
+- **Key Concepts:** MAC addresses, switching, VLANs, STP, ARP
+
+### Layer 1: Physical
+
+- **Function:** Bit transmission over physical medium (electrical, optical, radio)
+- **Standards:** Ethernet (10BASE-T, 100BASE-TX, 1000BASE-T), 802.11, RS-232
+- **Devices:** Hub, Repeater, Modem, Cables, Connectors
+- **PDU:** Bit
+- **Key Concepts:** Cabling (Cat5e/6/6a, Fiber), connectors (RJ-45, LC, SC), signaling
+
+---
+
+### Data Encapsulation Flow
+
+\`\`\`
+Application  → [ Data                                    ]
+Transport    → [ TCP/UDP Header | Data                   ]  = Segment
+Network      → [ IP Header | TCP Header | Data           ]  = Packet
+Data Link    → [ Frame Header | IP | TCP | Data | FCS    ]  = Frame
+Physical     → [ 10110010101001011010... ]                   = Bits
+\`\`\`
+
+### Common Mnemonics
+
+- **Top → Bottom:** All People Seem To Need Data Processing
+- **Bottom → Top:** Please Do Not Throw Sausage Pizza Away
+`,
+  },
+  {
+    id: "nf-r5",
+    courseId: "network-fundamentals",
+    title: "Network Command-Line Tools Guide",
+    type: "template",
+    content: `
+## Network Command-Line Tools — Complete Reference
+
+### 1. ping — Test Connectivity
+
+**Purpose:** Test basic IP connectivity and measure round-trip time
+
+| OS | Command |
+|----|---------|
+| Windows | \`ping 8.8.8.8\` |
+| Linux/Mac | \`ping -c 4 8.8.8.8\` |
+
+**Useful Flags:**
+- \`-t\` (Windows) — Continuous ping
+- \`-c N\` (Linux) — Send N packets
+- \`-s SIZE\` (Linux) — Set packet size
+- \`-i INTERVAL\` (Linux) — Set interval between pings
+
+**Reading Results:**
+- **Reply from:** Successful connectivity
+- **Request timed out:** No response (host down or ICMP blocked)
+- **TTL:** Hops remaining (indicates distance)
+- **time:** Round-trip latency in ms
+
+---
+
+### 2. traceroute / tracert — Path Discovery
+
+**Purpose:** Show the path packets take to a destination
+
+| OS | Command |
+|----|---------|
+| Windows | \`tracert 8.8.8.8\` |
+| Linux | \`traceroute 8.8.8.8\` |
+
+**Reading Results:**
+- Each line = one hop (router)
+- Three time values per hop
+- \`* * *\` = No response (ICMP blocked)
+- Increasing latency at a specific hop = potential bottleneck
+
+---
+
+### 3. nslookup / dig — DNS Queries
+
+**Purpose:** Query DNS servers for name resolution
+
+| Task | Command |
+|------|---------|
+| Basic lookup | \`nslookup example.com\` |
+| Specific record | \`nslookup -type=MX example.com\` |
+| Specific DNS server | \`nslookup example.com 8.8.8.8\` |
+| dig (Linux, more detail) | \`dig example.com A\` |
+| dig reverse lookup | \`dig -x 8.8.8.8\` |
+| dig short output | \`dig +short example.com\` |
+
+---
+
+### 4. ipconfig / ifconfig / ip — Interface Configuration
+
+| Task | Windows | Linux |
+|------|---------|-------|
+| View config | \`ipconfig\` | \`ip addr show\` |
+| Detailed view | \`ipconfig /all\` | \`ip addr\` |
+| Release DHCP | \`ipconfig /release\` | \`dhclient -r\` |
+| Renew DHCP | \`ipconfig /renew\` | \`dhclient\` |
+| Flush DNS | \`ipconfig /flushdns\` | \`systemd-resolve --flush-caches\` |
+
+---
+
+### 5. netstat / ss — Network Connections
+
+| Task | netstat | ss (modern) |
+|------|---------|-------------|
+| All connections | \`netstat -an\` | \`ss -an\` |
+| Listening ports | \`netstat -tlnp\` | \`ss -tlnp\` |
+| With process IDs | \`netstat -anp\` | \`ss -anp\` |
+| TCP only | \`netstat -at\` | \`ss -at\` |
+| UDP only | \`netstat -au\` | \`ss -au\` |
+| Routing table | \`netstat -rn\` | \`ip route\` |
+
+---
+
+### 6. arp — ARP Cache
+
+| Task | Command |
+|------|---------|
+| View ARP cache | \`arp -a\` |
+| Delete entry | \`arp -d IP_ADDRESS\` |
+| Add static entry | \`arp -s IP_ADDRESS MAC_ADDRESS\` |
+
+---
+
+### 7. route — Routing Table
+
+| Task | Windows | Linux |
+|------|---------|-------|
+| View table | \`route print\` | \`ip route show\` |
+| Add route | \`route add DEST mask MASK GW\` | \`ip route add DEST/CIDR via GW\` |
+| Delete route | \`route delete DEST\` | \`ip route del DEST/CIDR\` |
+| Default route | \`route add 0.0.0.0 mask 0.0.0.0 GW\` | \`ip route add default via GW\` |
+
+---
+
+### 8. Wireshark Quick Commands
+
+| Task | Filter/Command |
+|------|---------------|
+| Capture on interface | \`wireshark -i eth0\` |
+| Capture with filter | \`wireshark -i eth0 -f "port 80"\` |
+| Command-line capture | \`tshark -i eth0 -w output.pcap\` |
+| Read capture file | \`tshark -r capture.pcap\` |
+| Apply display filter | \`tshark -r file.pcap -Y "http"\` |
+
+---
+
+### Troubleshooting Checklist
+
+- [ ] \`ping 127.0.0.1\` — Test TCP/IP stack
+- [ ] \`ping DEFAULT_GATEWAY\` — Test local network
+- [ ] \`ping 8.8.8.8\` — Test internet connectivity
+- [ ] \`ping google.com\` — Test DNS resolution
+- [ ] \`ipconfig /all\` — Verify IP configuration
+- [ ] \`nslookup example.com\` — Test DNS
+- [ ] \`tracert destination\` — Identify routing issues
+- [ ] \`netstat -an\` — Check active connections
+- [ ] \`arp -a\` — Verify ARP entries
+`,
+  },
 ];
 
 export const getResourceContent = (courseId: string, resourceId: string): ResourceDocument | undefined => {

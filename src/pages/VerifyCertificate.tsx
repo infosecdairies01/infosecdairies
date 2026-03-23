@@ -138,10 +138,10 @@ export default function VerifyCertificate() {
                     value={inputCertId}
                     onChange={(e) => setInputCertId(e.target.value)}
                     className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                    onKeyDown={(e) => e.key === 'Enter' && inputCertId && navigate(`/verify-certificate/${inputCertId}`)}
+                    onKeyDown={(e) => e.key === 'Enter' && inputCertId && navigate(`/Verify/${inputCertId}`)}
                   />
                   <Button
-                    onClick={() => inputCertId && navigate(`/verify-certificate/${inputCertId}`)}
+                    onClick={() => inputCertId && navigate(`/Verify/${inputCertId}`)}
                     disabled={!inputCertId}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
