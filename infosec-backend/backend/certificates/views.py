@@ -12,9 +12,30 @@ from django.conf import settings
 from django.utils.html import escape
 
 from accounts.email_templates import _send_html_email, get_certificate_template
+from .models import Certificate
 
 
 logger = logging.getLogger(__name__)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def lookup_certificate(request, cert_id):
+    """Lookup certificate by ID"""
+    try:
+        certificate = Certificate.objects.get(cert_id=cert_id)
+        return JsonResponse({
+            'success': True,
+            'certId': certificate.cert_id,
+            'studentName': certificate.student_name,
+            'courseName': certificate.course_name,
+            'issueDate': certificate.issue_date,
+            'verified': True
+        })
+    except Certificate.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Certificate not found'
+        }, status=404)
 
 @csrf_exempt
 @require_http_methods(["POST"])

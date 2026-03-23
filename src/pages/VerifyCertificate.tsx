@@ -32,21 +32,25 @@ export default function VerifyCertificate() {
 
     const verifyCertificate = async () => {
       try {
-        // If certId is provided, use the new verification endpoint
+        // If certId is provided, fetch from backend API
         if (certId) {
-          // Parse cert ID format: INFOD-SOC-2025-001
-          const parts = certId.split('-');
-          const year = parts[2] || '2025';
-          const rollNo = parts[3] || '001';
-          
-          // For demo purposes, create verification data from cert ID
-          setData({
-            courseTitle: "SOC Analyst - Level 1",
-            studentName: "RAKESH JIMMIDI", // You can map cert IDs to names
-            issueDate: `5th October ${year}`,
-            verified: true,
-            certId: certId
-          });
+          const response = await fetch(apiUrl(`/api/certificates/lookup/${certId}/`));
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              setData({
+                courseTitle: result.courseName,
+                studentName: result.studentName,
+                issueDate: result.issueDate,
+                verified: result.verified,
+                certId: result.certId
+              });
+            } else {
+              setError(result.error || "Certificate not found");
+            }
+          } else {
+            setError("Certificate not found or invalid");
+          }
           setLoading(false);
           return;
         }
