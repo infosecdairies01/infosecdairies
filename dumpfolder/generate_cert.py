@@ -14,7 +14,7 @@ OUTPUT_PATH = "dumpfolder/certificate_RAKESH_JIMMIDI.png"
 STUDENT_NAME = "RAKESH JIMMIDI"
 ISSUE_DATE = "5th October 2025"
 CERT_ID = "INFOD-SOC-2025-001"
-VERIFY_URL = f"https://www.infosecdairies.io/Verify/{CERT_ID}"
+VERIFY_URL = f"https://www.infosecdairies.io/cert/{CERT_ID}"
 
 # Load template
 template = Image.open(TEMPLATE_PATH)
