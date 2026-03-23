@@ -52,9 +52,10 @@ interface ActivityItem {
   timestamp: number;
 }
 
-const getRecentActivity = (): ActivityItem[] => {
+const getRecentActivity = (userEmail: string): ActivityItem[] => {
   try {
-    const stored = localStorage.getItem('user_activity_log');
+    const userSpecificKey = `user_activity_log_${userEmail}`;
+    const stored = localStorage.getItem(userSpecificKey);
     if (!stored) return [];
     const parsed = JSON.parse(stored) as ActivityItem[];
     return parsed
@@ -67,7 +68,11 @@ const getRecentActivity = (): ActivityItem[] => {
 
 export const logActivity = (type: ActivityItem['type'], title: string, courseTitle: string) => {
   try {
-    const existing = getRecentActivity();
+    // Get current user email from localStorage
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) return; // Don't log activity if no user is logged in
+    
+    const existing = getRecentActivity(userEmail);
     const newActivity: ActivityItem = {
       type,
       title,
@@ -80,7 +85,9 @@ export const logActivity = (type: ActivityItem['type'], title: string, courseTit
         !(a.type === type && a.title === title && Date.now() - a.timestamp < 3600000)
     );
     const updated = [newActivity, ...filtered].slice(0, 10);
-    localStorage.setItem('user_activity_log', JSON.stringify(updated));
+    
+    const userSpecificKey = `user_activity_log_${userEmail}`;
+    localStorage.setItem(userSpecificKey, JSON.stringify(updated));
   } catch {
     // Silently fail
   }
@@ -311,8 +318,29 @@ const Dashboard = () => {
     };
 
     fetchEnrollments();
-    setRecentActivity(getRecentActivity());
-  }, []);
+    // Only get recent activity if user is logged in
+    if (user?.email) {
+      const allActivities = getRecentActivity(user.email);
+      // Filter activities to only show courses user is enrolled in
+      const enrolledCourseSlugs = enrollmentChecks
+        .filter(check => check?.course)
+        .map(check => check.course.slug);
+      
+      const filteredActivities = allActivities.filter(activity => 
+        enrolledCourseSlugs.some(slug => activity.courseTitle.toLowerCase().includes(slug.toLowerCase())) ||
+        activity.courseTitle.toLowerCase().includes('blue team') || // Fallback for SOC course
+        activity.courseTitle.toLowerCase().includes('log analysis') || // Fallback for other courses
+        activity.courseTitle.toLowerCase().includes('threat hunting') ||
+        activity.courseTitle.toLowerCase().includes('network security') ||
+        activity.courseTitle.toLowerCase().includes('malware analysis') ||
+        activity.courseTitle.toLowerCase().includes('detection engineering') ||
+        activity.courseTitle.toLowerCase().includes('incident response') ||
+        activity.courseTitle.toLowerCase().includes('network fundamentals')
+      );
+      
+      setRecentActivity(filteredActivities);
+    }
+  }, [user, enrollmentChecks]);
 
   const enrolledCount = enrolledCourses.length;
   const completedLessonsCount = useMemo(
