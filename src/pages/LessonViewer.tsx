@@ -160,26 +160,9 @@ const LessonViewer = () => {
   const getModuleGateQuizId = (module: any): string | null => {
     if (!module) return null;
 
-    const lessons: any[] = Array.isArray(module.lessons) ? module.lessons : [];
-
-    if (module.quizId && lessons.some((l) => l?.id === module.quizId)) {
-      return module.quizId;
-    }
-
-    const quizLesson = lessons.find((l) => {
-      if (!l?.id || !l?.title) return false;
-      const looksNumericQuiz =
-        (/^[0-9]+\.[0-9]+$/.test(l.id) && l.id.split(".")[1] === "5") ||
-        String(l.title).toLowerCase().includes("quiz");
-
-      if (slug === "blue-team-soc-fundamentals" && l.id === "10.5") {
-        return false;
-      }
-
-      return looksNumericQuiz;
-    });
-
-    return quizLesson?.id ?? null;
+    // Prefer explicit module.quizId. Our quizzes live on the quiz route (not as lessons).
+    if (module.quizId) return String(module.quizId);
+    return null;
   };
 
   // Normalize backend slugs separately for course metadata vs lesson content
@@ -319,78 +302,39 @@ const LessonViewer = () => {
   console.log('Current lesson index:', currentLessonIndex);
   console.log('Current lesson:', currentLesson);
 
-  // Find next non-quiz lesson for navigation
-  const findNextNonQuizLesson = (startIndex: number) => {
-    for (let i = startIndex + 1; i < allLessons.length; i++) {
-      const lesson = allLessons[i];
-      if (!lesson) return null;
-      
-      // Check if this lesson is a quiz
-      let isQuizLesson = Boolean(lesson.title?.toLowerCase().includes("quiz"));
-      
-      // Apply the same quiz detection logic as in the render
-      if (!isQuizLesson && lesson.id && /^\d+\.\d+$/.test(lesson.id) && lesson.id.split('.')[1] === '5') {
-        isQuizLesson = true;
-      }
-      
-      // Apply special cases
-      if (slug === "blue-team-soc-fundamentals" && lesson.id === "10.5") {
-        isQuizLesson = false;
-      }
-      if (slug === "blue-team-soc-fundamentals" && lesson.id === "4.5") {
-        isQuizLesson = false;
-      }
-      if (slug === "blue-team-soc-fundamentals" && lesson.id === "5.5") {
-        isQuizLesson = false;
-      }
-      if (slug === "network-fundamentals" && (lesson.id === "nf-2.5" || lesson.id === "nf-3.5" || lesson.id === "nf-4.5")) {
-        isQuizLesson = false;
-      }
-      
-      if (!isQuizLesson) {
-        return lesson;
-      }
-    }
-    return null;
-  };
-  
-  // Find previous non-quiz lesson for navigation
-  const findPrevNonQuizLesson = (startIndex: number) => {
-    for (let i = startIndex - 1; i >= 0; i--) {
-      const lesson = allLessons[i];
-      if (!lesson) return null;
-      
-      // Check if this lesson is a quiz
-      let isQuizLesson = Boolean(lesson.title?.toLowerCase().includes("quiz"));
-      
-      // Apply the same quiz detection logic as in the render
-      if (!isQuizLesson && lesson.id && /^\d+\.\d+$/.test(lesson.id) && lesson.id.split('.')[1] === '5') {
-        isQuizLesson = true;
-      }
-      
-      // Apply special cases
-      if (slug === "blue-team-soc-fundamentals" && lesson.id === "10.5") {
-        isQuizLesson = false;
-      }
-      if (slug === "blue-team-soc-fundamentals" && lesson.id === "4.5") {
-        isQuizLesson = false;
-      }
-      if (slug === "blue-team-soc-fundamentals" && lesson.id === "5.5") {
-        isQuizLesson = false;
-      }
-      if (slug === "network-fundamentals" && (lesson.id === "nf-2.5" || lesson.id === "nf-3.5" || lesson.id === "nf-4.5")) {
-        isQuizLesson = false;
-      }
-      
-      if (!isQuizLesson) {
-        return lesson;
-      }
-    }
-    return null;
-  };
-  
-  const nextLesson = findNextNonQuizLesson(currentLessonIndex);
-  const prevLesson = findPrevNonQuizLesson(currentLessonIndex);
+  // Module-aware navigation (prevents the fragile '*.5 == quiz' heuristic from breaking flow)
+  const currentModuleIndex = useMemo(() => {
+    if (!course || !lessonId) return -1;
+    return course.modules.findIndex((m) => m.lessons.some((l) => l.id === lessonId));
+  }, [course, lessonId]);
+
+  const currentModule = currentModuleIndex >= 0 ? course.modules[currentModuleIndex] : null;
+  const currentLessonIndexInModule = useMemo(() => {
+    if (!currentModule || !lessonId) return -1;
+    return currentModule.lessons.findIndex((l) => l.id === lessonId);
+  }, [currentModule, lessonId]);
+
+  const nextLessonInModule =
+    currentModule && currentLessonIndexInModule >= 0
+      ? currentModule.lessons[currentLessonIndexInModule + 1] ?? null
+      : null;
+
+  const prevLessonInModule =
+    currentModule && currentLessonIndexInModule > 0
+      ? currentModule.lessons[currentLessonIndexInModule - 1] ?? null
+      : null;
+
+  const nextModuleFirstLesson =
+    course && currentModuleIndex >= 0
+      ? course.modules[currentModuleIndex + 1]?.lessons?.[0] ?? null
+      : null;
+
+  const moduleQuizId = currentModule?.quizId ?? null;
+  const moduleQuizScore = moduleQuizId ? getStoredQuizScore(moduleQuizId) : null;
+  const hasPassedModuleQuiz = moduleQuizId ? moduleQuizScore != null && moduleQuizScore >= 70 : true;
+
+  const nextLesson = nextLessonInModule ?? nextModuleFirstLesson;
+  const prevLesson = prevLessonInModule ?? null;
 
   // Only some courses have full lesson navigation/progress enabled
   const isCourseProgressEnabled = useMemo(() => {
@@ -517,13 +461,7 @@ const LessonViewer = () => {
     if (passed) return;
 
     // Redirect to the previous module quiz
-    const quizId = gateQuizId;
-    const isSocFundamentals = slug === "blue-team-soc-fundamentals";
-    if (isSocFundamentals) {
-      navigate(`/courses/${slug}/lesson/${quizId}`, { replace: true });
-    } else {
-      navigate(`/courses/${slug}/quiz/${quizId}`, { replace: true });
-    }
+    navigate(`/courses/${slug}/quiz/${gateQuizId}`, { replace: true });
   }, [slug, lessonId, course, navigate]);
 
   // Redirect if course or lesson not found
@@ -557,13 +495,7 @@ const LessonViewer = () => {
 
         if (!passed) {
           window.alert("Complete the quiz (70%+) to unlock the next module.");
-          const quizId = gateQuizId;
-          const isSocFundamentals = slug === "blue-team-soc-fundamentals";
-          if (isSocFundamentals) {
-            navigate(`/courses/${slug}/lesson/${quizId}`);
-          } else {
-            navigate(`/courses/${slug}/quiz/${quizId}`);
-          }
+          navigate(`/courses/${slug}/quiz/${gateQuizId}`);
           return false;
         }
       }
@@ -1160,11 +1092,35 @@ const LessonViewer = () => {
                   nextLesson ? (
                     <button
                       onClick={() => {
-                        const didNavigate = navigateToLesson(nextLesson.id);
-                        if (didNavigate) {
-                          // Fire-and-forget: try to mark current lesson complete, but don't block navigation
-                          void markLessonComplete();
+                        // Within a module: go to next lesson.
+                        if (nextLessonInModule?.id) {
+                          const didNavigate = navigateToLesson(nextLessonInModule.id);
+                          if (didNavigate) {
+                            // Fire-and-forget: try to mark current lesson complete, but don't block navigation
+                            void markLessonComplete();
+                          }
+                          return;
                         }
+
+                        // End of module: require taking the module quiz (if any) before moving to next module.
+                        if (moduleQuizId && !hasPassedModuleQuiz) {
+                          void markLessonComplete();
+                          navigate(`/courses/${slug}/quiz/${moduleQuizId}`);
+                          return;
+                        }
+
+                        // Quiz already passed (or no quiz): go to next module first lesson.
+                        if (nextModuleFirstLesson?.id) {
+                          const didNavigate = navigateToLesson(nextModuleFirstLesson.id);
+                          if (didNavigate) {
+                            void markLessonComplete();
+                          }
+                          return;
+                        }
+
+                        // Nothing left
+                        void markLessonComplete();
+                        navigate(`/courses/${slug}`);
                       }}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                     >
