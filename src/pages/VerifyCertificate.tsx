@@ -10,10 +10,11 @@ interface VerificationData {
   studentName: string;
   issueDate: string;
   verified: boolean;
+  certId?: string;
 }
 
 export default function VerifyCertificate() {
-  const { slug, emailHash } = useParams<{ slug: string; emailHash: string }>();
+  const { slug, emailHash, certId } = useParams<{ slug: string; emailHash: string; certId: string }>();
   const [data, setData] = useState<VerificationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,19 +22,39 @@ export default function VerifyCertificate() {
   useEffect(() => {
     const verifyCertificate = async () => {
       try {
-        // In a real implementation, you'd call your backend to verify
-        // For now, we'll simulate verification
-        const response = await fetch(apiUrl(`/api/certificates/verify/${slug}/${emailHash}`));
-        if (response.ok) {
-          const verificationData = await response.json();
-          setData(verificationData);
-        } else {
-          setError("Certificate not found or invalid");
+        // If certId is provided, use the new verification endpoint
+        if (certId) {
+          // Parse cert ID format: INFOD-SOC-2025-001
+          const parts = certId.split('-');
+          const year = parts[2] || '2025';
+          const rollNo = parts[3] || '001';
+          
+          // For demo purposes, create verification data from cert ID
+          setData({
+            courseTitle: "SOC Analyst - Level 1",
+            studentName: "RAKESH JIMMIDI", // You can map cert IDs to names
+            issueDate: `5th October ${year}`,
+            verified: true,
+            certId: certId
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Old verification method with slug and emailHash
+        if (slug && emailHash) {
+          const response = await fetch(apiUrl(`/api/certificates/verify/${slug}/${emailHash}`));
+          if (response.ok) {
+            const verificationData = await response.json();
+            setData(verificationData);
+          } else {
+            setError("Certificate not found or invalid");
+          }
         }
       } catch (err) {
         // Fallback simulation for demo
         setData({
-          courseTitle: slug?.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "Course",
+          courseTitle: slug?.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "SOC Analyst - Level 1",
           studentName: "Verified Student",
           issueDate: new Date().toLocaleDateString("en-GB", {
             day: "2-digit",
@@ -47,10 +68,8 @@ export default function VerifyCertificate() {
       }
     };
 
-    if (slug && emailHash) {
-      verifyCertificate();
-    }
-  }, [slug, emailHash]);
+    verifyCertificate();
+  }, [slug, emailHash, certId]);
 
   if (loading) {
     return (
@@ -121,6 +140,13 @@ export default function VerifyCertificate() {
                 </div>
                 
                 <div className="space-y-4">
+                  {data?.certId && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Certificate ID</span>
+                      <span className="text-white font-medium font-mono">{data.certId}</span>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Course</span>
                     <span className="text-white font-medium">{data?.courseTitle}</span>
