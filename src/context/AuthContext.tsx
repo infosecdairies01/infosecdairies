@@ -18,10 +18,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const logout = () => {
+    // Get userEmail before removing it from localStorage
+    const userEmail = localStorage.getItem("userEmail");
+    
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userFullName");
+    
+    // Clear user-specific activity data when logging out
+    if (userEmail) {
+      const userSpecificKey = `user_activity_log_${userEmail}`;
+      localStorage.removeItem(userSpecificKey);
+    }
+    
     setUser(null);
   };
 
