@@ -507,6 +507,17 @@ const LessonViewer = () => {
       }
     }
 
+    // Special case: allow navigation to quiz lessons (e.g., 1.5) from previous lesson without gating
+    const targetLesson = course.modules[targetModuleIndex]?.lessons?.find(l => l.id === newLessonId);
+    const isTargetQuizLesson = targetLesson && /^\d+\.5$/.test(targetLesson.id) && 
+                               !(slug === "blue-team-soc-fundamentals" && (targetLesson.id === "4.5" || targetLesson.id === "5.5"));
+
+    if (isTargetQuizLesson && currentModuleIndex === targetModuleIndex) {
+      // Moving to a quiz lesson within the same module: allow it
+      navigate(`/courses/${slug}/lesson/${newLessonId}`);
+      return true;
+    }
+
     navigate(`/courses/${slug}/lesson/${newLessonId}`);
     return true;
   };
