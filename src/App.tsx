@@ -60,6 +60,8 @@ const App = () => (
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/verify/:slug/:emailHash" element={<VerifyCertificate />} />
             <Route path="/verify-certificate/:certId" element={<VerifyCertificate />} />
+            <Route path="/verify-certificate" element={<VerifyCertificate />} />
+            <Route path="/VerifyCertificate" element={<VerifyCertificate />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
