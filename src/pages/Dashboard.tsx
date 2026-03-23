@@ -310,6 +310,26 @@ const Dashboard = () => {
         );
 
         setEnrolledCourses(enrollmentChecks.filter(Boolean) as EnrolledCourse[]);
+        
+        // Now that we have enrollment data, fetch recent activity
+        if (user?.email) {
+          const allActivities = getRecentActivity(user.email);
+          const enrolledCourseSlugs = courses.map(c => c.slug);
+          
+          const filteredActivities = allActivities.filter(activity => 
+            enrolledCourseSlugs.some(slug => activity.courseTitle.toLowerCase().includes(slug.toLowerCase())) ||
+            activity.courseTitle.toLowerCase().includes('blue team') ||
+            activity.courseTitle.toLowerCase().includes('log analysis') ||
+            activity.courseTitle.toLowerCase().includes('threat hunting') ||
+            activity.courseTitle.toLowerCase().includes('network security') ||
+            activity.courseTitle.toLowerCase().includes('malware analysis') ||
+            activity.courseTitle.toLowerCase().includes('detection engineering') ||
+            activity.courseTitle.toLowerCase().includes('incident response') ||
+            activity.courseTitle.toLowerCase().includes('network fundamentals')
+          );
+          
+          setRecentActivity(filteredActivities);
+        }
       } catch (err) {
         setError("Could not load your dashboard data. Please try again later.");
       } finally {
@@ -318,29 +338,7 @@ const Dashboard = () => {
     };
 
     fetchEnrollments();
-    // Only get recent activity if user is logged in
-    if (user?.email) {
-      const allActivities = getRecentActivity(user.email);
-      // Filter activities to only show courses user is enrolled in
-      const enrolledCourseSlugs = enrollmentChecks
-        .filter(check => check?.course)
-        .map(check => check.course.slug);
-      
-      const filteredActivities = allActivities.filter(activity => 
-        enrolledCourseSlugs.some(slug => activity.courseTitle.toLowerCase().includes(slug.toLowerCase())) ||
-        activity.courseTitle.toLowerCase().includes('blue team') || // Fallback for SOC course
-        activity.courseTitle.toLowerCase().includes('log analysis') || // Fallback for other courses
-        activity.courseTitle.toLowerCase().includes('threat hunting') ||
-        activity.courseTitle.toLowerCase().includes('network security') ||
-        activity.courseTitle.toLowerCase().includes('malware analysis') ||
-        activity.courseTitle.toLowerCase().includes('detection engineering') ||
-        activity.courseTitle.toLowerCase().includes('incident response') ||
-        activity.courseTitle.toLowerCase().includes('network fundamentals')
-      );
-      
-      setRecentActivity(filteredActivities);
-    }
-  }, [user, enrollmentChecks]);
+  }, [user]);
 
   const enrolledCount = enrolledCourses.length;
   const completedLessonsCount = useMemo(
