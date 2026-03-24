@@ -1090,6 +1090,8 @@ const LessonViewer = () => {
                         }
 
                         const quizLessonInModule = currentModule?.lessons?.find((l) => {
+                          // Skip current lesson
+                          if (l.id === lessonId) return false;
                           // Check if lesson looks like a quiz lesson (.5 or .6)
                           if (!/^\d+\.\d+$/.test(l.id)) return false;
                           const subId = l.id.split('.')[1];
@@ -1102,7 +1104,7 @@ const LessonViewer = () => {
                           }
                           if (subId === '6') {
                             // Include quiz lessons at .6
-                            if (slug === "blue-team-soc-fundamentals" && ["3.6", "4.6", "5.6"].includes(l.id)) {
+                            if (slug === "blue-team-soc-fundamentals" && ["3.6", "4.6", "5.6", "6.6"].includes(l.id)) {
                               return true;
                             }
                             return false;
