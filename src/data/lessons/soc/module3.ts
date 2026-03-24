@@ -880,9 +880,9 @@ Files/Commands:
     }
   },
   {
-    id: "3.5",
+    id: "3.6",
     courseId: "soc-fundamentals",
-    title: "Log Analysis Challenge Quiz",
+    title: "Module 3 Quiz: Log Analysis Fundamentals",
     content: `
 # Log Analysis Challenge Quiz
 
@@ -932,16 +932,6 @@ Good luck! Log analysis is a fundamental skill for SOC analysts.
       "Pattern recognition in logs enables detection of suspicious activities",
       "Multiple log sources provide comprehensive visibility into security events"
     ],
-    practicalExercise: {
-      title: "Quiz Preparation",
-      description: "Review log analysis concepts before taking the quiz.",
-      steps: [
-        "Study common Windows Event IDs and their meanings",
-        "Review Linux log file locations and formats",
-        "Practice timestamp analysis techniques",
-        "Learn to identify suspicious log patterns",
-        "Take the quiz when ready"
-      ]
-    }
+    quiz: "q3"
   }
 ];
