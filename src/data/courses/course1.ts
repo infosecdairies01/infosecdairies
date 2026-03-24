@@ -134,11 +134,19 @@ export const courses: Course[] = [
             duration: "45 min",
             status: "locked" 
           },
+          { 
+            id: "3.6", 
+            title: "Module 3 Quiz: Log Analysis Fundamentals", 
+            description: "Test your knowledge of Windows, Linux, and network log analysis concepts.",
+            duration: "30 min",
+            status: "locked" 
+          },
         ],
       },
       {
         id: "4",
         title: "SIEM Fundamentals",
+        quizId: "q4",
         lessons: [
           { 
             id: "4.1", 
@@ -175,11 +183,19 @@ export const courses: Course[] = [
             duration: "50 min",
             status: "locked" 
           },
+          {
+            id: "4.6",
+            title: "Module 4 Quiz: SIEM Fundamentals",
+            description: "Test your SIEM knowledge including navigation, queries, correlation rules, and alerts.",
+            duration: "25 min",
+            status: "locked"
+          },
         ],
       },
       {
         id: "5",
         title: "Alert Triage & Analysis",
+        quizId: "q5",
         lessons: [
           { 
             id: "5.1", 
@@ -216,12 +232,19 @@ export const courses: Course[] = [
             duration: "25 min",
             status: "locked" 
           },
+          {
+            id: "5.6",
+            title: "Module 5 Quiz: Alert Triage & Analysis",
+            description: "Test your understanding of alert triage, true/false positive analysis, and escalation procedures.",
+            duration: "20 min",
+            status: "locked"
+          },
         ],
       },
       {
         id: "6",
         title: "Threat Intelligence Basics",
-        quizId: "q5",
+        quizId: "q6",
         lessons: [
           { 
             id: "6.1", 

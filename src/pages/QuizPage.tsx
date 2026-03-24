@@ -55,8 +55,11 @@ const QuizPage = () => {
         "1.5": "q1",
         "2.5": "q2",
         "3.5": "q3",
+        "3.6": "q3",
         "4.5": "q4",
+        "4.6": "q4",
         "5.5": "q5",
+        "5.6": "q5",
         "6.5": "q6",
         "7.5": "q7",
         "8.5": "q8",
@@ -349,14 +352,23 @@ const QuizPage = () => {
       if (!/^\d+\.\d+$/.test(lessonId)) return false;
       const parts = lessonId.split(".");
       if (parts.length !== 2) return false;
-      if (parts[1] !== "5") return false;
+      const subId = parts[1];
 
+      // For SOC Fundamentals, quizzes are at .5 (most modules) and .6 (modules 3,4,5)
       if (courseSlug === "blue-team-soc-fundamentals") {
-        if (lessonId === "4.5") return false;
-        if (lessonId === "5.5") return false;
+        // Module 10 final quiz is at 10.4
+        if (lessonId === "10.4") return true;
+        // 10.5 is a summary lesson, not a quiz
+        if (lessonId === "10.5") return false;
+        // Modules 3, 4, 5 have quizzes at .6
+        if (["3.6", "4.6", "5.6"].includes(lessonId)) return true;
+        // Most other modules have quizzes at .5
+        if (subId === "5") return true;
+        return false;
       }
 
-      return true;
+      // Default: .5 sub-lessons are quizzes
+      return subId === "5";
     };
 
     let moduleIndex = -1;
