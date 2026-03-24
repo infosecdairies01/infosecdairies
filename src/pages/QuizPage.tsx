@@ -265,25 +265,41 @@ const QuizPage = () => {
     setShowExplanation(true);
   };
 
-  // Save quiz score and unlock next lesson
+  // ─── FIX: Save quiz score under BOTH the raw quizId AND resolvedQuizId ───
+  // This ensures LessonViewer's gate check (which looks up by resolvedQuizId
+  // like "q6") always finds the score, even when the URL used "6.5".
   useEffect(() => {
     if (quizState === "results") {
-      // Save quiz score to localStorage (always save, regardless of pass/fail)
-      const quizKey = `quiz_${slug}_${quizId}`;
-      localStorage.setItem(quizKey, score.percentage.toString());
+      // Save under raw quizId (e.g., "6.5") — used by the quiz score display in LessonViewer
+      const rawKey = `quiz_${slug}_${quizId}`;
+      localStorage.setItem(rawKey, score.percentage.toString());
+
+      // ALSO save under resolvedQuizId (e.g., "q6") — used by the module gate check
+      if (resolvedQuizId && resolvedQuizId !== quizId) {
+        const resolvedKey = `quiz_${slug}_${resolvedQuizId}`;
+        localStorage.setItem(resolvedKey, score.percentage.toString());
+      }
 
       // Mark lesson as completed ONLY if passed
       if (passed) {
         const completedKey = `completed_lessons_${slug}`;
         const completedLessons = JSON.parse(localStorage.getItem(completedKey) || "[]");
-        if (!completedLessons.includes(quizId)) {
-          completedLessons.push(quizId);
+        // Mark both the raw quizId and resolvedQuizId as completed
+        const idsToMark = [quizId, resolvedQuizId].filter(Boolean) as string[];
+        let changed = false;
+        for (const id of idsToMark) {
+          if (!completedLessons.includes(id)) {
+            completedLessons.push(id);
+            changed = true;
+          }
+        }
+        if (changed) {
           localStorage.setItem(completedKey, JSON.stringify(completedLessons));
         }
       }
       
       // Always save to database (both passed and failed)
-      saveQuizScoreToDatabase(quizId, score.percentage);
+      saveQuizScoreToDatabase(quizId!, score.percentage);
       
       // Log activity for dashboard when quiz is passed
       if (passed && course) {
@@ -295,7 +311,7 @@ const QuizPage = () => {
         detail: { quizId, score: score.percentage, courseId: slug, passed } 
       }));
     }
-  }, [quizState, passed, score.percentage, slug, quizId]);
+  }, [quizState, passed, score.percentage, slug, quizId, resolvedQuizId]);
 
   // Save quiz score to database
   const saveQuizScoreToDatabase = async (quizId: string, score: number) => {
@@ -330,14 +346,11 @@ const QuizPage = () => {
     if (!course) return null;
 
     const isQuizLikeLessonId = (courseSlug: string | undefined, lessonId: string): boolean => {
-      // Only treat purely numeric x.y as candidates for the *.5 quiz convention.
-      // Avoid misclassifying prefixed IDs like nf-2.5.
       if (!/^\d+\.\d+$/.test(lessonId)) return false;
       const parts = lessonId.split(".");
       if (parts.length !== 2) return false;
       if (parts[1] !== "5") return false;
 
-      // Course-specific exceptions (some *.5 lessons are NOT quizzes)
       if (courseSlug === "blue-team-soc-fundamentals") {
         if (lessonId === "4.5") return false;
         if (lessonId === "5.5") return false;
@@ -346,8 +359,6 @@ const QuizPage = () => {
       return true;
     };
 
-    // Find which module contains this quiz by checking if quizId matches
-    // or if the lesson ID ends with .5 (quiz lessons)
     let moduleIndex = -1;
     
     // First try to find by quizId
@@ -369,12 +380,9 @@ const QuizPage = () => {
       return null;
     }
 
-    // Return the FIRST non-quiz lesson of the next module.
-    // This fixes the bug where the next module's first item can be a quiz-lesson (e.g. *.5).
     const firstNonQuizLesson = nextModule.lessons.find((l) => !isQuizLikeLessonId(slug, l.id));
     if (firstNonQuizLesson?.id) return firstNonQuizLesson.id;
 
-    // Fallback: if the next module only contains quiz-like lessons (rare), return the first.
     return nextModule.lessons[0]?.id ?? null;
   };
 
@@ -668,7 +676,7 @@ const QuizPage = () => {
             <div className="relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] p-8 shadow-lg">
               <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               
-              {/* Score Display - Like your images */}
+              {/* Score Display */}
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-foreground mb-4">
                   Quiz Completed!
