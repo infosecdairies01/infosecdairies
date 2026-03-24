@@ -59,13 +59,11 @@ const LessonViewer = () => {
 
         "4.6": "q4",
         "5.6": "q5",
-        "6.5": "q6",
         "6.6": "q6",
         "7.5": "q7",
         "8.5": "q8",
         "9.5": "q9",
         "10.4": "q10",
-        "10.5": "q10",
       };
       return socQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
@@ -580,6 +578,36 @@ const LessonViewer = () => {
     }
   };
 
+  // Memoized quiz score data to fix INP performance issue
+  const quizScoreData = useMemo(() => {
+    if (!slug || !lessonId) return null;
+    const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
+    const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
+    const resolvedKey = `quiz_${slug}_${resolvedId}`;
+    const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
+    return { score, hasScore: score !== null };
+  }, [slug, lessonId, lessonContent?.quiz]);
+
+  // Memoized quiz lesson detection
+  const isQuizLesson = useMemo(() => {
+    let isQuiz = Boolean(lessonContent?.quiz);
+
+    if (!isQuiz && lessonId && /^\d+\.\d+$/.test(lessonId)) {
+      const subId = lessonId.split('.')[1];
+      if (subId === '5' || subId === '6') {
+        isQuiz = true;
+      }
+    }
+
+    if (slug === "blue-team-soc-fundamentals") {
+      if (lessonId === "10.5") isQuiz = false;
+      if (lessonId === "4.5" || lessonId === "5.5") isQuiz = false;
+      if (["3.6", "4.6", "5.6", "6.6"].includes(lessonId)) isQuiz = true;
+    }
+
+    return isQuiz;
+  }, [lessonContent?.quiz, lessonId, slug]);
+
   // Parse markdown-like content to JSX
   const renderContent = (content: string) => {
     const lines = content.trim().split('\n');
@@ -907,36 +935,7 @@ const LessonViewer = () => {
                   </div>
 
                   {/* Quiz Button for Quiz Lessons */}
-                  {(() => {
-                    let isQuizLesson = Boolean(lessonContent?.quiz);
-
-                    if (!isQuizLesson && lessonId && /^\d+\.\d+$/.test(lessonId)) {
-                      const subId = lessonId.split('.')[1];
-                      // For SOC Fundamentals: .5 sub-lessons are quizzes (except special cases)
-                      // and 3.6, 4.6, 5.6 are also quizzes
-                      if (subId === '5' || subId === '6') {
-                        isQuizLesson = true;
-                      }
-                    }
-
-                    // Special cases for SOC Fundamentals
-                    if (slug === "blue-team-soc-fundamentals") {
-                      // 10.5 is a summary lesson, not a quiz
-                      if (lessonId === "10.5") {
-                        isQuizLesson = false;
-                      }
-                      // 4.5 and 5.5 are regular lessons (not quizzes)
-                      if (lessonId === "4.5" || lessonId === "5.5") {
-                        isQuizLesson = false;
-                      }
-                      // 3.6, 4.6, 5.6, 6.6 are quiz lessons
-                      if (lessonId === "3.6" || lessonId === "4.6" || lessonId === "5.6" || lessonId === "6.6") {
-                        isQuizLesson = true;
-                      }
-                    }
-
-                    return isQuizLesson;
-                  })() && (
+                  {isQuizLesson && (
                     <div className="mt-8 p-6 rounded-xl bg-orange-500/10 border border-orange-500/20">
                       <div className="flex items-center gap-3 mb-4">
                         <FileQuestion className="w-6 h-6 text-orange-400" />
@@ -951,21 +950,11 @@ const LessonViewer = () => {
                         <div className="text-center">
                           <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Quiz Score</h4>
                           <div className="text-2xl font-bold text-foreground mb-1">
-                            {(() => {
-                              // Check both key formats for the score display
-                              const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
-                              const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
-                              const resolvedKey = `quiz_${slug}_${resolvedId}`;
-                              const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
-                              return score ? `${score}%` : 'Not taken yet';
-                            })()}
+                            {quizScoreData?.score ? `${quizScoreData.score}%` : 'Not taken yet'}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {(() => {
-                              const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
-                              const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
-                              const resolvedKey = `quiz_${slug}_${resolvedId}`;
-                              const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
+                              const score = quizScoreData?.score;
                               if (!score) return 'Complete the quiz to see your score';
                               const scoreNum = parseInt(score);
                               if (scoreNum >= 70) return '✅ Passed - Ready for next module!';
@@ -980,13 +969,7 @@ const LessonViewer = () => {
                         className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3"
                       >
                         <FileQuestion className="w-4 h-4 mr-2" />
-                        {(() => {
-                          const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
-                          const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
-                          const resolvedKey = `quiz_${slug}_${resolvedId}`;
-                          const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
-                          return score ? 'Retake Quiz' : 'Start Quiz';
-                        })()}
+                        {quizScoreData?.hasScore ? 'Retake Quiz' : 'Start Quiz'}
                       </Button>
                     </div>
                   )}
