@@ -917,9 +917,16 @@ const CourseDetail = () => {
           let isQuiz = ((/^[0-9]+\.[0-9]+$/.test(firstLesson.id) && firstLesson.id.split('.')[1] === '5')) || 
                        firstLesson.title.toLowerCase().includes('quiz');
 
-          // Special case: in SOC Fundamentals, 10.5 is a summary lesson, not a quiz
-          if (slug === "blue-team-soc-fundamentals" && firstLesson.id === "10.5") {
-            isQuiz = false;
+          // Special cases for SOC Fundamentals
+          if (slug === "blue-team-soc-fundamentals") {
+            // 10.5 is a summary lesson, not a quiz
+            if (firstLesson.id === "10.5") {
+              isQuiz = false;
+            }
+            // 3.6, 4.6, 5.6 are quiz lessons
+            if (["3.6", "4.6", "5.6"].includes(firstLesson.id)) {
+              isQuiz = true;
+            }
           }
           
           if (isQuiz && slug !== "blue-team-soc-fundamentals") {
@@ -940,9 +947,16 @@ const CourseDetail = () => {
         let isQuiz = ((/^[0-9]+\.[0-9]+$/.test(nextLesson.id) && nextLesson.id.split('.')[1] === '5')) || 
                      nextLesson.title.toLowerCase().includes('quiz');
 
-        // Special case: in SOC Fundamentals, 10.5 is a summary lesson, not a quiz
-        if (slug === "blue-team-soc-fundamentals" && nextLesson.id === "10.5") {
-          isQuiz = false;
+        // Special cases for SOC Fundamentals
+        if (slug === "blue-team-soc-fundamentals") {
+          // 10.5 is a summary lesson, not a quiz
+          if (nextLesson.id === "10.5") {
+            isQuiz = false;
+          }
+          // 3.6, 4.6, 5.6 are quiz lessons
+          if (["3.6", "4.6", "5.6"].includes(nextLesson.id)) {
+            isQuiz = true;
+          }
         }
         
         // For SOC Fundamentals, Continue Course should go to the lesson page
@@ -1222,9 +1236,16 @@ const CourseDetail = () => {
                               let isQuiz = ((/^[0-9]+\.[0-9]+$/.test(lesson.id) && lesson.id.split('.')[1] === '5')) || 
                                        lesson.title.toLowerCase().includes('quiz');
 
-                              // Special case: in SOC Fundamentals, 10.5 is a summary lesson, not a quiz
-                              if (slug === "blue-team-soc-fundamentals" && lesson.id === "10.5") {
-                                isQuiz = false;
+                              // Special cases for SOC Fundamentals
+                              if (slug === "blue-team-soc-fundamentals") {
+                                // 10.5 is a summary lesson, not a quiz
+                                if (lesson.id === "10.5") {
+                                  isQuiz = false;
+                                }
+                                // 3.6, 4.6, 5.6 are quiz lessons
+                                if (["3.6", "4.6", "5.6"].includes(lesson.id)) {
+                                  isQuiz = true;
+                                }
                               }
                               
                               // Debug logging

@@ -55,13 +55,17 @@ const LessonViewer = () => {
         "1.5": "q1",
         "2.5": "q2",
         "3.5": "q3",
+        "3.6": "q3",
         "4.5": "q4",
+        "4.6": "q4",
         "5.5": "q5",
+        "5.6": "q5",
         "6.5": "q6",
         "7.5": "q7",
         "8.5": "q8",
         "9.5": "q9",
         "10.4": "q10",
+        "10.5": "q10",
       };
       return socQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
@@ -141,33 +145,39 @@ const LessonViewer = () => {
     return lessonLikeQuizId;
   };
 
+  // ─── FIX: Try multiple key formats so we always find the stored score ───
+  // QuizPage saves under both raw ID (e.g. "6.5") and resolved ID (e.g. "q6").
+  // We check both here so the gate never incorrectly thinks a quiz wasn't passed.
   const getStoredQuizScore = (lessonLikeQuizId: string): number | null => {
     if (!slug) return null;
 
     const resolved = resolveQuizStorageId(lessonLikeQuizId);
-    const primaryRaw = localStorage.getItem(`quiz_${slug}_${resolved}`);
-    const fallbackRaw =
-      resolved !== lessonLikeQuizId
-        ? localStorage.getItem(`quiz_${slug}_${lessonLikeQuizId}`)
-        : null;
 
-    const raw = primaryRaw ?? fallbackRaw;
-    const score = raw != null ? Number(raw) : null;
-    if (score == null || Number.isNaN(score)) return null;
-    return score;
+    // Build a deduplicated list of keys to try, most-specific first
+    const keysToTry = Array.from(
+      new Set([
+        `quiz_${slug}_${resolved}`,          // e.g. quiz_blue-team-soc-fundamentals_q6
+        `quiz_${slug}_${lessonLikeQuizId}`,  // e.g. quiz_blue-team-soc-fundamentals_6.5
+      ])
+    );
+
+    for (const key of keysToTry) {
+      const raw = localStorage.getItem(key);
+      if (raw != null) {
+        const score = Number(raw);
+        if (!Number.isNaN(score)) return score;
+      }
+    }
+
+    return null;
   };
 
   const getModuleGateQuizId = (module: any): string | null => {
     if (!module) return null;
-
-    // Prefer explicit module.quizId. Our quizzes live on the quiz route (not as lessons).
     if (module.quizId) return String(module.quizId);
     return null;
   };
 
-  // Normalize backend slugs separately for course metadata vs lesson content
-  // Course metadata (data/courses.ts) uses one set of IDs, while lessonContent
-  // still uses a legacy ID for the SOC fundamentals course.
   const courseIdForMeta = useMemo(() => {
     if (!slug) return "";
 
@@ -193,7 +203,6 @@ const LessonViewer = () => {
       case "network-security-monitoring":
         return "network-security-monitoring";
       default:
-        // slugs that already match static course IDs (e.g. siem-fundamentals)
         return slug;
     }
   }, [slug]);
@@ -203,7 +212,6 @@ const LessonViewer = () => {
 
     switch (slug) {
       case "blue-team-soc-fundamentals":
-        // lessonContent still keyed by legacy ID for this course
         return "soc-fundamentals";
       case "log-analysis-for-beginners":
         return "log-analysis";
@@ -254,7 +262,6 @@ const LessonViewer = () => {
     );
   }, [course]);
 
-  // More debug once allLessons is computed
   console.log('All lessons length:', allLessons.length);
   console.log('First few lessons:', allLessons.slice(0, 5));
 
@@ -302,13 +309,12 @@ const LessonViewer = () => {
   console.log('Current lesson index:', currentLessonIndex);
   console.log('Current lesson:', currentLesson);
 
-  // Module-aware navigation (prevents the fragile '*.5 == quiz' heuristic from breaking flow)
   const currentModuleIndex = useMemo(() => {
     if (!course || !lessonId) return -1;
     return course.modules.findIndex((m) => m.lessons.some((l) => l.id === lessonId));
   }, [course, lessonId]);
 
-  const currentModule = currentModuleIndex >= 0 ? course.modules[currentModuleIndex] : null;
+  const currentModule = currentModuleIndex >= 0 ? course?.modules[currentModuleIndex] : null;
   const currentLessonIndexInModule = useMemo(() => {
     if (!currentModule || !lessonId) return -1;
     return currentModule.lessons.findIndex((l) => l.id === lessonId);
@@ -336,19 +342,16 @@ const LessonViewer = () => {
   const nextLesson = nextLessonInModule ?? nextModuleFirstLesson;
   const prevLesson = prevLessonInModule ?? null;
 
-  // Only some courses have full lesson navigation/progress enabled
   const isCourseProgressEnabled = useMemo(() => {
     if (!slug) return false;
     return Boolean(course);
   }, [slug]);
 
-  // Calculate progress based on backend-tracked completions
   const completedCount = allLessons.filter((l) => completedLessonIds.includes(l.id)).length;
   const progressPercent = allLessons.length
     ? Math.round((completedCount / allLessons.length) * 100)
     : 0;
 
-  // Get course background
   const courseBgImage = useMemo(() => {
     if (slug && courseBackgrounds[slug]) {
       return courseBackgrounds[slug];
@@ -356,12 +359,10 @@ const LessonViewer = () => {
     return socFundamentalsBg;
   }, [slug]);
 
-  // Ensure we start from top when navigating between lessons/chapters
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [lessonId]);
 
-  // Load completion progress from backend for this course
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
     if (!slug) {
@@ -381,7 +382,6 @@ const LessonViewer = () => {
           });
 
           if (res.status === 401) {
-            // Token is missing/invalid/expired - force re-auth
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
             localStorage.removeItem("userEmail");
@@ -397,7 +397,6 @@ const LessonViewer = () => {
               )
               .filter((id: string | null): id is string => Boolean(id));
             
-            // If backend has no progress, clear localStorage to prevent stale data
             if (backendIds.length === 0) {
               const completedKey = `completed_lessons_${slug}`;
               localStorage.removeItem(completedKey);
@@ -417,7 +416,6 @@ const LessonViewer = () => {
     fetchProgress();
   }, [slug]);
 
-  // Initialize completion state for the currently viewed lesson
   useEffect(() => {
     if (currentLesson && completedLessonIds.includes(currentLesson.id)) {
       setIsCompleted(true);
@@ -426,22 +424,19 @@ const LessonViewer = () => {
     }
   }, [currentLesson?.id, completedLessonIds]);
 
-  // Auto-mark lesson as complete when first viewed
   useEffect(() => {
     if (!isCourseProgressEnabled || !currentLesson) return;
     
-    // Only mark if not already completed
     if (!completedLessonIds.includes(currentLesson.id)) {
-      // Small delay to ensure the user actually stayed on the page
       const timer = setTimeout(() => {
         void markLessonComplete();
-      }, 3000); // 3 seconds delay
+      }, 3000);
       
       return () => clearTimeout(timer);
     }
   }, [currentLesson?.id, isCourseProgressEnabled]);
 
-  // Gate access to a module until the previous module's quiz is passed (>= 70%)
+  // ─── FIX: Gate check now uses getStoredQuizScore which tries both key formats ───
   useEffect(() => {
     if (!slug || !lessonId || !course) return;
 
@@ -455,6 +450,7 @@ const LessonViewer = () => {
     const gateQuizId = getModuleGateQuizId(previousModule);
     if (!gateQuizId) return;
 
+    // getStoredQuizScore now tries both "q6" and "6.5" style keys
     const score = getStoredQuizScore(gateQuizId);
     const passed = score != null && score >= 70;
 
@@ -464,7 +460,6 @@ const LessonViewer = () => {
     navigate(`/courses/${slug}/quiz/${gateQuizId}`, { replace: true });
   }, [slug, lessonId, course, navigate]);
 
-  // Redirect if course or lesson not found
   if (!course) {
     console.warn('LessonViewer redirect: course not found, going back to /courses');
     return <Navigate to="/courses" replace />;
@@ -487,14 +482,13 @@ const LessonViewer = () => {
       m.lessons.some((l) => l.id === newLessonId),
     );
     if (targetModuleIndex > 0) {
-      // Only check previous module's quiz when moving to a DIFFERENT module
-      // (not when clicking Next within the same module)
       const isMovingToDifferentModule = targetModuleIndex !== currentModuleIndex;
 
       if (isMovingToDifferentModule) {
         const previousModule = course.modules[targetModuleIndex - 1];
         const gateQuizId = getModuleGateQuizId(previousModule);
         if (gateQuizId) {
+          // getStoredQuizScore tries both key formats
           const score = getStoredQuizScore(gateQuizId);
           const passed = score != null && score >= 70;
 
@@ -507,13 +501,28 @@ const LessonViewer = () => {
       }
     }
 
-    // Special case: allow navigation to quiz lessons (e.g., 1.5) from previous lesson without gating
     const targetLesson = course.modules[targetModuleIndex]?.lessons?.find(l => l.id === newLessonId);
-    const isTargetQuizLesson = targetLesson && /^\d+\.5$/.test(targetLesson.id) && 
-                               !(slug === "blue-team-soc-fundamentals" && (targetLesson.id === "4.5" || targetLesson.id === "5.5"));
+    // Check if target is a quiz lesson (.5 or .6 for SOC, with exceptions)
+    const isTargetQuizLesson = targetLesson && /^\d+\.\d+$/.test(targetLesson.id) && (() => {
+      const subId = targetLesson.id.split('.')[1];
+      if (subId === '5') {
+        // Exclude special cases that are not quizzes
+        if (slug === "blue-team-soc-fundamentals" && (targetLesson.id === "4.5" || targetLesson.id === "5.5" || targetLesson.id === "10.5")) {
+          return false;
+        }
+        return true;
+      }
+      if (subId === '6') {
+        // Include quiz lessons at .6
+        if (slug === "blue-team-soc-fundamentals" && ["3.6", "4.6", "5.6"].includes(targetLesson.id)) {
+          return true;
+        }
+        return false;
+      }
+      return false;
+    })();
 
     if (isTargetQuizLesson && currentModuleIndex === targetModuleIndex) {
-      // Moving to a quiz lesson within the same module: allow it
       navigate(`/courses/${slug}/lesson/${newLessonId}`);
       return true;
     }
@@ -543,7 +552,6 @@ const LessonViewer = () => {
       });
 
       if (res.status === 401) {
-        // Token is missing/invalid/expired - force re-auth
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userEmail");
@@ -560,7 +568,6 @@ const LessonViewer = () => {
         prev.includes(lessonId) ? prev : [...prev, lessonId]
       );
       
-      // Log activity for dashboard
       if (course && currentLesson) {
         logActivity('lesson', currentLesson.title, course.title);
       }
@@ -605,7 +612,7 @@ const LessonViewer = () => {
     const flushTable = () => {
       if (tableRows.length > 1) {
         const headers = tableRows[0];
-        const body = tableRows.slice(2); // Skip header separator
+        const body = tableRows.slice(2);
         elements.push(
           <div key={`table-${elements.length}`} className="my-6 overflow-x-auto">
             <table className="w-full text-sm">
@@ -641,7 +648,6 @@ const LessonViewer = () => {
     };
 
     lines.forEach((line, lineIdx) => {
-      // Code blocks
       if (line.startsWith('```')) {
         if (inCodeBlock) {
           elements.push(
@@ -667,7 +673,6 @@ const LessonViewer = () => {
         return;
       }
 
-      // Tables
       if (line.includes('|') && line.trim().startsWith('|')) {
         flushList();
         if (!inTable) inTable = true;
@@ -675,20 +680,18 @@ const LessonViewer = () => {
         if (!cells.every(c => c.trim().match(/^[-:]+$/))) {
           tableRows.push(cells);
         } else {
-          tableRows.push(cells); // separator row
+          tableRows.push(cells);
         }
         return;
       } else if (inTable) {
         flushTable();
       }
 
-      // Empty line
       if (line.trim() === '') {
         flushList();
         return;
       }
 
-      // Headers
       if (line.startsWith('# ')) {
         flushList();
         elements.push(
@@ -717,7 +720,6 @@ const LessonViewer = () => {
         return;
       }
 
-      // Blockquote
       if (line.startsWith('> ')) {
         flushList();
         elements.push(
@@ -728,14 +730,12 @@ const LessonViewer = () => {
         return;
       }
 
-      // List items
       if (line.match(/^[-*] /)) {
         inList = true;
         listItems.push(line.slice(2));
         return;
       }
 
-      // Numbered list
       if (line.match(/^\d+\. /)) {
         flushList();
         const match = line.match(/^(\d+)\. (.+)$/);
@@ -750,7 +750,6 @@ const LessonViewer = () => {
         return;
       }
 
-      // Regular paragraph
       flushList();
       if (line.trim()) {
         elements.push(
@@ -909,48 +908,31 @@ const LessonViewer = () => {
 
                   {/* Quiz Button for Quiz Lessons */}
                   {(() => {
-                    // Base rule: quiz if lessonContent has an explicit quiz field
                     let isQuizLesson = Boolean(lessonContent?.quiz);
 
-                    // Fallback rule: treat purely numeric *.5 lessons (e.g., 5.5) as quizzes
-                    // (Avoid misclassifying prefixed IDs like nf-5.5)
-                    if (!isQuizLesson && lessonId && /^\d+\.\d+$/.test(lessonId) && lessonId.split('.')[1] === '5') {
-                      isQuizLesson = true;
+                    if (!isQuizLesson && lessonId && /^\d+\.\d+$/.test(lessonId)) {
+                      const subId = lessonId.split('.')[1];
+                      // For SOC Fundamentals: .5 sub-lessons are quizzes (except special cases)
+                      // and 3.6, 4.6, 5.6 are also quizzes
+                      if (subId === '5' || subId === '6') {
+                        isQuizLesson = true;
+                      }
                     }
 
-                    // Special case: SOC Fundamentals summary lesson 10.5 should NOT be a quiz
-                    if (slug === "blue-team-soc-fundamentals" && lessonId === "10.5") {
-                      isQuizLesson = false;
-                    }
-
-                    // Special case: Network Fundamentals lesson nf-2.5 is a regular lesson, not a quiz
-                    if (slug === "network-fundamentals" && lessonId === "nf-2.5") {
-                      isQuizLesson = false;
-                    }
-
-                    // Special case: Network Fundamentals lesson nf-3.5 is a regular lesson, not a quiz
-                    if (slug === "network-fundamentals" && lessonId === "nf-3.5") {
-                      isQuizLesson = false;
-                    }
-
-                    // Special case: Network Fundamentals lesson nf-4.5 is a regular lesson, not a quiz
-                    if (slug === "network-fundamentals" && lessonId === "nf-4.5") {
-                      isQuizLesson = false;
-                    }
-
-                    // Special case: SOC Fundamentals lesson 4.5 is a hands-on lab, not a quiz
-                    if (slug === "blue-team-soc-fundamentals" && lessonId === "4.5") {
-                      isQuizLesson = false;
-                    }
-
-                    // Special case: SOC Fundamentals lesson 5.5 is documentation, not a quiz
-                    if (slug === "blue-team-soc-fundamentals" && lessonId === "5.5") {
-                      isQuizLesson = false;
-                    }
-
-                    // Special case: SOC Fundamentals lesson 6.5 IS a quiz
-                    if (slug === "blue-team-soc-fundamentals" && lessonId === "6.5") {
-                      isQuizLesson = true;
+                    // Special cases for SOC Fundamentals
+                    if (slug === "blue-team-soc-fundamentals") {
+                      // 10.5 is a summary lesson, not a quiz
+                      if (lessonId === "10.5") {
+                        isQuizLesson = false;
+                      }
+                      // 4.5 and 5.5 are regular lessons (not quizzes)
+                      if (lessonId === "4.5" || lessonId === "5.5") {
+                        isQuizLesson = false;
+                      }
+                      // 3.6, 4.6, 5.6, 6.5 are quiz lessons
+                      if (lessonId === "3.6" || lessonId === "4.6" || lessonId === "5.6" || lessonId === "6.5") {
+                        isQuizLesson = true;
+                      }
                     }
 
                     return isQuizLesson;
@@ -970,20 +952,25 @@ const LessonViewer = () => {
                           <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Quiz Score</h4>
                           <div className="text-2xl font-bold text-foreground mb-1">
                             {(() => {
-                              const quizKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
-                              const score = localStorage.getItem(quizKey);
+                              // Check both key formats for the score display
+                              const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
+                              const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
+                              const resolvedKey = `quiz_${slug}_${resolvedId}`;
+                              const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
                               return score ? `${score}%` : 'Not taken yet';
                             })()}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {(() => {
-                            const quizKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
-                            const score = localStorage.getItem(quizKey);
-                            if (!score) return 'Complete the quiz to see your score';
-                            const scoreNum = parseInt(score);
-                            if (scoreNum >= 70) return '✅ Passed - Ready for next module!';
-                            return '❌ Need 70% to pass - Try again!';
-                          })()}
+                              const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
+                              const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
+                              const resolvedKey = `quiz_${slug}_${resolvedId}`;
+                              const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
+                              if (!score) return 'Complete the quiz to see your score';
+                              const scoreNum = parseInt(score);
+                              if (scoreNum >= 70) return '✅ Passed - Ready for next module!';
+                              return '❌ Need 70% to pass - Try again!';
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -994,8 +981,10 @@ const LessonViewer = () => {
                       >
                         <FileQuestion className="w-4 h-4 mr-2" />
                         {(() => {
-                          const quizKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
-                          const score = localStorage.getItem(quizKey);
+                          const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
+                          const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
+                          const resolvedKey = `quiz_${slug}_${resolvedId}`;
+                          const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
                           return score ? 'Retake Quiz' : 'Start Quiz';
                         })()}
                       </Button>
@@ -1109,29 +1098,36 @@ const LessonViewer = () => {
                   nextLesson ? (
                     <button
                       onClick={() => {
-                        // Within a module: go to next lesson (including quiz lessons like 1.5).
                         if (nextLessonInModule?.id) {
                           const didNavigate = navigateToLesson(nextLessonInModule.id);
                           if (didNavigate) {
-                            // Fire-and-forget: try to mark current lesson complete, but don't block navigation
                             void markLessonComplete();
                           }
                           return;
                         }
 
-                        // End of module: check if module has a quiz lesson (e.g., *.5) before jumping to quiz page.
-                        // If quiz lesson exists, go there first so user sees quiz intro.
                         const quizLessonInModule = currentModule?.lessons?.find((l) => {
-                          const looksLikeQuizLesson = /^\d+\.5$/.test(l.id);
-                          // SOC exceptions where *.5 is NOT a quiz
-                          if (slug === "blue-team-soc-fundamentals" && (l.id === "4.5" || l.id === "5.5")) {
+                          // Check if lesson looks like a quiz lesson (.5 or .6)
+                          if (!/^\d+\.\d+$/.test(l.id)) return false;
+                          const subId = l.id.split('.')[1];
+                          if (subId === '5') {
+                            // Exclude lessons that are not quizzes
+                            if (slug === "blue-team-soc-fundamentals" && (l.id === "4.5" || l.id === "5.5" || l.id === "10.5")) {
+                              return false;
+                            }
+                            return true;
+                          }
+                          if (subId === '6') {
+                            // Include quiz lessons at .6
+                            if (slug === "blue-team-soc-fundamentals" && ["3.6", "4.6", "5.6"].includes(l.id)) {
+                              return true;
+                            }
                             return false;
                           }
-                          return looksLikeQuizLesson;
+                          return false;
                         });
 
                         if (quizLessonInModule?.id) {
-                          // Go to the quiz lesson first (e.g., 1.5) which has the Start Quiz button
                           const didNavigate = navigateToLesson(quizLessonInModule.id);
                           if (didNavigate) {
                             void markLessonComplete();
@@ -1139,14 +1135,12 @@ const LessonViewer = () => {
                           return;
                         }
 
-                        // No quiz lesson in module; if module has quizId and not passed, go to quiz page.
                         if (moduleQuizId && !hasPassedModuleQuiz) {
                           void markLessonComplete();
                           navigate(`/courses/${slug}/quiz/${moduleQuizId}`);
                           return;
                         }
 
-                        // Quiz already passed (or no quiz): go to next module first lesson.
                         if (nextModuleFirstLesson?.id) {
                           const didNavigate = navigateToLesson(nextModuleFirstLesson.id);
                           if (didNavigate) {
@@ -1155,7 +1149,6 @@ const LessonViewer = () => {
                           return;
                         }
 
-                        // Nothing left
                         void markLessonComplete();
                         navigate(`/courses/${slug}`);
                       }}
@@ -1170,7 +1163,6 @@ const LessonViewer = () => {
                   ) : (
                     <button
                       onClick={() => {
-                        // On the final lesson, mark it complete (best-effort) then go back to course
                         void markLessonComplete();
                         navigate(`/courses/${slug}`);
                       }}
