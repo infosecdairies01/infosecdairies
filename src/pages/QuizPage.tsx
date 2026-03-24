@@ -61,6 +61,7 @@ const QuizPage = () => {
         "5.5": "q5",
         "5.6": "q5",
         "6.5": "q6",
+        "6.6": "q6",
         "7.5": "q7",
         "8.5": "q8",
         "9.5": "q9",
@@ -360,8 +361,8 @@ const QuizPage = () => {
         if (lessonId === "10.4") return true;
         // 10.5 is a summary lesson, not a quiz
         if (lessonId === "10.5") return false;
-        // Modules 3, 4, 5 have quizzes at .6
-        if (["3.6", "4.6", "5.6"].includes(lessonId)) return true;
+        // Modules 3, 4, 5, 6 have quizzes at .6
+        if (["3.6", "4.6", "5.6", "6.6"].includes(lessonId)) return true;
         // Most other modules have quizzes at .5
         if (subId === "5") return true;
         return false;

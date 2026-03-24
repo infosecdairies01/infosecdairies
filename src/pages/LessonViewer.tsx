@@ -54,13 +54,13 @@ const LessonViewer = () => {
       const socQuizMap: Record<string, string> = {
         "1.5": "q1",
         "2.5": "q2",
-        "3.5": "q3",
+        
         "3.6": "q3",
-        "4.5": "q4",
+
         "4.6": "q4",
-        "5.5": "q5",
         "5.6": "q5",
         "6.5": "q6",
+        "6.6": "q6",
         "7.5": "q7",
         "8.5": "q8",
         "9.5": "q9",
@@ -929,8 +929,8 @@ const LessonViewer = () => {
                       if (lessonId === "4.5" || lessonId === "5.5") {
                         isQuizLesson = false;
                       }
-                      // 3.6, 4.6, 5.6, 6.5 are quiz lessons
-                      if (lessonId === "3.6" || lessonId === "4.6" || lessonId === "5.6" || lessonId === "6.5") {
+                      // 3.6, 4.6, 5.6, 6.6 are quiz lessons
+                      if (lessonId === "3.6" || lessonId === "4.6" || lessonId === "5.6" || lessonId === "6.6") {
                         isQuizLesson = true;
                       }
                     }
