@@ -276,6 +276,13 @@ export const courses: Course[] = [
           },
           { 
             id: "6.5", 
+            title: "Hands-On: Threat Intelligence Challenge", 
+            description: "Apply your threat intelligence knowledge in a practical scenario.",
+            duration: "40 min",
+            status: "locked" 
+          },
+          { 
+            id: "6.6", 
             title: "Module 6 Quiz: Threat Intelligence", 
             description: "Test your understanding of threat intelligence concepts, IOCs, OSINT, and intel platforms.",
             duration: "15 min",

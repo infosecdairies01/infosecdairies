@@ -586,66 +586,173 @@ Enriched Alert to Analyst
   {
     id: "6.5",
     courseId: "soc-fundamentals",
-    title: "Threat Intelligence Quiz",
+    title: "Hands-On: Threat Intelligence Challenge",
     content: `
-# Threat Intelligence Quiz
+# Hands-On: Threat Intelligence Challenge
 
-Test your understanding of threat intelligence lifecycle and IOC analysis.
+Apply your threat intelligence knowledge in this practical scenario-based challenge.
+
+## Challenge Scenario
+
+You've been alerted to suspicious activity in your environment. An internal host (192.168.100.55) has been communicating with an external IP address (185.220.101.42) over port 443. Your task is to investigate using threat intelligence techniques.
+
+## Investigation Steps
+
+### Step 1: IP Reputation Check
+
+Start by checking the reputation of the external IP:
+
+**Using VirusTotal:**
+- Navigate to virustotal.com
+- Search for IP: 185.220.101.42
+- Review detection ratio and community comments
+
+**Using AbuseIPDB:**
+- Check if the IP is reported for malicious activity
+- Review the confidence score and report history
+
+### Step 2: Enrichment Questions
+
+Answer the following based on your research:
+
+1. **Geolocation**: What country/region is this IP associated with?
+2. **ASN**: Which organization owns this IP block?
+3. **Reputation**: How many security vendors flag this as malicious?
+4. **History**: Has this IP been consistently reported or is it a new threat?
+
+### Step 3: IOC Pivoting
+
+From your initial findings, identify related indicators:
+
+**Search for:**
+- Associated domains resolving to this IP
+- File hashes communicating with this IP
+- Related network infrastructure
+
+**Tools to use:**
+- VirusTotal Relations tab
+- AlienVault OTX
+- PassiveTotal/SecurityTrails (if available)
+
+### Step 4: Threat Assessment
+
+Based on your research, classify the threat:
+
+| Assessment | Criteria |
+|------------|----------|
+| **Critical** | Confirmed C2, ransomware infrastructure, or APT-related |
+| **High** | Malware distribution, phishing hosting, or proxy service |
+| **Medium** | Suspicious but unconfirmed, requires further monitoring |
+| **Low** | Likely false positive or benign service |
+
+## Challenge Tasks
+
+### Task 1: Documentation (15 min)
+Create a threat intel report with:
+- Executive summary (2-3 sentences)
+- IOCs discovered (IPs, domains, hashes)
+- Recommended actions (block, monitor, investigate)
+- Confidence level (High/Medium/Low)
+
+### Task 2: SIEM Query (10 min)
+Write a query to find similar activity:
+
+**Example Splunk query:**
+\`\`\`
+index=network sourcetype=firewall 
+  dest_ip=185.220.101.42 OR dest_ip IN (related_IPs_from_research)
+| stats count by src_ip, dest_ip, dest_port, bytes_out
+| sort - count
+\`\`\`
+
+### Task 3: Decision Making (5 min)
+Choose your response:
+- **Block immediately** - High confidence malicious
+- **Monitor closely** - Suspicious but needs more evidence
+- **Whitelist** - False positive or business-justified
+
+## Expected Outcomes
+
+By completing this challenge, you should be able to:
+- Pivot between IOCs using multiple threat intel platforms
+- Assess the reputation and context of indicators
+- Make informed decisions about alert response
+- Document findings for team sharing
+
+## Reflection Questions
+
+1. What was the most valuable source of information? Why?
+2. How confident are you in your assessment? What would increase confidence?
+3. What additional context would help make a better decision?
+4. How would you share this intelligence with your team?
+
+> **Pro Tip:** In a real SOC, time is critical. While thorough investigation is important, know when you have enough information to act. Sometimes blocking first and investigating later is the right call for high-confidence threats.
+    `,
+    keyTakeaways: [
+      "Practical threat intelligence requires pivoting between multiple sources",
+      "IOC reputation and context are essential for accurate threat assessment",
+      "Documentation enables knowledge sharing and future reference",
+      "Time management balances thoroughness with response speed"
+    ],
+    practicalExercise: {
+      title: "Threat Intelligence Challenge",
+      description: "Investigate a suspicious IP and make a response decision.",
+      steps: [
+        "Research the provided suspicious IP using VirusTotal",
+        "Check AbuseIPDB for reputation and reports",
+        "Pivot to find related domains and infrastructure",
+        "Document findings and create IOC list",
+        "Make and justify a response decision"
+      ]
+    }
+  },
+  {
+    id: "6.6",
+    courseId: "soc-fundamentals",
+    title: "Module 6 Quiz: Threat Intelligence",
+    content: `
+# Module 6 Quiz: Threat Intelligence
+
+Test your understanding of threat intelligence concepts, IOCs, OSINT, and intelligence platforms.
 
 ## Quiz Overview
 
-This quiz covers the threat intelligence concepts from Module 6:
-- Threat intelligence lifecycle
-- IOC creation and analysis
+This quiz covers the key topics from Module 6:
+- Threat intelligence types and lifecycle
+- Indicators of Compromise (IOCs)
 - OSINT techniques and tools
 - Threat intelligence platforms
-- Information sharing frameworks
+- Information sharing and enrichment
 
 ## Instructions
 
-1. **Duration**: 25 minutes
-2. **Questions**: 5 multiple-choice questions
-3. **Passing Score**: 70% (4 out of 5 questions)
-4. **Attempts**: Unlimited - retake if needed
+- **Duration:** 15 minutes
+- **Questions:** 10 multiple choice questions
+- **Passing Score:** 70% (7 out of 10 correct)
+- **Attempts:** Unlimited - review and retake if needed
 
-## Key Topics to Review
+## Key Concepts to Review
 
-Before taking the quiz, make sure you understand:
-- Threat intelligence lifecycle phases
-- IOC types and identification
-- OSINT tools and techniques
-- Threat intelligence platforms
-- Information sharing communities
-- Strategic vs tactical intelligence
+Before starting, ensure you understand:
+- The four types of threat intelligence (Strategic, Tactical, Operational, Technical)
+- Common IOC types: hashes, IPs, domains, URLs, registry keys
+- OSINT tools: VirusTotal, AbuseIPDB, Shodan, AlienVault OTX
+- The Pyramid of Pain and its significance
+- Intelligence lifecycle: Direction → Collection → Processing → Analysis → Dissemination
 
 ## Taking the Quiz
 
-Click the "Start Quiz" button below when you're ready. The quiz will cover:
-- Threat intelligence processes
-- IOC analysis and creation
-- OSINT methodologies
-- Platform utilization
-- Sharing best practices
+Click the "Start Quiz" button when ready. You'll need to score 70% or higher to unlock Module 7: Incident Response Introduction.
 
-Good luck! Threat intelligence enhances proactive defense capabilities.
+Good luck! Threat intelligence is a powerful force multiplier for SOC analysts.
     `,
     keyTakeaways: [
-      "Threat intelligence provides context for security events and alerts",
-      "IOCs are technical indicators that help identify potential threats",
-      "OSINT enables gathering threat information from public sources",
+      "Threat intelligence transforms data into actionable security insights",
+      "IOCs are forensic artifacts that indicate potential compromise",
+      "OSINT provides free, valuable context for investigations",
       "Threat intelligence platforms automate collection and analysis",
-      "Information sharing strengthens collective defense capabilities"
+      "Information sharing strengthens collective defense"
     ],
-    practicalExercise: {
-      title: "Quiz Preparation",
-      description: "Review threat intelligence concepts before taking the quiz.",
-      steps: [
-        "Study the threat intelligence lifecycle",
-        "Learn IOC types and examples",
-        "Review OSINT tools and techniques",
-        "Understand sharing frameworks",
-        "Take the quiz when ready"
-      ]
-    }
+    quiz: "q6"
   }
 ];
