@@ -470,11 +470,10 @@ const CourseDetail = () => {
       const socQuizMap: Record<string, string> = {
         "1.5": "q1",
         "2.5": "q2",
-        "3.5": "q3",
-        "4.5": "q4",
-        "5.5": "q5",
-        "6.5": "q6",
-        "7.5": "q7",
+        "3.6": "q3",
+        "4.6": "q4",
+        "5.6": "q5",
+        "6.6": "q6",
         "8.5": "q8",
         "9.5": "q9",
         "10.4": "q10",
@@ -568,15 +567,7 @@ const CourseDetail = () => {
 
     const quizLesson = lessons.find((l) => {
       if (!l?.id || !l?.title) return false;
-      const looksNumericQuiz =
-        (/^[0-9]+\.[0-9]+$/.test(l.id) && l.id.split(".")[1] === "5") ||
-        String(l.title).toLowerCase().includes("quiz");
-
-      if (slug === "blue-team-soc-fundamentals" && l.id === "10.5") {
-        return false;
-      }
-
-      return looksNumericQuiz;
+      return String(l.title).toLowerCase().includes("quiz");
     });
 
     return quizLesson?.id ?? null;
@@ -602,14 +593,8 @@ const CourseDetail = () => {
       return true;
     }
 
-    // Check if it's a quiz lesson (numeric id ends with .5 or title contains "quiz")
-    let isQuiz = ((/^[0-9]+\.[0-9]+$/.test(lesson.id) && lesson.id.split('.')[1] === '5')) || 
-                 lesson.title.toLowerCase().includes('quiz');
-
-    // Special case: in SOC Fundamentals, 10.5 is a summary lesson, not a quiz
-    if (slug === "blue-team-soc-fundamentals" && lesson.id === "10.5") {
-      isQuiz = false;
-    }
+    // Check if it's a quiz lesson (title contains "quiz")
+    const isQuiz = lesson.title.toLowerCase().includes('quiz');
 
     if (isQuiz) {
       // For quiz lessons, check if the previous lesson is completed
@@ -625,8 +610,7 @@ const CourseDetail = () => {
     // For regular lessons after quiz, check if the quiz was passed with 70%
     if (lessonIndex > 0 && course.modules[moduleIndex].lessons[lessonIndex - 1]) {
       const previousLesson = course.modules[moduleIndex].lessons[lessonIndex - 1];
-      const isPreviousQuiz = ((/^[0-9]+\.[0-9]+$/.test(previousLesson.id) && previousLesson.id.split('.')[1] === '5')) ||
-                            previousLesson.title.toLowerCase().includes('quiz');
+      const isPreviousQuiz = previousLesson.title.toLowerCase().includes('quiz');
 
       if (isPreviousQuiz) {
         // Check if quiz was passed with 70%
@@ -914,21 +898,8 @@ const CourseDetail = () => {
         const firstModule = course.modules[0];
         const firstLesson = firstModule?.lessons?.[0];
         if (firstLesson) {
-          let isQuiz = ((/^[0-9]+\.[0-9]+$/.test(firstLesson.id) && firstLesson.id.split('.')[1] === '5')) || 
-                       firstLesson.title.toLowerCase().includes('quiz');
+          const isQuiz = firstLesson.title.toLowerCase().includes('quiz');
 
-          // Special cases for SOC Fundamentals
-          if (slug === "blue-team-soc-fundamentals") {
-            // 10.5 is a summary lesson, not a quiz
-            if (firstLesson.id === "10.5") {
-              isQuiz = false;
-            }
-            // 3.6, 4.6, 5.6 are quiz lessons
-            if (["3.6", "4.6", "5.6"].includes(firstLesson.id)) {
-              isQuiz = true;
-            }
-          }
-          
           if (isQuiz && slug !== "blue-team-soc-fundamentals") {
             navigate(`/courses/${slug}/quiz/${firstLesson.id}`);
           } else {
@@ -944,20 +915,7 @@ const CourseDetail = () => {
         console.log('Next lesson:', nextLesson);
         
         // Navigate to quiz page if it's a quiz
-        let isQuiz = ((/^[0-9]+\.[0-9]+$/.test(nextLesson.id) && nextLesson.id.split('.')[1] === '5')) || 
-                     nextLesson.title.toLowerCase().includes('quiz');
-
-        // Special cases for SOC Fundamentals
-        if (slug === "blue-team-soc-fundamentals") {
-          // 10.5 is a summary lesson, not a quiz
-          if (nextLesson.id === "10.5") {
-            isQuiz = false;
-          }
-          // 3.6, 4.6, 5.6 are quiz lessons
-          if (["3.6", "4.6", "5.6"].includes(nextLesson.id)) {
-            isQuiz = true;
-          }
-        }
+        const isQuiz = nextLesson.title.toLowerCase().includes('quiz');
         
         // For SOC Fundamentals, Continue Course should go to the lesson page
         // (quiz intro) even when the next lesson is a quiz like 1.5 or 2.5.
@@ -1012,9 +970,8 @@ const CourseDetail = () => {
         const firstModule = course.modules[0];
         const firstLesson = firstModule?.lessons?.[0];
         if (firstLesson) {
-          const isQuiz = ((/^[0-9]+\.[0-9]+$/.test(firstLesson.id) && firstLesson.id.split('.')[1] === '5')) || 
-                         firstLesson.title.toLowerCase().includes('quiz');
-          
+          const isQuiz = firstLesson.title.toLowerCase().includes('quiz');
+
           if (isQuiz) {
             navigate(`/courses/${slug}/quiz/${firstLesson.id}`);
           } else {
@@ -1233,20 +1190,7 @@ const CourseDetail = () => {
                                 effectiveCompletedLessonIds.includes(resolvedQuizId);
                               const isUnlocked = isLessonUnlocked(lesson, moduleIndex, lessonIndex);
                               const isLocked = !isCompleted && !isUnlocked;
-                              let isQuiz = ((/^[0-9]+\.[0-9]+$/.test(lesson.id) && lesson.id.split('.')[1] === '5')) || 
-                                       lesson.title.toLowerCase().includes('quiz');
-
-                              // Special cases for SOC Fundamentals
-                              if (slug === "blue-team-soc-fundamentals") {
-                                // 10.5 is a summary lesson, not a quiz
-                                if (lesson.id === "10.5") {
-                                  isQuiz = false;
-                                }
-                                // 3.6, 4.6, 5.6 are quiz lessons
-                                if (["3.6", "4.6", "5.6"].includes(lesson.id)) {
-                                  isQuiz = true;
-                                }
-                              }
+                              const isQuiz = lesson.title.toLowerCase().includes('quiz');
                               
                               // Debug logging
                               console.log(`Lesson ${lesson.id}: isQuiz=${isQuiz}, isUnlocked=${isUnlocked}, isCompleted=${isCompleted}, isLocked=${isLocked}`);

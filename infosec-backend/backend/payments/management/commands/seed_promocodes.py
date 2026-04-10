@@ -8,23 +8,25 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Define promo codes with their limits
         promo_codes = [
-            # (code, course_slug, max_uses, is_active)
-            ("HEHE100", "blue-team-soc-fundamentals", 10, True),
-            ("PBRVITS", "blue-team-soc-fundamentals", 10, True),
-            ("FIX100", "blue-team-soc-fundamentals", 10, True),
-            ("FIRST100", "blue-team-soc-fundamentals", 15, True),
+            # (code, course_slug, max_uses, is_active, discount_percent)
+            ("HEHE100", "blue-team-soc-fundamentals", 10, True, 100),
+            ("PBRVITS", "blue-team-soc-fundamentals", 10, True, 100),
+            ("FIX100", "blue-team-soc-fundamentals", 10, True, 100),
+            ("FIRST100", "blue-team-soc-fundamentals", 15, True, 100),
+            ("SOC04", "blue-team-soc-fundamentals", 5, True, 100),
         ]
 
         created_count = 0
         updated_count = 0
 
-        for code, course_slug, max_uses, is_active in promo_codes:
+        for code, course_slug, max_uses, is_active, discount_percent in promo_codes:
             obj, created = PromoCode.objects.update_or_create(
                 code=code,
                 defaults={
                     "course_slug": course_slug,
                     "max_uses": max_uses,
                     "is_active": is_active,
+                    "discount_percent": discount_percent,
                 }
             )
             if created:
