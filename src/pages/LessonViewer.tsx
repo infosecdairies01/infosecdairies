@@ -44,6 +44,7 @@ const LessonViewer = () => {
   const [markingComplete, setMarkingComplete] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
+  const [progressLoaded, setProgressLoaded] = useState(false);
 
   const formatModuleId = (id: string) => id.replace(/^[a-z]+-/, "");
 
@@ -394,11 +395,6 @@ const LessonViewer = () => {
                 item && item.lesson_id != null ? String(item.lesson_id) : null,
               )
               .filter((id: string | null): id is string => Boolean(id));
-            
-            if (backendIds.length === 0) {
-              const completedKey = `completed_lessons_${slug}`;
-              localStorage.removeItem(completedKey);
-            }
           }
         }
 
@@ -406,8 +402,10 @@ const LessonViewer = () => {
         const localIds = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
         const merged = Array.from(new Set([...(backendIds || []), ...(localIds || [])]));
         setCompletedLessonIds(merged);
+        setProgressLoaded(true);
       } catch {
         // best-effort; if it fails, keep existing local state
+        setProgressLoaded(true);
       }
     };
 
@@ -436,9 +434,9 @@ const LessonViewer = () => {
     }
   }, [currentLesson?.id, isCourseProgressEnabled]);
 
-  // ─── FIX: Gate check now uses getStoredQuizScore which tries both key formats ───
+  // ─── Gate check: wait for progress to load before evaluating ───
   useEffect(() => {
-    if (!slug || !lessonId || !course) return;
+    if (!slug || !lessonId || !course || !progressLoaded) return;
 
     const currentModuleIndex = course.modules.findIndex((m) =>
       m.lessons.some((l) => l.id === lessonId),
@@ -450,15 +448,15 @@ const LessonViewer = () => {
     const gateQuizId = getModuleGateQuizId(previousModule);
     if (!gateQuizId) return;
 
-    // getStoredQuizScore now tries both "q6" and "6.5" style keys
+    // Pass if quiz score ≥70 OR the quiz lesson itself is in completedLessonIds
     const score = getStoredQuizScore(gateQuizId);
-    const passed = score != null && score >= 70;
-
-    if (passed) return;
+    const passedByScore = score != null && score >= 70;
+    const passedByCompletion = completedLessonIds.includes(gateQuizId);
+    if (passedByScore || passedByCompletion) return;
 
     // Redirect to the previous module quiz
     navigate(`/courses/${slug}/quiz/${gateQuizId}`, { replace: true });
-  }, [slug, lessonId, course, navigate]);
+  }, [slug, lessonId, course, progressLoaded, completedLessonIds, navigate]);
 
   if (!course) {
     console.warn('LessonViewer redirect: course not found, going back to /courses');
@@ -488,11 +486,11 @@ const LessonViewer = () => {
         const previousModule = course.modules[targetModuleIndex - 1];
         const gateQuizId = getModuleGateQuizId(previousModule);
         if (gateQuizId) {
-          // getStoredQuizScore tries both key formats
           const score = getStoredQuizScore(gateQuizId);
-          const passed = score != null && score >= 70;
+          const passedByScore = score != null && score >= 70;
+          const passedByCompletion = completedLessonIds.includes(gateQuizId);
 
-          if (!passed) {
+          if (!passedByScore && !passedByCompletion) {
             window.alert("Complete the quiz (70%+) to unlock the next module.");
             navigate(`/courses/${slug}/quiz/${gateQuizId}`);
             return false;
@@ -899,10 +897,12 @@ const LessonViewer = () => {
             <div className="max-w-4xl">
               {lessonContent ? (
                 <>
-                  {/* Main Content */}
-                  <div className="prose prose-invert max-w-none">
-                    {renderContent(displayedLessonContent?.content || "")}
-                  </div>
+                  {/* Main Content — skip for quiz lessons (avoids rendering raw Q&A data) */}
+                  {!isQuizLesson && (
+                    <div className="prose prose-invert max-w-none">
+                      {renderContent(displayedLessonContent?.content || "")}
+                    </div>
+                  )}
 
                   {/* Quiz Button for Quiz Lessons */}
                   {isQuizLesson && (
