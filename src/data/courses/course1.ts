@@ -293,49 +293,56 @@ export const courses: Course[] = [
       {
         id: "7",
         title: "Incident Response Introduction",
-        quizId: "q6",
+        quizId: "q7",
         lessons: [
-          { 
-            id: "7.1", 
-            title: "Incident Response Lifecycle", 
+          {
+            id: "7.1",
+            title: "Incident Response Lifecycle",
             description: "NIST framework: Preparation, Detection, Containment, Eradication, Recovery, Lessons Learned.",
             duration: "30 min",
-            status: "locked" 
+            status: "locked"
           },
-          { 
-            id: "7.2", 
-            title: "Incident Classification & Severity", 
+          {
+            id: "7.2",
+            title: "Incident Classification & Severity",
             description: "How to classify incidents and determine priority.",
             duration: "25 min",
-            status: "locked" 
+            status: "locked"
           },
-          { 
-            id: "7.3", 
-            title: "Initial Containment Actions", 
+          {
+            id: "7.3",
+            title: "Initial Containment Actions",
             description: "First response actions for common incident types.",
             duration: "35 min",
-            status: "locked" 
+            status: "locked"
           },
-          { 
-            id: "7.4", 
-            title: "Incident Documentation", 
+          {
+            id: "7.4",
+            title: "Incident Documentation",
             description: "Creating effective incident tickets and reports.",
             duration: "25 min",
-            status: "locked" 
+            status: "locked"
           },
-          { 
-            id: "7.5", 
-            title: "Hands-On: Phishing Incident Response", 
+          {
+            id: "7.5",
+            title: "Hands-On: Phishing Incident Response",
             description: "Walk through a complete phishing incident from detection to resolution.",
             duration: "45 min",
-            status: "locked" 
+            status: "locked"
+          },
+          {
+            id: "7.6",
+            title: "Module 7 Quiz: Incident Response",
+            description: "Test your understanding of the incident response lifecycle, classification, containment, and documentation.",
+            duration: "20 min",
+            status: "locked"
           },
         ],
       },
       {
         id: "8",
         title: "Endpoint Detection & Response",
-        quizId: "q7",
+        quizId: "q8",
         lessons: [
           { 
             id: "8.1", 
@@ -377,7 +384,7 @@ export const courses: Course[] = [
       {
         id: "9",
         title: "Network Security Monitoring",
-        quizId: "q8",
+        quizId: "q9",
         lessons: [
           { 
             id: "9.1", 

@@ -60,7 +60,7 @@ const LessonViewer = () => {
         "4.6": "q4",
         "5.6": "q5",
         "6.6": "q6",
-        "7.5": "q7",
+        "7.6": "q7",
         "8.5": "q8",
         "9.5": "q9",
         "10.4": "q10",
@@ -1020,6 +1020,40 @@ const LessonViewer = () => {
                     </div>
                   )}
                 </>
+              ) : isQuizLesson ? (
+                <div className="mt-8 p-6 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                  <div className="flex items-center gap-3 mb-4">
+                    <FileQuestion className="w-6 h-6 text-orange-400" />
+                    <h3 className="text-lg font-semibold text-foreground">Ready to Test Your Knowledge?</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-6">
+                    This quiz covers the material from the previous lessons. You need to score 70% or higher to unlock the next module.
+                  </p>
+                  <div className="mb-6 p-4 rounded-lg bg-background/50 border border-white/[0.08]">
+                    <div className="text-center">
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Quiz Score</h4>
+                      <div className="text-2xl font-bold text-foreground mb-1">
+                        {quizScoreData?.score ? `${quizScoreData.score}%` : 'Not taken yet'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {(() => {
+                          const score = quizScoreData?.score;
+                          if (!score) return 'Complete the quiz to see your score';
+                          const scoreNum = parseInt(score);
+                          if (scoreNum >= 70) return '✅ Passed - Ready for next module!';
+                          return '❌ Need 70% to pass - Try again!';
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => navigate(`/courses/${slug}/quiz/${lessonId}`)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3"
+                  >
+                    <FileQuestion className="w-4 h-4 mr-2" />
+                    {quizScoreData?.hasScore ? 'Retake Quiz' : 'Start Quiz'}
+                  </Button>
+                </div>
               ) : (
                 <div className="text-center py-16">
                   <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
