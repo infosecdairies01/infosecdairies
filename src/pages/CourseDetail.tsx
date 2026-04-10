@@ -474,7 +474,7 @@ const CourseDetail = () => {
         "4.6": "q4",
         "5.6": "q5",
         "6.6": "q6",
-        "7.5": "q7",
+        "7.6": "q7",
         "8.5": "q8",
         "9.5": "q9",
         "10.4": "q10",
@@ -1269,7 +1269,7 @@ const CourseDetail = () => {
                                   </div>
                                 </div>
 
-                                {isCompleted && (
+                                {isCompleted && !isQuiz && (
                                   <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/25">
                                     Completed
                                   </span>
