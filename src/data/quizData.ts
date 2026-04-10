@@ -1326,7 +1326,7 @@ export const quizzes: QuizData[] = [
           "Normal web traffic",
           "Single source connecting to many destinations on multiple ports",
           "Large file downloads",
-          "Email traffic"
+          "Email traffic"   
         ],
         correctAnswer: 1,
         explanation: "Port scanning shows a single source systematically connecting to many targets across multiple ports for reconnaissance."
