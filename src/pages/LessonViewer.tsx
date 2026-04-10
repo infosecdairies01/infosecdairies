@@ -424,12 +424,14 @@ const LessonViewer = () => {
 
   useEffect(() => {
     if (!isCourseProgressEnabled || !currentLesson) return;
-    
+    // Never auto-complete quiz lessons — completion is handled by QuizPage on pass
+    if (currentLesson.title.toLowerCase().includes('quiz')) return;
+
     if (!completedLessonIds.includes(currentLesson.id)) {
       const timer = setTimeout(() => {
         void markLessonComplete();
       }, 3000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [currentLesson?.id, isCourseProgressEnabled]);
@@ -500,25 +502,7 @@ const LessonViewer = () => {
     }
 
     const targetLesson = course.modules[targetModuleIndex]?.lessons?.find(l => l.id === newLessonId);
-    // Check if target is a quiz lesson (.5 or .6 for SOC, with exceptions)
-    const isTargetQuizLesson = targetLesson && /^\d+\.\d+$/.test(targetLesson.id) && (() => {
-      const subId = targetLesson.id.split('.')[1];
-      if (subId === '5') {
-        // Exclude special cases that are not quizzes
-        if (slug === "blue-team-soc-fundamentals" && (targetLesson.id === "4.5" || targetLesson.id === "5.5" || targetLesson.id === "10.5")) {
-          return false;
-        }
-        return true;
-      }
-      if (subId === '6') {
-        // Include quiz lessons at .6
-        if (slug === "blue-team-soc-fundamentals" && ["3.6", "4.6", "5.6"].includes(targetLesson.id)) {
-          return true;
-        }
-        return false;
-      }
-      return false;
-    })();
+    const isTargetQuizLesson = targetLesson?.title.toLowerCase().includes('quiz') ?? false;
 
     if (isTargetQuizLesson && currentModuleIndex === targetModuleIndex) {
       navigate(`/courses/${slug}/lesson/${newLessonId}`);
@@ -588,25 +572,11 @@ const LessonViewer = () => {
     return { score, hasScore: score !== null };
   }, [slug, lessonId, lessonContent?.quiz]);
 
-  // Memoized quiz lesson detection
+  // Memoized quiz lesson detection — rely solely on lesson title
   const isQuizLesson = useMemo(() => {
-    let isQuiz = Boolean(lessonContent?.quiz);
-
-    if (!isQuiz && lessonId && /^\d+\.\d+$/.test(lessonId)) {
-      const subId = lessonId.split('.')[1];
-      if (subId === '5' || subId === '6') {
-        isQuiz = true;
-      }
-    }
-
-    if (slug === "blue-team-soc-fundamentals") {
-      if (lessonId === "10.5") isQuiz = false;
-      if (lessonId === "4.5" || lessonId === "5.5") isQuiz = false;
-      if (["3.6", "4.6", "5.6", "6.6"].includes(lessonId)) isQuiz = true;
-    }
-
-    return isQuiz;
-  }, [lessonContent?.quiz, lessonId, slug]);
+    return Boolean(lessonContent?.quiz) ||
+      Boolean(currentLesson?.title.toLowerCase().includes('quiz'));
+  }, [lessonContent?.quiz, currentLesson?.title]);
 
   // Parse markdown-like content to JSX
   const renderContent = (content: string) => {
