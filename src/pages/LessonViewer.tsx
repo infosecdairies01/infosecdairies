@@ -435,7 +435,19 @@ const LessonViewer = () => {
     const score = getStoredQuizScore(gateQuizId);
     const passedByScore = score != null && score >= 70;
     const passedByCompletion = completedLessonIds.includes(gateQuizId);
-    if (passedByScore || passedByCompletion) return;
+
+    // Backward compat: also check by the quiz lesson's raw ID in the previous module
+    // (covers stored scores from before quizId mapping was corrected)
+    const prevQuizLesson = previousModule.lessons.find((l) =>
+      l.title.toLowerCase().includes("quiz"),
+    );
+    const prevQuizLessonScore = prevQuizLesson ? getStoredQuizScore(prevQuizLesson.id) : null;
+    const passedByLessonScore = prevQuizLessonScore != null && prevQuizLessonScore >= 70;
+    const passedByLessonCompletion = prevQuizLesson
+      ? completedLessonIds.includes(prevQuizLesson.id)
+      : false;
+
+    if (passedByScore || passedByLessonScore || passedByCompletion || passedByLessonCompletion) return;
 
     // Redirect to the previous module quiz
     navigate(`/courses/${slug}/quiz/${gateQuizId}`, { replace: true });
@@ -473,7 +485,17 @@ const LessonViewer = () => {
           const passedByScore = score != null && score >= 70;
           const passedByCompletion = completedLessonIds.includes(gateQuizId);
 
-          if (!passedByScore && !passedByCompletion) {
+          // Backward compat: also check by the quiz lesson's raw ID
+          const prevQuizLesson = previousModule.lessons.find((l) =>
+            l.title.toLowerCase().includes("quiz"),
+          );
+          const prevQuizLessonScore = prevQuizLesson ? getStoredQuizScore(prevQuizLesson.id) : null;
+          const passedByLessonScore = prevQuizLessonScore != null && prevQuizLessonScore >= 70;
+          const passedByLessonCompletion = prevQuizLesson
+            ? completedLessonIds.includes(prevQuizLesson.id)
+            : false;
+
+          if (!passedByScore && !passedByLessonScore && !passedByCompletion && !passedByLessonCompletion) {
             window.alert("Complete the quiz (70%+) to unlock the next module.");
             navigate(`/courses/${slug}/quiz/${gateQuizId}`);
             return false;
