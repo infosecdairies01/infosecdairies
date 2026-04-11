@@ -1093,37 +1093,6 @@ const LessonViewer = () => {
                           return;
                         }
 
-                        const quizLessonInModule = currentModule?.lessons?.find((l) => {
-                          // Skip current lesson
-                          if (l.id === lessonId) return false;
-                          // Check if lesson looks like a quiz lesson (.5 or .6)
-                          if (!/^\d+\.\d+$/.test(l.id)) return false;
-                          const subId = l.id.split('.')[1];
-                          if (subId === '5') {
-                            // Exclude lessons that are not quizzes
-                            if (slug === "blue-team-soc-fundamentals" && (l.id === "4.5" || l.id === "5.5" || l.id === "10.5")) {
-                              return false;
-                            }
-                            return true;
-                          }
-                          if (subId === '6') {
-                            // Include quiz lessons at .6
-                            if (slug === "blue-team-soc-fundamentals" && ["3.6", "4.6", "5.6", "6.6"].includes(l.id)) {
-                              return true;
-                            }
-                            return false;
-                          }
-                          return false;
-                        });
-
-                        if (quizLessonInModule?.id) {
-                          const didNavigate = navigateToLesson(quizLessonInModule.id);
-                          if (didNavigate) {
-                            void markLessonComplete();
-                          }
-                          return;
-                        }
-
                         if (moduleQuizId && !hasPassedModuleQuiz) {
                           void markLessonComplete();
                           navigate(`/courses/${slug}/quiz/${moduleQuizId}`);
