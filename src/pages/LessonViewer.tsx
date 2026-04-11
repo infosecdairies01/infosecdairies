@@ -55,16 +55,14 @@ const LessonViewer = () => {
       const socQuizMap: Record<string, string> = {
         "1.5": "q1",
         "2.5": "q2",
-        
         "3.6": "q3",
-
         "4.6": "q4",
-        "5.6": "q5",
-        "6.6": "q6",
-        "7.6": "q7",
-        "8.5": "q8",
-        "9.5": "q9",
-        "10.4": "q10",
+        "5.6": "q4",
+        "6.6": "q5",
+        "7.6": "q6",
+        "8.5": "q7",
+        "9.5": "q8",
+        "10.4": "q9",
       };
       return socQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
@@ -240,15 +238,6 @@ const LessonViewer = () => {
   const lessonContentFromPerCourse = getLessonContentFromPerCourse(lessonsCourseId, lessonId || "");
   const lessonContent = lessonContentFromMain || lessonContentFromPerCourse;
 
-  // Debug logging
-  console.log('LessonViewer Debug:');
-  console.log('Slug:', slug);
-  console.log('LessonId:', lessonId);
-  console.log('CourseIdForMeta:', courseIdForMeta);
-  console.log('LessonsCourseId:', lessonsCourseId);
-  console.log('Course:', course);
-  console.log('LessonContent:', lessonContent);
-
   // Get all lessons flattened for navigation
   const allLessons = useMemo(() => {
     if (!course) return [];
@@ -260,9 +249,6 @@ const LessonViewer = () => {
       }))
     );
   }, [course]);
-
-  console.log('All lessons length:', allLessons.length);
-  console.log('First few lessons:', allLessons.slice(0, 5));
 
   // Find current lesson index
   const currentLessonIndex = allLessons.findIndex((l) => l.id === lessonId);
@@ -304,9 +290,6 @@ const LessonViewer = () => {
       content: filtered.join("\n"),
     };
   }, [lessonContent, currentLesson?.title]);
-
-  console.log('Current lesson index:', currentLessonIndex);
-  console.log('Current lesson:', currentLesson);
 
   const currentModuleIndex = useMemo(() => {
     if (!course || !lessonId) return -1;
