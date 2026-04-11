@@ -13,7 +13,7 @@ class Command(BaseCommand):
             ("PBRVITS", "blue-team-soc-fundamentals", 10, True, 100),
             ("FIX100", "blue-team-soc-fundamentals", 10, True, 100),
             ("FIRST100", "blue-team-soc-fundamentals", 15, True, 100),
-            ("SOC04", "blue-team-soc-fundamentals", 7, True, 100),
+            ("SOC04", "blue-team-soc-fundamentals", 17, True, 100),
         ]
 
         created_count = 0

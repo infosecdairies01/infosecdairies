@@ -426,7 +426,7 @@ export const courses: Course[] = [
       {
         id: "10",
         title: "SOC Analyst Best Practices",
-        quizId: "q9",
+        quizId: "q10",
         lessons: [
           { 
             id: "10.1", 
