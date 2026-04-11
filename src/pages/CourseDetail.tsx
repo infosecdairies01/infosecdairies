@@ -472,12 +472,12 @@ const CourseDetail = () => {
         "2.5": "q2",
         "3.6": "q3",
         "4.6": "q4",
-        "5.6": "q5",
-        "6.6": "q6",
-        "7.6": "q7",
-        "8.5": "q8",
-        "9.5": "q9",
-        "10.4": "q10",
+        "5.6": "q4",
+        "6.6": "q5",
+        "7.6": "q6",
+        "8.5": "q7",
+        "9.5": "q8",
+        "10.4": "q9",
       };
       return socQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
@@ -1192,9 +1192,6 @@ const CourseDetail = () => {
                               const isUnlocked = isLessonUnlocked(lesson, moduleIndex, lessonIndex);
                               const isLocked = !isCompleted && !isUnlocked;
                               const isQuiz = lesson.title.toLowerCase().includes('quiz');
-                              
-                              // Debug logging
-                              console.log(`Lesson ${lesson.id}: isQuiz=${isQuiz}, isUnlocked=${isUnlocked}, isCompleted=${isCompleted}, isLocked=${isLocked}`);
 
                               return (
                                 <div
