@@ -447,7 +447,15 @@ const LessonViewer = () => {
       ? completedLessonIds.includes(prevQuizLesson.id)
       : false;
 
-    if (passedByScore || passedByLessonScore || passedByCompletion || passedByLessonCompletion) return;
+    // Backward compat: also check quizId+1 (old off-by-one cascade from prior bug)
+    // e.g. module 8 was q8 before fix, now q7 — score stored at q8 still counts
+    const oldQuizNum = parseInt(gateQuizId.replace("q", ""), 10);
+    const oldGateQuizId = isNaN(oldQuizNum) ? null : `q${oldQuizNum + 1}`;
+    const oldScore = oldGateQuizId ? getStoredQuizScore(oldGateQuizId) : null;
+    const passedByOldScore = oldScore != null && oldScore >= 70;
+    const passedByOldCompletion = oldGateQuizId ? completedLessonIds.includes(oldGateQuizId) : false;
+
+    if (passedByScore || passedByLessonScore || passedByOldScore || passedByCompletion || passedByLessonCompletion || passedByOldCompletion) return;
 
     // Redirect to the previous module quiz
     navigate(`/courses/${slug}/quiz/${gateQuizId}`, { replace: true });
@@ -495,7 +503,14 @@ const LessonViewer = () => {
             ? completedLessonIds.includes(prevQuizLesson.id)
             : false;
 
-          if (!passedByScore && !passedByLessonScore && !passedByCompletion && !passedByLessonCompletion) {
+          // Backward compat: also check quizId+1 (old off-by-one cascade from prior bug)
+          const oldQuizNum = parseInt(gateQuizId.replace("q", ""), 10);
+          const oldGateQuizId = isNaN(oldQuizNum) ? null : `q${oldQuizNum + 1}`;
+          const oldScore = oldGateQuizId ? getStoredQuizScore(oldGateQuizId) : null;
+          const passedByOldScore = oldScore != null && oldScore >= 70;
+          const passedByOldCompletion = oldGateQuizId ? completedLessonIds.includes(oldGateQuizId) : false;
+
+          if (!passedByScore && !passedByLessonScore && !passedByOldScore && !passedByCompletion && !passedByLessonCompletion && !passedByOldCompletion) {
             window.alert("Complete the quiz (70%+) to unlock the next module.");
             navigate(`/courses/${slug}/quiz/${gateQuizId}`);
             return false;
