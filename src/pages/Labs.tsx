@@ -4,71 +4,96 @@ import AlertSummaryCards from "@/components/soc/AlertSummaryCards";
 import AlertsChart from "@/components/soc/AlertsChart";
 import TopSourcesChart from "@/components/soc/TopSourcesChart";
 import RecentAlertsTable from "@/components/soc/RecentAlertsTable";
-import { Bell, Search, User, Lock } from "lucide-react";
+import SeverityDonutChart from "@/components/soc/SeverityDonutChart";
+import ActiveInvestigations from "@/components/soc/ActiveInvestigations";
+import MitreHeatmapInteractive from "@/components/soc/MitreHeatmapInteractive";
+import ThreatGeoMap from "@/components/soc/ThreatGeoMap";
+import LiveActivityFeed from "@/components/soc/LiveActivityFeed";
+
+import { Bell, Search, User, RefreshCw, Clock } from "lucide-react";
+
 const Labs = () => {
-  return <main className="min-h-screen bg-[#010409] flex flex-col">
+  return (
+    <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      
-      {/* Access Restriction Overlay */}
-      <div className="fixed inset-0 top-16 md:top-20 z-40 flex items-start justify-center pt-100 md:pt-60 pointer-events-none">
-        <div className="text-center pointer-events-auto">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#21262d]/80 border border-[#30363d] flex items-center justify-center backdrop-blur-sm">
-            <Lock className="w-10 h-10 text-red-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">
-            You don't have access to this page
-          </h2>
-          <p className="text-sm text-[#8b949e]">Please upgrade your plan or contact the
-administrator</p>
-        </div>
-      </div>
-      
-      <div className="flex flex-1 pt-5 md:pt-1 blur-[3px] pointer-events-none select-none overflow-auto">
-        <SOCSidebar />
-        
+
+      <div className="flex flex-1 pt-20 overflow-hidden">
+        <SOCSidebar activeItem="Dashboard" />
+
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Dashboard Header */}
-          <header className="bg-[#0d1117] border-b border-[#21262d] px-6 py-4 flex items-center justify-between">
+          <header className="bg-card/25 backdrop-blur-lg border-b border-white/[0.08] px-6 py-4 flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-[#c9d1d9]">Security Dashboard</h1>
-              <p className="text-sm text-[#8b949e]">Real-time threat monitoring and analysis</p>
+              <h1 className="text-xl font-semibold text-foreground">Security Dashboard</h1>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                Real-time threat monitoring and analysis
+                <span className="flex items-center gap-1 text-[10px] text-primary/60">
+                  <Clock className="w-3 h-3" />
+                  Last updated: just now
+                </span>
+              </p>
             </div>
-            
-            <div className="flex items-center gap-4">
+
+            <div className="flex items-center gap-3">
               <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8b949e]" />
-                <input type="text" placeholder="Search alerts..." className="bg-[#0d1117] border border-[#21262d] rounded-md pl-10 pr-4 py-2 text-sm text-[#c9d1d9] placeholder:text-[#8b949e] focus:outline-none focus:border-[#00ffc8] w-64" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search alerts, IPs, IOCs..."
+                  className="bg-background/50 border border-white/[0.08] rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 w-72 transition-colors backdrop-blur-sm"
+                />
               </div>
-              
-              <button className="relative p-2 text-[#8b949e] hover:text-[#c9d1d9] transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+
+              <button className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-white/[0.04]" title="Refresh">
+                <RefreshCw className="w-4 h-4" />
               </button>
-              
-              <button className="w-8 h-8 bg-[#21262d] rounded-full flex items-center justify-center text-[#8b949e] hover:text-[#c9d1d9] transition-colors">
+
+              <button className="relative p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-white/[0.04]">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              </button>
+
+              <button className="w-8 h-8 bg-primary/10 border border-primary/25 rounded-full flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
                 <User className="w-4 h-4" />
               </button>
             </div>
           </header>
-          
-          {/* Dashboard Content */}
+
           <div className="flex-1 p-6 overflow-auto">
             <div className="space-y-6">
-              {/* Alert Summary Cards */}
               <AlertSummaryCards />
-              
-              {/* Charts Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <AlertsChart />
-                <TopSourcesChart />
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <AlertsChart />
+                </div>
+                <div className="lg:col-span-1">
+                  <LiveActivityFeed />
+                </div>
               </div>
-              
-              {/* Recent Alerts Table */}
+
+              <MitreHeatmapInteractive />
+
+              <ThreatGeoMap />
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <TopSourcesChart />
+                </div>
+                <div className="lg:col-span-1">
+                  <ActiveInvestigations />
+                </div>
+                <div className="lg:col-span-1">
+                  <SeverityDonutChart />
+                </div>
+              </div>
+
               <RecentAlertsTable />
             </div>
           </div>
         </div>
       </div>
-    </main>;
+    </main>
+  );
 };
+
 export default Labs;

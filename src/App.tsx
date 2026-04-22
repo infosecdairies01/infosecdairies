@@ -12,6 +12,12 @@ import LiveCourseDetail from "./pages/LiveCourseDetail";
 import LessonViewer from "./pages/LessonViewer";
 import QuizPage from "./pages/QuizPage";
 import Labs from "./pages/Labs";
+import Alerts from "./pages/Alerts";
+import Incidents from "./pages/Incidents";
+import Endpoints from "./pages/Endpoints";
+import ThreatIntel from "./pages/ThreatIntel";
+import EmailSecurity from "./pages/EmailSecurity";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
@@ -49,6 +55,12 @@ const App = () => (
             <Route path="/courses/:courseId/resources/:resourceId" element={<ResourceViewer />} />
             <Route path="/courses/:courseId/resource/:resourceId" element={<ResourceViewer />} />
             <Route path="/labs" element={<Labs />} />
+            <Route path="/labs/alerts" element={<Alerts />} />
+            <Route path="/labs/incidents" element={<Incidents />} />
+            <Route path="/labs/endpoints" element={<Endpoints />} />
+            <Route path="/labs/threat-intel" element={<ThreatIntel />} />
+            <Route path="/labs/email-security" element={<EmailSecurity />} />
+            <Route path="/labs/settings" element={<Settings />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
