@@ -221,7 +221,7 @@ const ResourceViewer = () => {
               <div className="relative border-b border-white/[0.08] px-8 py-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <img src={logo} alt="InfoSec Diaries" className="h-10 w-auto" />
+                    <img src={logo} alt="BlueTeamers" className="h-10 w-auto" />
                     <div>
                       <h1 className="text-xl font-bold text-foreground">{resourceMeta.title}</h1>
                       <div className="flex items-center gap-2 mt-1">
@@ -251,10 +251,10 @@ const ResourceViewer = () => {
               {/* Footer */}
               <div className="relative border-t border-white/[0.08] px-8 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <img src={logo} alt="InfoSec Diaries" className="h-6 w-auto opacity-60" />
-                  <span className="text-xs text-muted-foreground">InfoSec Diaries — {course.title}</span>
+                  <img src={logo} alt="BlueTeamers" className="h-6 w-auto opacity-60" />
+                  <span className="text-xs text-muted-foreground">BlueTeamers — {course.title}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">© {new Date().getFullYear()} InfoSec Diaries. All rights reserved.</span>
+                <span className="text-xs text-muted-foreground">© {new Date().getFullYear()} BlueTeamers. All rights reserved.</span>
               </div>
             </div>
           </div>
@@ -265,7 +265,7 @@ const ResourceViewer = () => {
       <div className="hidden print:block p-8">
         <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-300">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="InfoSec Diaries" className="h-8 w-auto" />
+            <img src={logo} alt="BlueTeamers" className="h-8 w-auto" />
             <div>
               <h1 className="text-xl font-bold text-black">{resourceMeta.title}</h1>
               <p className="text-sm text-gray-600">{course.title} — {typeLabel[resourceMeta.type] || resourceMeta.type}</p>
@@ -276,8 +276,8 @@ const ResourceViewer = () => {
           {renderMarkdown(resource.content)}
         </div>
         <div className="mt-8 pt-4 border-t border-gray-300 flex items-center justify-between">
-          <span className="text-xs text-gray-500">InfoSec Diaries — {course.title}</span>
-          <span className="text-xs text-gray-500">© {new Date().getFullYear()} InfoSec Diaries</span>
+          <span className="text-xs text-gray-500">BlueTeamers — {course.title}</span>
+          <span className="text-xs text-gray-500">© {new Date().getFullYear()} BlueTeamers</span>
         </div>
       </div>
     </>
