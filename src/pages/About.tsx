@@ -68,7 +68,7 @@ const About = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              <span className="gradient-text">About InfosecDairies</span>
+              <span className="gradient-text">About BlueTeamers</span>
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
               Your gateway to mastering blue team cybersecurity. We're on a mission to 
@@ -93,7 +93,7 @@ const About = () => {
               
               <div className="space-y-6 text-muted-foreground leading-relaxed relative z-10">
                 <p className={`text-lg transition-all duration-500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} style={{ transitionDelay: '0.1s' }}>
-                  InfosecDairies was born from a simple observation: while offensive security gets the spotlight, 
+                  BlueTeamers was born from a simple observation: while offensive security gets the spotlight,
                   defensive security professionals are the unsung heroes keeping organizations safe 24/7. We 
                   created this platform to give blue teamers the recognition and resources they deserve.
                 </p>

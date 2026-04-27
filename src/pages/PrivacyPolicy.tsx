@@ -6,12 +6,12 @@ const PrivacyPolicy = () => {
     <main className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16">
-        <h1 className="text-4xl font-bold text-foreground mb-2">🔐 Privacy Policy – InfoSec Dairies</h1>
+        <h1 className="text-4xl font-bold text-foreground mb-2">🔐 Privacy Policy – BlueTeamers</h1>
         <p className="text-sm text-muted-foreground mb-8">Last Updated: 21-01-2026</p>
         
         <div className="prose prose-invert max-w-none space-y-8 text-muted-foreground">
           <p className="text-lg">
-            InfoSec Dairies ("we", "our", "us") values your privacy. This Privacy Policy explains how we collect, 
+            BlueTeamers ("we", "our", "us") values your privacy. This Privacy Policy explains how we collect,
             use, and protect your information when you use our website, labs, and services.
           </p>
 

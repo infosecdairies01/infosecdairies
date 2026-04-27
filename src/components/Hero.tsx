@@ -33,7 +33,7 @@ const Hero = () => {
           {/* Heading with shimmer effect */}
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-up">
             <span className="gradient-text inline-block bg-[length:200%_auto] animate-gradient-shift">
-              InfosecDairies
+              BlueTeamers
             </span>
           </h1>
           

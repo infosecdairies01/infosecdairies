@@ -6,17 +6,17 @@ const TermsOfService = () => {
     <main className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16">
-        <h1 className="text-4xl font-bold text-foreground mb-2">📜 Terms of Service – InfoSec Dairies</h1>
+        <h1 className="text-4xl font-bold text-foreground mb-2">📜 Terms of Service – BlueTeamers</h1>
         <p className="text-sm text-muted-foreground mb-8">Last Updated: 21-01-2026</p>
         
         <div className="prose prose-invert max-w-none space-y-8 text-muted-foreground">
           <p className="text-lg">
-            By accessing or using InfoSec Dairies, you agree to these Terms of Service.
+            By accessing or using BlueTeamers, you agree to these Terms of Service.
           </p>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">1. Purpose of the Platform</h2>
-            <p>InfoSec Dairies provides:</p>
+            <p>BlueTeamers provides:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Cybersecurity learning content</li>
               <li>Simulated SOC labs</li>
@@ -45,13 +45,13 @@ const TermsOfService = () => {
               <li>No real malware is used</li>
               <li>Actions taken in labs are for learning only</li>
             </ul>
-            <p className="mt-2">InfoSec Dairies is not responsible for misuse of skills outside the platform.</p>
+            <p className="mt-2">BlueTeamers is not responsible for misuse of skills outside the platform.</p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">4. Intellectual Property</h2>
             <ul className="list-disc pl-6 space-y-1">
-              <li>All lab content, dashboards, explanations, and designs belong to InfoSec Dairies</li>
+              <li>All lab content, dashboards, explanations, and designs belong to BlueTeamers</li>
               <li>You may not copy, redistribute, or resell any content</li>
               <li>Certificates are for personal use only</li>
             </ul>
@@ -78,7 +78,7 @@ const TermsOfService = () => {
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">7. Limitation of Liability</h2>
-            <p>InfoSec Dairies is not liable for:</p>
+            <p>BlueTeamers is not liable for:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Any illegal activity done using learned skills</li>
               <li>Any damage caused by misuse of information</li>

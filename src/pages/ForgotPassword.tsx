@@ -183,7 +183,7 @@ const ForgotPassword = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8 animate-fade-up">
           <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
-            <span className="font-bold text-2xl gradient-text">InfosecDairies</span>
+            <span className="font-bold text-2xl gradient-text">BlueTeamers</span>
           </Link>
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Mail className="w-8 h-8 text-primary" />

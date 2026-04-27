@@ -779,7 +779,7 @@ const CourseDetail = () => {
   const handleShareOnLinkedIn = async () => {
     if (!course || !user) return;
 
-    const shareText = `I have completed my course on ${course.title} from Infosec-Dairies! 🎓\n\nhttps://www.infosecdairies.io/`;
+    const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.infosecdairies.io/`;
 
     try {
       const cert = await generateCertificatePngDataUrl();
