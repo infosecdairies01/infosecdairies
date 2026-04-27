@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Send, Linkedin } from "lucide-react";
+import { Linkedin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const CTA = () => {
@@ -32,7 +32,7 @@ const CTA = () => {
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-cyber opacity-10 animate-gradient-shift" style={{ backgroundSize: '200% 200%' }} />
       <div className="absolute inset-0 circuit-pattern opacity-5" />
-      
+
       <div className="container mx-auto px-4 relative z-10">
         <div className={`max-w-3xl mx-auto text-center space-y-8 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2 className="text-4xl md:text-5xl font-bold">
@@ -40,37 +40,21 @@ const CTA = () => {
               Join the Community
             </span>
           </h2>
-          
+
           <p className={`text-xl text-muted-foreground transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.2s' : '0s' }}>
-            Stay updated with the latest in blue team cybersecurity. 
-            Join our Telegram channel for daily insights, 
-            tips, and discussions.
+            Stay updated with the latest in blue team cybersecurity.
+            Connect with us on LinkedIn for insights, tips, and discussions.
           </p>
-          
-          <div className={`flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.4s' : '0s' }}>
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-secondary to-primary hover:opacity-90 transition-all duration-300 glow-lime hover:scale-110 hover:glow-cyan group"
-              asChild
-            >
-              <a 
-                href="https://t.me/infosecdairiess" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2"
-              >
-                <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                Telegram
-              </a>
-            </Button>
-            <Button 
-              size="lg" 
+
+          <div className={`flex justify-center items-center pt-4 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.4s' : '0s' }}>
+            <Button
+              size="lg"
               className="bg-[#0077B5] hover:bg-[#0077B5]/90 transition-all duration-300 hover:scale-110 group"
               asChild
             >
-              <a 
-                href="https://www.linkedin.com/in/infosecdairies" 
-                target="_blank" 
+              <a
+                href="https://www.linkedin.com/company/blueteamers"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
               >
@@ -79,7 +63,7 @@ const CTA = () => {
               </a>
             </Button>
           </div>
-          
+
           <p className={`text-sm text-muted-foreground pt-8 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.6s' : '0s' }}>
             <span className="inline-block animate-pulse">🔒</span> Defending today, securing tomorrow
           </p>
