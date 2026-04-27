@@ -1,4 +1,4 @@
-import { Send, Linkedin } from "lucide-react";
+import { Linkedin } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -8,16 +8,7 @@ const Footer = () => {
         <div className="flex flex-col items-center gap-4">
           <div className="flex items-center gap-4">
             <a
-              href="https://t.me/infosecdairiess"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-full bg-muted/50 hover:bg-primary/20 transition-colors group"
-              aria-label="Telegram"
-            >
-              <Send className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/infosecdairies"
+              href="https://www.linkedin.com/company/blueteamers"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-full bg-muted/50 hover:bg-[#0077B5]/20 transition-colors group"

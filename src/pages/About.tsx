@@ -38,7 +38,7 @@ const About = () => {
     {
       icon: Users,
       title: "Community Driven",
-      description: "Learning happens best together. Our Telegram community fosters collaboration and knowledge sharing."
+      description: "Learning happens best together. Our LinkedIn community fosters collaboration and knowledge sharing."
     },
     {
       icon: Target,
@@ -105,9 +105,9 @@ const About = () => {
                 </p>
 
                 <p className={`text-lg transition-all duration-500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} style={{ transitionDelay: '0.3s' }}>
-                  What started as an Instagram page sharing daily security insights has grown into a 
-                  thriving Telegram community where defenders from around the world connect, learn, and 
-                  share their experiences. Every day, we're helping security professionals level up their skills.
+                  What started as a simple idea has grown into a thriving community where defenders from
+                  around the world connect, learn, and share their experiences on LinkedIn. Every day,
+                  we're helping security professionals level up their skills.
                 </p>
                 
                 <div className={`pt-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.4s' }}>
@@ -193,16 +193,16 @@ const About = () => {
               <span className="gradient-text">Join Our Global Community</span>
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Connect with thousands of security professionals on our Telegram community. 
+              Connect with thousands of security professionals on LinkedIn.
               Share knowledge, ask questions, and stay updated with the latest in defensive security.
             </p>
-            <a 
-              href="https://t.me/infosecdairiess" 
-              target="_blank" 
+            <a
+              href="https://www.linkedin.com/company/blueteamers"
+              target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
-              Join Telegram Community
+              Follow on LinkedIn
             </a>
           </Card>
         </div>
