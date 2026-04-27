@@ -6,12 +6,12 @@ const Disclaimer = () => {
     <main className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16">
-        <h1 className="text-4xl font-bold text-foreground mb-2">⚠️ Disclaimer – InfoSecDairies</h1>
+        <h1 className="text-4xl font-bold text-foreground mb-2">⚠️ Disclaimer – BlueTeamers</h1>
         <p className="text-sm text-muted-foreground mb-8">Last Updated: 21-01-2026</p>
         
         <div className="prose prose-invert max-w-none space-y-8 text-muted-foreground">
           <p className="text-lg">
-            The information, labs, and training provided on InfoSec Dairies are intended strictly for 
+            The information, labs, and training provided on BlueTeamers are intended strictly for
             educational and learning purposes only.
           </p>
 
@@ -28,7 +28,7 @@ const Disclaimer = () => {
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">2. No Authorization for Illegal Activity</h2>
-            <p>InfoSec Dairies does not encourage, promote, or authorize:</p>
+            <p>BlueTeamers does not encourage, promote, or authorize:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Hacking real systems</li>
               <li>Unauthorized access</li>
@@ -42,7 +42,7 @@ const Disclaimer = () => {
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">3. Limitation of Responsibility</h2>
-            <p>InfoSec Dairies is not responsible for:</p>
+            <p>BlueTeamers is not responsible for:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Misuse of cybersecurity knowledge</li>
               <li>Illegal actions taken by users</li>
@@ -55,7 +55,7 @@ const Disclaimer = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">4. Accuracy of Content</h2>
             <p>
-              While we strive to provide accurate and up-to-date content, InfoSec Dairies makes no guarantees 
+              While we strive to provide accurate and up-to-date content, BlueTeamers makes no guarantees
               regarding completeness or accuracy.
             </p>
             <ul className="list-disc pl-6 space-y-1">
@@ -75,7 +75,7 @@ const Disclaimer = () => {
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">6. External Links Disclaimer</h2>
-            <p>InfoSec Dairies may contain links to third-party websites. We are not responsible for:</p>
+            <p>BlueTeamers may contain links to third-party websites. We are not responsible for:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>External content</li>
               <li>Privacy practices</li>
@@ -85,7 +85,7 @@ const Disclaimer = () => {
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">7. Consent</h2>
-            <p>By using InfoSec Dairies, you acknowledge that:</p>
+            <p>By using BlueTeamers, you acknowledge that:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>You have read and understood this disclaimer</li>
               <li>You agree to use the platform responsibly</li>

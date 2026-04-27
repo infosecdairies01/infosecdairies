@@ -228,7 +228,7 @@ export default function VerifyCertificate() {
                 </div>
 
                 <p className="text-sm text-gray-500 text-center">
-                  This certificate was issued by InfosecDairies upon successful completion of the course.
+                  This certificate was issued by BlueTeamers upon successful completion of the course.
                 </p>
               </div>
             )}

@@ -36,13 +36,13 @@ const About = () => {
             
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center relative z-10">
               <span className="gradient-text inline-block group-hover:scale-105 transition-transform duration-300">
-                About InfosecDairies
+                About BlueTeamers
               </span>
             </h2>
             
             <div className="space-y-6 text-muted-foreground leading-relaxed relative z-10">
               <p className={`text-lg transition-all duration-500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} style={{ transitionDelay: '0.1s' }}>
-                InfosecDairies is your trusted source for blue team cybersecurity knowledge. 
+                BlueTeamers is your trusted source for blue team cybersecurity knowledge.
                 We focus on defensive security strategies, helping security professionals and 
                 enthusiasts understand the art of protection, detection, and response.
               </p>

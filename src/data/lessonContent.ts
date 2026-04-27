@@ -8478,7 +8478,7 @@ Practice Platforms:
 ├── CyberDefenders: cyberdefenders.org
 
 Community:
-├── InfoSecDairies Telegram: @infosecdairiess
+├── BlueTeamers Telegram: @infosecdairiess
 ├── Discord security servers
 ├── Local security meetups
 
