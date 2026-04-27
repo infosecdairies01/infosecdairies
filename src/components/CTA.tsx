@@ -47,7 +47,7 @@ const CTA = () => {
             tips, and discussions.
           </p>
           
-          <div className={`flex justify-center items-center gap-4 pt-4 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.4s' : '0s' }}>
+          <div className={`flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.4s' : '0s' }}>
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-secondary to-primary hover:opacity-90 transition-all duration-300 glow-lime hover:scale-110 hover:glow-cyan group"

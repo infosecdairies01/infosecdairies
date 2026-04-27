@@ -10,7 +10,7 @@ const Hero = () => {
       behavior: 'smooth'
     });
   };
-  return <section className="relative min-h-screen flex items-start justify-center overflow-hidden pt-16 md:pt-20">
+  return <section className="relative min-h-screen flex items-start justify-center overflow-hidden pt-14 md:pt-20">
       {/* Dark base with subtle gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-slate-950 to-black" />
       
@@ -31,19 +31,19 @@ const Hero = () => {
           
           
           {/* Heading with shimmer effect */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-up">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 animate-fade-up">
             <span className="gradient-text inline-block bg-[length:200%_auto] animate-gradient-shift">
               BlueTeamers
             </span>
           </h1>
           
           {/* Tagline with staggered animation */}
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-up" style={{
+          <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-up px-2" style={{
           animationDelay: '0.2s'
         }}>Hands-on Blue Team & SOC Training. Learn Detection, Threat Hunting, and Incident Response from Real Practitioners</p>
-          
+
           {/* Animated Stats */}
-          <div className="grid grid-cols-3 gap-8 pt-16 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-10 md:pt-16 max-w-2xl mx-auto">
             <div className="space-y-2 group hover:scale-110 transition-transform duration-300 animate-slide-right" style={{
             animationDelay: '0.6s'
           }}>

@@ -40,7 +40,7 @@ const courseBackgrounds: Record<string, string> = {
 const LessonViewer = () => {
   const { slug, lessonId } = useParams<{ slug: string; lessonId: string }>();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
   const [markingComplete, setMarkingComplete] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
@@ -790,9 +790,9 @@ const LessonViewer = () => {
 
       <div className="flex pt-20">
         {/* Sidebar */}
-        <aside 
-          className={`fixed left-0 top-20 h-[calc(100vh-5rem)] bg-card/30 backdrop-blur-lg border-r border-white/[0.08] transition-all duration-300 z-40 ${
-            sidebarOpen ? 'w-80' : 'w-0'
+        <aside
+          className={`fixed left-0 top-16 md:top-20 h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)] bg-card/95 md:bg-card/30 backdrop-blur-lg border-r border-white/[0.08] transition-all duration-300 z-40 ${
+            sidebarOpen ? 'w-full md:w-80' : 'w-0'
           }`}
         >
           {sidebarOpen && (
@@ -865,15 +865,15 @@ const LessonViewer = () => {
         {/* Toggle Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`fixed top-24 z-50 p-2 rounded-r-lg bg-card/50 border border-l-0 border-white/[0.08] text-muted-foreground hover:text-foreground transition-all ${
-            sidebarOpen ? 'left-80' : 'left-0'
+          className={`fixed top-20 md:top-24 z-50 p-2 rounded-r-lg bg-card/50 border border-l-0 border-white/[0.08] text-muted-foreground hover:text-foreground transition-all ${
+            sidebarOpen ? 'left-full md:left-80' : 'left-0'
           }`}
         >
           {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </button>
 
         {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-0'}`}>
+        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'md:ml-80' : 'ml-0'}`}>
           {/* Lesson Header */}
           <div className="relative">
             <div className="absolute inset-0 h-48 overflow-hidden">
