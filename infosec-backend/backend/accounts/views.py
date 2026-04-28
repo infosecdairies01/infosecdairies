@@ -1,12 +1,16 @@
 from datetime import timedelta
 
 import logging
+import urllib.parse
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.http import HttpResponseRedirect
 from django.utils.html import strip_tags
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes, throttle_classes
@@ -588,17 +592,92 @@ def login(request):
 @permission_classes([AllowAny])
 def verify_token(request):
     """Verify if the provided JWT access token is valid.
-    
+
     This endpoint cryptographically validates the token signature and expiry.
     Used by frontend to prevent response manipulation attacks.
     """
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         return Response({"valid": False, "detail": "Authorization header required"}, status=status.HTTP_401_UNAUTHORIZED)
-    
+
     token = auth_header.split(" ")[1]
     try:
         AccessToken(token)  # Validates signature, expiry, and issuer
         return Response({"valid": True}, status=status.HTTP_200_OK)
     except TokenError as e:
         return Response({"valid": False, "detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+_ALLOWED_FRONTEND_HOSTS = {
+    "infosecdairies.io",
+    "www.infosecdairies.io",
+    "blueteamers.io",
+    "www.blueteamers.io",
+}
+
+
+@require_GET
+def google_token_redirect(request):
+    """
+    Intermediate redirect called by allauth after Google OAuth completes.
+
+    Because this view is on the backend (api.infosecdairies.io), the Django
+    session cookie is sent normally (same-site). We issue JWT tokens here and
+    redirect to the originating frontend domain with tokens in the URL fragment,
+    bypassing the cross-site SameSite=Lax cookie restriction that would block
+    a direct fetch from blueteamers.io.
+    """
+    target = request.GET.get("target", "").strip()
+
+    allowed_hosts = set(_ALLOWED_FRONTEND_HOSTS)
+    if settings.DEBUG:
+        allowed_hosts.update({"localhost", "localhost:8081", "127.0.0.1", "127.0.0.1:8081"})
+
+    if not target or not url_has_allowed_host_and_scheme(
+        target, allowed_hosts=allowed_hosts, require_https=not settings.DEBUG
+    ):
+        target = settings.LOGIN_REDIRECT_URL
+
+    parsed = urllib.parse.urlparse(target)
+    frontend_origin = f"{parsed.scheme}://{parsed.netloc}"
+
+    user = request.user
+    if not user.is_authenticated:
+        return HttpResponseRedirect(f"{target}?error=auth_failed")
+
+    # Issue tokens for verified users (mirrors google_jwt logic)
+    def _issue_tokens_redirect():
+        tokens = _jwt_for_user(user)
+        user_data = UserSerializer(user).data
+        fragment = urllib.parse.urlencode({
+            "access": tokens["access"],
+            "refresh": tokens["refresh"],
+            "email": user_data.get("email", ""),
+            "full_name": user_data.get("full_name", "") or "",
+        })
+        return HttpResponseRedirect(f"{target}#{fragment}")
+
+    if getattr(user, "is_verified", False) and user.is_active:
+        return _issue_tokens_redirect()
+
+    # Legacy: active users with existing purchases skip re-onboarding
+    if user.is_active:
+        try:
+            from courses.models import Enrollment
+            from payments.models import CoursePurchase
+            if (
+                Enrollment.objects.filter(user=user).exists()
+                or CoursePurchase.objects.filter(user=user, status=CoursePurchase.STATUS_PAID).exists()
+            ):
+                return _issue_tokens_redirect()
+        except Exception:
+            pass
+
+    # New Google user: redirect to onboarding on the originating frontend
+    onboarding_token = _onboarding_token_for_user(user)
+    onboarding_url = (
+        f"{frontend_origin}/google/onboarding"
+        f"?email={urllib.parse.quote(user.email)}"
+        f"&ot={urllib.parse.quote(onboarding_token)}"
+    )
+    return HttpResponseRedirect(onboarding_url)
