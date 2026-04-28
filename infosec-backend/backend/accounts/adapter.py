@@ -1,10 +1,31 @@
 """Custom allauth adapter to link social accounts to existing users by email."""
 
+from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.models import SocialAccount
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+_ALLOWED_FRONTEND_HOSTS = {
+    "infosecdairies.io",
+    "www.infosecdairies.io",
+    "blueteamers.io",
+    "www.blueteamers.io",
+}
+
+
+class CustomAccountAdapter(DefaultAccountAdapter):
+    """Allow post-OAuth redirects to either production frontend domain."""
+
+    def is_safe_url(self, url):
+        from django.utils.http import url_has_allowed_host_and_scheme
+
+        allowed = set(_ALLOWED_FRONTEND_HOSTS)
+        if settings.DEBUG:
+            allowed.update({"localhost", "localhost:8081", "127.0.0.1", "127.0.0.1:8081"})
+        return url_has_allowed_host_and_scheme(url, allowed_hosts=allowed, require_https=not settings.DEBUG)
 
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
