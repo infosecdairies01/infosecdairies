@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { apiUrl } from "@/services/api";
 
 interface AuthUser {
   email: string;
@@ -39,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const refreshToken = localStorage.getItem("refreshToken");
     if (!refreshToken) return false;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/token/refresh/`, {
+      const res = await fetch(apiUrl("/api/auth/token/refresh/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

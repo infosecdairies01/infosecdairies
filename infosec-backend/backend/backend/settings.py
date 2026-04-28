@@ -42,6 +42,8 @@ ALLOWED_HOSTS = [
     ".up.railway.app",
     "api.infosecdairies.io",
     "infosecdairies.io",
+    "blueteamers.io",
+    "www.blueteamers.io",
     *[h for h in _railway_hosts if h],
 ]
 
@@ -110,6 +112,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://infosecdairies.io",
     "https://www.infosecdairies.io",
     "https://api.infosecdairies.io",
+    "https://blueteamers.io",
+    "https://www.blueteamers.io",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -119,6 +123,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://api.infosecdairies.io",
     "https://infosecdairies.io",
     "https://www.infosecdairies.io",
+    "https://blueteamers.io",
+    "https://www.blueteamers.io",
 ]
 
 _railway_public_domain = config("RAILWAY_PUBLIC_DOMAIN", default="").strip()
@@ -188,6 +194,8 @@ _frontend_url = config("FRONTEND_URL", default="http://127.0.0.1:8081").rstrip("
 LOGIN_REDIRECT_URL = f"{_frontend_url}/auth/google-callback"
 
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http" if DEBUG else "https"
+
+ACCOUNT_ADAPTER = "accounts.adapter.CustomAccountAdapter"
 
 # allauth settings to prevent duplicate users and ensure proper account linking
 ACCOUNT_UNIQUE_EMAIL = True  # Critical: prevents creating new users with same email
