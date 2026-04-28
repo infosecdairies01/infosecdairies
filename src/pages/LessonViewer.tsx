@@ -2,13 +2,12 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import {
-  ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen,
+  Shield, ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen,
   Lightbulb, FlaskConical, ExternalLink, Menu, X, Lock, FileQuestion,
-  HelpCircle, Terminal
+  HelpCircle, Eye, EyeOff, Send
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { getCourseById, Course, Lesson, Module } from "@/data/courses";
 import { getLessonContent, LessonContent, LabQuestion } from "@/data/lessonContent";
 import { getLessonContentFromPerCourse } from "@/data/lessons";
@@ -39,6 +38,162 @@ const courseBackgrounds: Record<string, string> = {
   "network-fundamentals": networkFundamentalsBg,
 };
 
+const LabQuestionsSection = ({ scenario, questions }: { scenario?: string; questions: LabQuestion[] }) => {
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
+  const [showHint, setShowHint] = useState<Record<string, boolean>>({});
+  const [showAnswer, setShowAnswer] = useState<Record<string, boolean>>({});
+  const [attempts, setAttempts] = useState<Record<string, number>>({});
+  const [locked, setLocked] = useState<Record<string, boolean>>({});
+
+  const handleSubmit = (qId: string, q: LabQuestion) => {
+    const newAttempts = (attempts[qId] || 0) + 1;
+    setAttempts(prev => ({ ...prev, [qId]: newAttempts }));
+    setSubmitted(prev => ({ ...prev, [qId]: true }));
+
+    const user = (userAnswers[qId] || "").trim().toLowerCase();
+    const correct = q.answer.toLowerCase();
+    const keywords = correct.split(/[\s,—-]+/).filter(w => w.length > 3);
+    const matchCount = keywords.filter(kw => user.includes(kw)).length;
+    const isRight = matchCount >= Math.min(2, keywords.length) || user.includes(correct.substring(0, 20).toLowerCase());
+
+    if (isRight || newAttempts >= 4) {
+      setLocked(prev => ({ ...prev, [qId]: true }));
+    }
+  };
+
+  const handleRetry = (qId: string) => {
+    setUserAnswers(prev => ({ ...prev, [qId]: "" }));
+    setSubmitted(prev => ({ ...prev, [qId]: false }));
+  };
+
+  const isCorrect = (q: LabQuestion) => {
+    const user = (userAnswers[q.id] || "").trim().toLowerCase();
+    const correct = q.answer.toLowerCase();
+    const keywords = correct.split(/[\s,—-]+/).filter(w => w.length > 3);
+    const matchCount = keywords.filter(kw => user.includes(kw)).length;
+    return matchCount >= Math.min(2, keywords.length) || user.includes(correct.substring(0, 20).toLowerCase());
+  };
+
+  return (
+    <div className="mt-6 space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <HelpCircle className="w-4 h-4 text-cyan-400" />
+        <h4 className="text-sm font-semibold text-cyan-400 uppercase tracking-wider">Scenario Lab</h4>
+      </div>
+
+      {scenario && (
+        <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20 space-y-2">
+          <p className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Scenario</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{scenario}</p>
+        </div>
+      )}
+
+      {questions.map((q, idx) => (
+        <div key={q.id} className="p-4 rounded-lg bg-background/40 border border-white/[0.06] space-y-3">
+          <div className="flex items-start gap-2">
+            <span className="flex-shrink-0 w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center font-bold mt-0.5">
+              {idx + 1}
+            </span>
+            <p className="text-sm font-medium text-foreground">{q.question}</p>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Type your answer..."
+              value={userAnswers[q.id] || ""}
+              onChange={e => setUserAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+              onKeyDown={e => { if (e.key === "Enter" && userAnswers[q.id]?.trim() && !locked[q.id] && !submitted[q.id]) handleSubmit(q.id, q); }}
+              disabled={locked[q.id]}
+              className="flex-1 px-3 py-2 text-sm rounded-md bg-background/60 border border-white/[0.1] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-cyan-500/50 disabled:opacity-60"
+            />
+            {!locked[q.id] && !submitted[q.id] && (
+              <button
+                onClick={() => handleSubmit(q.id, q)}
+                disabled={!userAnswers[q.id]?.trim()}
+                className="px-3 py-2 rounded-md bg-cyan-600/80 text-white text-sm font-medium hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+              >
+                <Send className="w-3.5 h-3.5" />
+                Submit
+              </button>
+            )}
+          </div>
+
+          {q.hint && !locked[q.id] && !submitted[q.id] && (
+            <button
+              onClick={() => setShowHint(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+              className="text-xs text-yellow-500/80 hover:text-yellow-400 flex items-center gap-1 transition-colors"
+            >
+              <Lightbulb className="w-3 h-3" />
+              {showHint[q.id] ? "Hide hint" : "Show hint"}
+            </button>
+          )}
+          {showHint[q.id] && !locked[q.id] && !submitted[q.id] && (
+            <p className="text-xs text-yellow-500/70 pl-4 border-l-2 border-yellow-500/30">{q.hint}</p>
+          )}
+
+          {submitted[q.id] && (
+            <div className="space-y-2">
+              {isCorrect(q) ? (
+                <div className="flex items-center gap-2 text-sm font-medium text-emerald-400">
+                  <CheckCircle className="w-4 h-4" /> Great answer!
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-orange-400">
+                    <Eye className="w-4 h-4" /> Incorrect {(attempts[q.id] || 0) >= 4 ? "— All attempts used." : ""}
+                  </div>
+                  {(attempts[q.id] || 0) < 4 && (
+                    <button
+                      onClick={() => handleRetry(q.id)}
+                      className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                    >
+                      Try again
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {locked[q.id] && (attempts[q.id] || 0) >= 4 && !isCorrect(q) && (
+                <>
+                  <button
+                    onClick={() => setShowAnswer(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                    className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                  >
+                    {showAnswer[q.id] ? <><EyeOff className="w-3 h-3" /> Hide answer</> : <><Eye className="w-3 h-3" /> Show answer</>}
+                  </button>
+                  {showAnswer[q.id] && (
+                    <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                      <p className="text-sm text-emerald-300"><span className="font-semibold">Answer:</span> {q.answer}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {isCorrect(q) && (
+                <>
+                  <button
+                    onClick={() => setShowAnswer(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                    className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                  >
+                    {showAnswer[q.id] ? <><EyeOff className="w-3 h-3" /> Hide answer</> : <><Eye className="w-3 h-3" /> View reference answer</>}
+                  </button>
+                  {showAnswer[q.id] && (
+                    <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                      <p className="text-sm text-emerald-300"><span className="font-semibold">Answer:</span> {q.answer}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const LessonViewer = () => {
   const { slug, lessonId } = useParams<{ slug: string; lessonId: string }>();
   const navigate = useNavigate();
@@ -47,11 +202,6 @@ const LessonViewer = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [progressLoaded, setProgressLoaded] = useState(false);
-
-  // Lab Q&A state
-  const [labAnswers, setLabAnswers] = useState<Record<string, string>>({});
-  const [labResults, setLabResults] = useState<Record<string, "correct" | "incorrect" | null>>({});
-  const [labHints, setLabHints] = useState<Record<string, boolean>>({});
 
   const formatModuleId = (id: string) => id.replace(/^[a-z]+-/, "");
 
@@ -350,9 +500,6 @@ const LessonViewer = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    setLabAnswers({});
-    setLabResults({});
-    setLabHints({});
   }, [lessonId]);
 
   useEffect(() => {
@@ -992,178 +1139,32 @@ const LessonViewer = () => {
                     </div>
                   )}
 
-                  {/* Practical Exercise / Scenario Lab */}
+                  {/* Practical Exercise */}
                   {lessonContent.practicalExercise && (
-                    <div className="mt-8">
-                      {/* Header */}
+                    <div className="mt-8 p-6 rounded-xl bg-secondary/5 border border-secondary/20">
                       <div className="flex items-center gap-2 mb-4">
                         <FlaskConical className="w-5 h-5 text-secondary" />
                         <h3 className="text-lg font-semibold text-foreground">
-                          {lessonContent.practicalExercise.labQuestions?.length
-                            ? "Scenario Lab"
-                            : `Practical Exercise: ${lessonContent.practicalExercise.title}`}
+                          Practical Exercise: {lessonContent.practicalExercise.title}
                         </h3>
-                        {lessonContent.practicalExercise.labQuestions?.length && (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-secondary/20 text-secondary border border-secondary/30">
-                            {lessonContent.practicalExercise.labQuestions.length} Questions
-                          </span>
-                        )}
                       </div>
+                      <p className="text-muted-foreground mb-4">{lessonContent.practicalExercise.description}</p>
+                      <ol className="space-y-2 mb-6">
+                        {lessonContent.practicalExercise.steps.map((step, idx) => (
+                          <li key={idx} className="flex items-start gap-3 text-muted-foreground">
+                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary/20 text-secondary text-sm flex items-center justify-center">
+                              {idx + 1}
+                            </span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ol>
 
-                      {/* Scenario box */}
-                      {lessonContent.practicalExercise.labScenario ? (
-                        <div className="mb-6 p-5 rounded-xl bg-card/40 border border-white/[0.1]">
-                          <div className="flex items-center gap-2 mb-3">
-                            <Terminal className="w-4 h-4 text-primary" />
-                            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Scenario</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {lessonContent.practicalExercise.labScenario}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="p-5 rounded-xl bg-secondary/5 border border-secondary/20 mb-6">
-                          <p className="text-muted-foreground mb-4">{lessonContent.practicalExercise.description}</p>
-                          <ol className="space-y-2">
-                            {lessonContent.practicalExercise.steps.map((step, idx) => (
-                              <li key={idx} className="flex items-start gap-3 text-muted-foreground">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary/20 text-secondary text-sm flex items-center justify-center">
-                                  {idx + 1}
-                                </span>
-                                <span>{step}</span>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      )}
-
-                      {/* Steps (shown alongside scenario if present) */}
-                      {lessonContent.practicalExercise.labScenario && lessonContent.practicalExercise.steps?.length > 0 && (
-                        <div className="mb-6 flex flex-wrap gap-2">
-                          {lessonContent.practicalExercise.steps.map((step, idx) => (
-                            <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5">
-                              <span className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[10px] flex items-center justify-center font-medium flex-shrink-0">{idx + 1}</span>
-                              {step}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Lab Questions */}
                       {lessonContent.practicalExercise.labQuestions && lessonContent.practicalExercise.labQuestions.length > 0 && (
-                        <div className="space-y-4">
-                          {lessonContent.practicalExercise.labQuestions.map((q, idx) => {
-                            const result = labResults[q.id];
-                            const hintVisible = labHints[q.id];
-                            return (
-                              <div
-                                key={q.id}
-                                className={`p-5 rounded-xl border transition-colors ${
-                                  result === "correct"
-                                    ? "bg-green-500/5 border-green-500/30"
-                                    : result === "incorrect"
-                                    ? "bg-red-500/5 border-red-500/30"
-                                    : "bg-card/30 border-white/[0.08]"
-                                }`}
-                              >
-                                <div className="flex items-start gap-3 mb-3">
-                                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center border border-primary/25">
-                                    {idx + 1}
-                                  </span>
-                                  <p className="text-sm text-foreground leading-relaxed">{q.question}</p>
-                                </div>
-
-                                {result === "correct" ? (
-                                  <div className="flex items-center gap-2 text-green-400 text-sm ml-9">
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span>Correct! The answer is <strong>{q.answer}</strong></span>
-                                  </div>
-                                ) : (
-                                  <div className="ml-9 space-y-2">
-                                    <div className="flex gap-2">
-                                      <Input
-                                        value={labAnswers[q.id] || ""}
-                                        onChange={(e) =>
-                                          setLabAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
-                                        }
-                                        onKeyDown={(e) => {
-                                          if (e.key === "Enter") {
-                                            const userAns = (labAnswers[q.id] || "").trim().toLowerCase();
-                                            const correct = q.answer.trim().toLowerCase();
-                                            setLabResults((prev) => ({
-                                              ...prev,
-                                              [q.id]: userAns === correct ? "correct" : "incorrect",
-                                            }));
-                                          }
-                                        }}
-                                        placeholder="Type your answer..."
-                                        className={`h-9 text-sm bg-background/50 ${
-                                          result === "incorrect" ? "border-red-500/50" : ""
-                                        }`}
-                                      />
-                                      <Button
-                                        size="sm"
-                                        className="h-9 px-4 shrink-0"
-                                        onClick={() => {
-                                          const userAns = (labAnswers[q.id] || "").trim().toLowerCase();
-                                          const correct = q.answer.trim().toLowerCase();
-                                          setLabResults((prev) => ({
-                                            ...prev,
-                                            [q.id]: userAns === correct ? "correct" : "incorrect",
-                                          }));
-                                        }}
-                                      >
-                                        Submit
-                                      </Button>
-                                    </div>
-
-                                    {result === "incorrect" && (
-                                      <p className="text-xs text-red-400">Incorrect — try again.</p>
-                                    )}
-
-                                    {q.hint && (
-                                      <button
-                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                        onClick={() =>
-                                          setLabHints((prev) => ({ ...prev, [q.id]: !prev[q.id] }))
-                                        }
-                                      >
-                                        <HelpCircle className="w-3 h-3" />
-                                        {hintVisible ? "Hide hint" : "Show hint"}
-                                      </button>
-                                    )}
-                                    {hintVisible && q.hint && (
-                                      <p className="text-xs text-muted-foreground bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2">
-                                        💡 {q.hint}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-
-                          {/* Score summary once all answered */}
-                          {lessonContent.practicalExercise.labQuestions.every((q) => labResults[q.id] != null) && (
-                            <div className="mt-2 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
-                              <p className="text-sm font-semibold text-foreground">
-                                Score:{" "}
-                                {lessonContent.practicalExercise.labQuestions.filter((q) => labResults[q.id] === "correct").length}
-                                /{lessonContent.practicalExercise.labQuestions.length} correct
-                              </p>
-                              <button
-                                className="mt-2 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                onClick={() => {
-                                  setLabAnswers({});
-                                  setLabResults({});
-                                  setLabHints({});
-                                }}
-                              >
-                                Reset lab
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        <LabQuestionsSection
+                          scenario={lessonContent.practicalExercise.labScenario}
+                          questions={lessonContent.practicalExercise.labQuestions}
+                        />
                       )}
                     </div>
                   )}
