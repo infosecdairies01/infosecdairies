@@ -9,13 +9,41 @@ const GoogleCallback = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTokens = async () => {
+    const handleCallback = async () => {
       try {
         setError(null);
 
+        // New flow: backend token-redirect passes JWT tokens in URL hash.
+        // This avoids the cross-domain SameSite=Lax session cookie problem.
+        const hash = window.location.hash;
+        if (hash && hash.length > 1) {
+          const params = new URLSearchParams(hash.slice(1));
+          const access = params.get("access");
+          const refresh = params.get("refresh");
+          const email = params.get("email");
+          const fullName = params.get("full_name") || undefined;
+          const authError = params.get("error");
+
+          // Remove tokens from browser history immediately
+          window.history.replaceState(null, "", window.location.pathname);
+
+          if (authError) {
+            setError("Could not complete Google login. Please try again.");
+            return;
+          }
+
+          if (access && email) {
+            login({ email, fullName, tokens: { access, refresh: refresh || undefined } });
+            navigate("/dashboard", { replace: true });
+            return;
+          }
+        }
+
+        // Legacy fallback: session-cookie flow for same-site (infosecdairies.io)
+        // or when backend hasn't deployed the new token-redirect view yet.
         const res = await fetch(apiUrl("/api/auth/google/jwt/"), {
           method: "GET",
-          credentials: "include", // send Django session cookie
+          credentials: "include",
         });
 
         if (!res.ok) {
@@ -35,7 +63,6 @@ const GoogleCallback = () => {
           return;
         }
 
-        // Check if Google signup requires email verification
         if (data.requires_verification) {
           navigate(`/verify-email?email=${encodeURIComponent(data.email)}`, { replace: true });
           return;
@@ -51,12 +78,12 @@ const GoogleCallback = () => {
 
         login({ email: user.email, fullName: user.full_name, tokens });
         navigate("/dashboard", { replace: true });
-      } catch (err) {
+      } catch {
         setError("Network error while completing Google login.");
       }
     };
 
-    fetchTokens();
+    handleCallback();
   }, [login, navigate]);
 
   return (

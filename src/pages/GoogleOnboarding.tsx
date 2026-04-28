@@ -38,8 +38,15 @@ const GoogleOnboarding = () => {
   useEffect(() => {
     if (!email) {
       navigate("/auth", { replace: true });
+      return;
     }
-  }, [email, navigate]);
+    // New flow: backend passes onboarding token via ?ot= query param.
+    // Store it in sessionStorage so the existing submit handler finds it.
+    const ot = searchParams.get("ot");
+    if (ot) {
+      sessionStorage.setItem("googleOnboardingToken", ot);
+    }
+  }, [email, navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

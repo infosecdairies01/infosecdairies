@@ -35,8 +35,9 @@ const Auth = () => {
   const { login } = useAuth();
 
   const handleGoogleLogin = () => {
-    const next = encodeURIComponent(`${window.location.origin}/auth/google-callback`);
-    window.location.href = apiUrl(`/accounts/google/login/?next=${next}`);
+    const frontendCallback = `${window.location.origin}/auth/google-callback`;
+    const tokenRedirectPath = `/api/auth/google/token-redirect/?target=${encodeURIComponent(frontendCallback)}`;
+    window.location.href = apiUrl(`/accounts/google/login/?next=${encodeURIComponent(tokenRedirectPath)}`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
