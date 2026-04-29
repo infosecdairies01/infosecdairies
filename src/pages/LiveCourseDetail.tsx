@@ -18,7 +18,6 @@ const LiveCourseDetail = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
     message: ""
   });
 
@@ -43,7 +42,6 @@ const LiveCourseDetail = () => {
           course_name: course.title,
           name: formData.name,
           email: formData.email,
-          phone: formData.phone,
           message: formData.message,
           country: "",
           city: ""
@@ -55,7 +53,7 @@ const LiveCourseDetail = () => {
           title: "Inquiry Submitted!",
           description: "We'll contact you shortly to discuss enrollment.",
         });
-        setFormData({ name: "", email: "", phone: "", message: "" });
+        setFormData({ name: "", email: "", message: "" });
       } else {
         const data = await response.json();
         toast({
@@ -277,16 +275,6 @@ const LiveCourseDetail = () => {
                       placeholder="Enter your email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">Phone Number</label>
-                    <Input
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       required
                     />
                   </div>
