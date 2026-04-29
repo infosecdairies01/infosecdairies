@@ -15,9 +15,10 @@ const navItems = [
 
 interface SOCSidebarProps {
   activeItem?: string;
+  locked?: boolean;
 }
 
-const SOCSidebar = ({ activeItem = "Dashboard" }: SOCSidebarProps) => {
+const SOCSidebar = ({ activeItem = "Dashboard", locked = false }: SOCSidebarProps) => {
   return (
     <aside className="w-16 lg:w-56 bg-card/25 backdrop-blur-lg border-r border-white/[0.08] flex flex-col shrink-0">
       <div className="p-4 border-b border-white/[0.06]">
@@ -28,6 +29,20 @@ const SOCSidebar = ({ activeItem = "Dashboard" }: SOCSidebarProps) => {
       <nav className="flex-1 py-4">
         {navItems.map((item) => {
           const isActive = item.label === activeItem;
+          const isLocked = locked && item.label !== "Dashboard";
+          if (isLocked) {
+            return (
+              <span
+                key={item.label}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 text-sm cursor-not-allowed",
+                  "text-muted-foreground/30"
+                )}
+              >
+                <span className="text-center lg:text-left">{item.label}</span>
+              </span>
+            );
+          }
           return (
             <Link
               key={item.label}
