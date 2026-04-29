@@ -10,7 +10,7 @@ import MitreHeatmapInteractive from "@/components/soc/MitreHeatmapInteractive";
 import ThreatGeoMap from "@/components/soc/ThreatGeoMap";
 import LiveActivityFeed from "@/components/soc/LiveActivityFeed";
 
-import { Bell, Search, User, RefreshCw, Clock } from "lucide-react";
+import { Bell, Search, User, RefreshCw, Clock, Lock } from "lucide-react";
 
 const Labs = () => {
   return (
@@ -18,7 +18,7 @@ const Labs = () => {
       <Navbar />
 
       <div className="flex flex-1 pt-20 overflow-hidden">
-        <SOCSidebar activeItem="Dashboard" />
+        <SOCSidebar activeItem="Dashboard" locked />
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Dashboard Header */}
@@ -60,7 +60,9 @@ const Labs = () => {
           </header>
 
           {/* Dashboard Content */}
-          <div className="flex-1 p-6 overflow-auto">
+          <div className="flex-1 overflow-hidden relative">
+            {/* Blurred dashboard preview */}
+            <div className="absolute inset-0 p-6 overflow-hidden pointer-events-none select-none blur-sm opacity-60">
             <div className="space-y-6">
               {/* Row 1: Alert Summary Cards */}
               <AlertSummaryCards />
@@ -96,6 +98,20 @@ const Labs = () => {
 
               {/* Row 7: Recent Alerts Table */}
               <RecentAlertsTable />
+            </div>
+            </div>
+
+            {/* Glass lock overlay */}
+            <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-[2px]">
+              <div className="flex flex-col items-center gap-4 px-10 py-8 rounded-2xl border border-white/[0.12] bg-white/[0.04] backdrop-blur-xl shadow-2xl text-center max-w-sm mx-4">
+                <div className="w-14 h-14 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+                  <Lock className="w-7 h-7 text-destructive" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground mb-1">You don't have access to this page</h2>
+                  <p className="text-sm text-muted-foreground">Please upgrade your plan or contact the administrator</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
