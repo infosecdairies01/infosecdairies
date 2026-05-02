@@ -26,6 +26,20 @@ FREE_COURSE_SLUG = "network-fundamentals"
 ALL_COURSES_BUNDLE_SLUG = "all-courses-bundle"
 ALL_COURSES_BUNDLE_PRICE_INR = 3999
 
+# URL slugs (sent by frontend) → canonical promo code course slugs (stored in DB)
+_URL_SLUG_TO_PROMO_SLUG = {
+    "malware-analysis-fundamentals": "malware-analysis",
+    "log-analysis-for-beginners": "log-analysis",
+    "incident-response-fundamentals": "incident-response",
+    "threat-hunting-fundamentals": "threat-hunting",
+    "detection-engineering-basics": "detection-engineering",
+    "soc-analyst-practical-training": "soc-analyst-practical",
+}
+
+
+def _promo_course_slug(course_slug: str) -> str:
+    return _URL_SLUG_TO_PROMO_SLUG.get(course_slug, course_slug)
+
 
 def _difficulty_price_inr(level: str) -> int:
     lvl = (level or "").strip().lower()
@@ -74,24 +88,27 @@ def create_order(request):
     if not course_slug:
         return Response({"detail": "course_slug is required"}, status=400)
 
+    # Normalize URL slug to the canonical slug stored in PromoCode rows.
+    promo_slug = _promo_course_slug(course_slug)
+
     # Check promo code validity using PromoCode model with usage limits.
     # Supports a global promo code row with course_slug == "all".
     is_promo_valid = False
     promo_code_obj = None
     if promo_code:
         promo_code_obj = (
-            PromoCode.objects.filter(code=promo_code, is_active=True, course_slug=course_slug).first()
+            PromoCode.objects.filter(code=promo_code, is_active=True, course_slug=promo_slug).first()
             or PromoCode.objects.filter(code=promo_code, is_active=True, course_slug="all").first()
         )
         if not promo_code_obj:
             return Response({"detail": "Invalid promo code"}, status=400)
 
-        if promo_code_obj.is_valid_for_user(request.user, target_course_slug=course_slug):
+        if promo_code_obj.is_valid_for_user(request.user, target_course_slug=promo_slug):
             is_promo_valid = True
         else:
             if promo_code_obj.current_uses >= promo_code_obj.max_uses and promo_code_obj.max_uses > 0:
                 return Response({"detail": "This promo code has reached its usage limit"}, status=400)
-            if PromoCodeUsage.objects.filter(code=promo_code, user=request.user, course_slug=course_slug).exists():
+            if PromoCodeUsage.objects.filter(code=promo_code, user=request.user, course_slug=promo_slug).exists():
                 return Response({"detail": "You have already used this promo code"}, status=400)
             return Response({"detail": "Invalid or inactive promo code"}, status=400)
 
@@ -109,7 +126,7 @@ def create_order(request):
 
         # Record usage early so the code can't be reused if the user retries checkout.
         # This trades off some false-positives (abandoned payments) for simplicity.
-        promo_code_obj.record_usage(request.user, course_slug)
+        promo_code_obj.record_usage(request.user, promo_slug)
 
     if amount_inr == 0:
         # Free access (promo code or free course): create enrollment directly
