@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import Course, Enrollment, LessonProgress
 
 
@@ -11,9 +12,19 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
-    list_display = ("user", "course", "is_paid")
+    list_display = ("user", "course", "is_paid", "promo_usage_count", "lesson_progress_count")
     list_filter = ("is_paid", "course")
     search_fields = ("user__email", "course__title")
+
+    def promo_usage_count(self, obj):
+        from payments.models import PromoCodeUsage
+        count = PromoCodeUsage.objects.filter(user=obj.user, course_slug=obj.course.slug).count()
+        return count
+    promo_usage_count.short_description = "Promo Usages"
+
+    def lesson_progress_count(self, obj):
+        return LessonProgress.objects.filter(user=obj.user, course=obj.course).count()
+    lesson_progress_count.short_description = "Lessons Done"
 
 
 @admin.register(LessonProgress)
