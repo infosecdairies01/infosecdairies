@@ -63,6 +63,7 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "courses",
     "accounts",
@@ -220,12 +221,10 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    # How long a user stays logged in before the access token expires.
-    # Increase this so the app does not "log out" after ~10-15 minutes.
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": False,
+    "BLACKLIST_AFTER_ROTATION": True,
 }
 
 # dj-rest-auth configuration: we're using SimpleJWT tokens, not DRF Token model
@@ -248,10 +247,12 @@ DATABASES = {
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
+    # ssl_require only for production (Railway sets RAILWAY_ENVIRONMENT=production)
+    _is_prod = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PUBLIC_DOMAIN"))
     DATABASES["default"] = dj_database_url.parse(
         DATABASE_URL,
         conn_max_age=600,
-        ssl_require=True,
+        ssl_require=_is_prod,
     )
 
 
