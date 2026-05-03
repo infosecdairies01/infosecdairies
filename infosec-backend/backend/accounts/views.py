@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import logging
+import secrets
 import urllib.parse
 
 from django.conf import settings
@@ -212,9 +213,7 @@ def google_onboarding(request):
     user.is_verified = False
     user.save(update_fields=["full_name", "password", "is_active", "is_verified"])
 
-    import random
-
-    code = f"{random.randint(0, 999999):06d}"
+    code = f"{secrets.randbelow(1_000_000):06d}"
     expires_at = timezone.now() + timedelta(minutes=10)
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
 
@@ -257,10 +256,8 @@ def google_start_otp(request):
         data = {"user": UserSerializer(user).data, "tokens": tokens}
         return Response(data, status=status.HTTP_200_OK)
 
-    # Generate a simple 6-digit numeric code for new/unverified users
-    import random
-
-    code = f"{random.randint(0, 999999):06d}"
+    # Generate a cryptographically secure 6-digit code
+    code = f"{secrets.randbelow(1_000_000):06d}"
     expires_at = timezone.now() + timedelta(minutes=10)
 
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
@@ -290,14 +287,12 @@ def google_verify_otp(request):
     if not code:
         return Response({"detail": "code is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    otp = (
-        LoginOtp.objects.filter(user=user, code=code).order_by("-created_at").first()
-    )
-    if not otp or not otp.is_valid():
+    # Atomically mark OTP used — prevents race-condition reuse
+    updated = LoginOtp.objects.filter(
+        user=user, code=code, used=False, expires_at__gt=timezone.now()
+    ).update(used=True)
+    if not updated:
         return Response({"detail": "Invalid or expired code"}, status=status.HTTP_400_BAD_REQUEST)
-
-    otp.used = True
-    otp.save(update_fields=["used"])
 
     # Mark the user as verified AND active so future logins can skip OTP
     updated = False
@@ -362,9 +357,7 @@ def register(request):
     user = serializer.save(is_active=False)
 
     # Generate OTP for email verification
-    import random
-
-    code = f"{random.randint(0, 999999):06d}"
+    code = f"{secrets.randbelow(1_000_000):06d}"
     expires_at = timezone.now() + timedelta(minutes=10)
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
 
@@ -399,9 +392,7 @@ def password_reset_request(request):
 
     user = User.objects.filter(email=email).first()
     if user:
-        import random
-
-        code = f"{random.randint(0, 999999):06d}"
+        code = f"{secrets.randbelow(1_000_000):06d}"
         expires_at = timezone.now() + timedelta(minutes=10)
         LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
 
@@ -441,17 +432,17 @@ def password_reset_confirm(request):
     if not user:
         return Response({"detail": "Invalid email or code"}, status=status.HTTP_400_BAD_REQUEST)
 
-    otp = LoginOtp.objects.filter(user=user, code=code).order_by("-created_at").first()
-    if not otp or not otp.is_valid():
-        return Response({"detail": "Invalid or expired code"}, status=status.HTTP_400_BAD_REQUEST)
-
     try:
         validate_password(new_password, user=user)
     except ValidationError as e:
         return Response({"detail": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
-    otp.used = True
-    otp.save(update_fields=["used"])
+    # Atomically mark OTP used — prevents race-condition reuse
+    updated = LoginOtp.objects.filter(
+        user=user, code=code, used=False, expires_at__gt=timezone.now()
+    ).update(used=True)
+    if not updated:
+        return Response({"detail": "Invalid or expired code"}, status=status.HTTP_400_BAD_REQUEST)
 
     user.set_password(new_password)
     user.is_active = True
@@ -492,18 +483,15 @@ def verify_email(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
     
-    # Check the OTP
-    otp = LoginOtp.objects.filter(user=user, code=code).order_by("-created_at").first()
-    
-    if not otp or not otp.is_valid():
+    # Atomically mark OTP used — prevents race-condition reuse
+    updated = LoginOtp.objects.filter(
+        user=user, code=code, used=False, expires_at__gt=timezone.now()
+    ).update(used=True)
+    if not updated:
         return Response(
             {"detail": "Invalid or expired code"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    
-    # Mark OTP as used
-    otp.used = True
-    otp.save(update_fields=["used"])
     
     # Activate user and mark verified
     user.is_active = True
@@ -551,8 +539,7 @@ def resend_verification_otp(request):
         )
     
     # Generate new OTP
-    import random
-    code = f"{random.randint(0, 999999):06d}"
+    code = f"{secrets.randbelow(1_000_000):06d}"
     expires_at = timezone.now() + timedelta(minutes=10)
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)
     

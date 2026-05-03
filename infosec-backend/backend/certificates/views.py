@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.cache import cache
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -8,8 +9,16 @@ import logging
 import os
 import uuid
 import base64
-from django.conf import settings
 from django.utils.html import escape
+
+
+def _rate_limit(key, limit, period_seconds):
+    """Returns True if caller exceeded the limit."""
+    count = cache.get(key, 0)
+    if count >= limit:
+        return True
+    cache.set(key, count + 1, period_seconds)
+    return False
 
 from accounts.email_templates import _send_html_email, get_certificate_template
 from .models import Certificate
@@ -21,6 +30,9 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def lookup_certificate(request, cert_id):
     """Lookup certificate by ID"""
+    ip = (request.META.get("HTTP_X_FORWARDED_FOR", "") or request.META.get("REMOTE_ADDR", "unknown")).split(",")[0].strip()
+    if _rate_limit(f"cert_lookup:{ip}", 30, 3600):
+        return JsonResponse({"error": "Rate limit exceeded. Try again later."}, status=429)
     try:
         certificate = Certificate.objects.get(cert_id=cert_id)
         return JsonResponse({

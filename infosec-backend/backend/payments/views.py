@@ -7,6 +7,7 @@ import razorpay
 from razorpay.errors import BadRequestError
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
@@ -53,7 +54,14 @@ def _difficulty_price_inr(level: str) -> int:
 
 
 def _is_test_mode() -> bool:
-    return bool(getattr(settings, "PAYMENTS_TEST_MODE", False))
+    if not getattr(settings, "PAYMENTS_TEST_MODE", False):
+        return False
+    # Block test mode in production to prevent payment bypass
+    is_prod = bool(getattr(settings, "RAILWAY_PUBLIC_DOMAIN", "") or getattr(settings, "RAILWAY_ENVIRONMENT", ""))
+    if is_prod:
+        logger.error("PAYMENTS_TEST_MODE=True is blocked in production — ignoring")
+        return False
+    return True
 
 
 def _course_price_inr(course: Course) -> int:
@@ -138,7 +146,12 @@ def create_order(request):
         amount_inr = promo_code_obj.calculate_discounted_price(amount_inr)
 
         if not getattr(promo_code_obj, "_skip_record_usage", False):
-            promo_code_obj.record_usage(request.user, promo_slug)
+            # Atomic check + record to prevent race condition on max_uses
+            with transaction.atomic():
+                locked = PromoCode.objects.select_for_update().get(pk=promo_code_obj.pk)
+                if locked.max_uses > 0 and locked.current_uses >= locked.max_uses:
+                    return Response({"detail": "This promo code has reached its usage limit"}, status=400)
+                locked.record_usage(request.user, promo_slug)
 
     if amount_inr == 0:
         # Free access (promo code or free course): create enrollment directly
