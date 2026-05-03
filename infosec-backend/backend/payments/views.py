@@ -109,6 +109,17 @@ def create_order(request):
             if promo_code_obj.current_uses >= promo_code_obj.max_uses and promo_code_obj.max_uses > 0:
                 return Response({"detail": "This promo code has reached its usage limit"}, status=400)
             if PromoCodeUsage.objects.filter(code=promo_code, user=request.user, course_slug=promo_slug).exists():
+                # Idempotent: user already used this code. If they're already enrolled,
+                # return success so the frontend can navigate them to the course.
+                already_enrolled = False
+                if course_slug == ALL_COURSES_BUNDLE_SLUG:
+                    already_enrolled = True  # bundle: treat as enrolled
+                else:
+                    _c = Course.objects.filter(slug=course_slug, is_published=True).first()
+                    if _c and Enrollment.objects.filter(user=request.user, course=_c, is_paid=True).exists():
+                        already_enrolled = True
+                if already_enrolled:
+                    return Response({"free": True, "course_slug": course_slug, "amount_inr": 0})
                 return Response({"detail": "You have already used this promo code"}, status=400)
             return Response({"detail": "Invalid or inactive promo code"}, status=400)
 

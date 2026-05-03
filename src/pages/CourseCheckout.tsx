@@ -129,11 +129,12 @@ const CourseCheckout = () => {
       }
 
       if (data.free) {
-        setPromoCode(trimmedCode);
-        setPromoApplied(true);
-        setCachedOrder(null);
-        setDiscountPercent(typeof data.discount_percent === "number" ? data.discount_percent : 50);
-        setDisplayAmountInr(0);
+        // Enrollment already created by the backend; navigate straight to the course.
+        if (slug === ALL_COURSES_BUNDLE_SLUG) {
+          navigate("/courses");
+        } else {
+          navigate(`/courses/${slug}`);
+        }
         return;
       }
 
@@ -214,6 +215,16 @@ const CourseCheckout = () => {
       return;
     }
 
+    // Free promo already enrolled the user at apply-time — navigate directly.
+    if (promoApplied && displayAmountInr === 0) {
+      if (slug === ALL_COURSES_BUNDLE_SLUG) {
+        navigate("/courses");
+      } else {
+        navigate(`/courses/${slug}`);
+      }
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -268,13 +279,17 @@ const CourseCheckout = () => {
           typeof rawDetail === "string" && rawDetail.trim().startsWith("<!doctype")
             ? `API error: ${res.status} ${res.statusText} (server returned HTML - check backend URL/deploy)`
             : rawDetail || `Error: ${res.status} ${res.statusText}`;
-        setError(detail);
         if ((detail as string).toLowerCase().includes("token") || (detail as string).toLowerCase().includes("credential")) {
+          setError(detail);
           handleAuthFailure();
-        }
-        if ((detail as string).toLowerCase().includes("promo")) {
+        } else if ((detail as string).toLowerCase().includes("promo")) {
+          // Only show in the promo section, not as a duplicate top-level error.
           setPromoError(detail);
           setPromoApplied(false);
+          setDiscountPercent(0);
+          setDisplayAmountInr(originalPrice);
+        } else {
+          setError(detail);
         }
         setSubmitting(false);
         return;
@@ -288,7 +303,11 @@ const CourseCheckout = () => {
       }
 
       if (data.free) {
-        navigate(`/courses/${slug}`);
+        if (slug === ALL_COURSES_BUNDLE_SLUG) {
+          navigate("/courses");
+        } else {
+          navigate(`/courses/${slug}`);
+        }
         setSubmitting(false);
         return;
       }
