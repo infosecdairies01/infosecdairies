@@ -128,25 +128,19 @@ const CourseCheckout = () => {
         return;
       }
 
-      if (data.free) {
-        // Enrollment already created by the backend; navigate straight to the course.
-        if (slug === ALL_COURSES_BUNDLE_SLUG) {
-          navigate("/courses");
-        } else {
-          navigate(`/courses/${slug}`);
-        }
-        return;
-      }
-
       setPromoCode(trimmedCode);
       setPromoApplied(true);
-      if (typeof data.amount_inr === "number") {
-        setDisplayAmountInr(data.amount_inr);
+      setDiscountPercent(typeof data.discount_percent === "number" ? data.discount_percent : (data.free ? 100 : 0));
+      if (data.free) {
+        // Enrollment already created by backend; show ₹0 so user can click "Get Free Access".
+        setDisplayAmountInr(0);
+        setCachedOrder(null);
+      } else {
+        if (typeof data.amount_inr === "number") {
+          setDisplayAmountInr(data.amount_inr);
+        }
+        setCachedOrder(data);
       }
-      if (data.discount_percent) {
-        setDiscountPercent(data.discount_percent);
-      }
-      setCachedOrder(data);
     } catch (err: any) {
       setPromoError(err?.message || "Failed to apply promo code");
       setPromoApplied(false);
