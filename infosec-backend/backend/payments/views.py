@@ -109,19 +109,21 @@ def create_order(request):
             if promo_code_obj.current_uses >= promo_code_obj.max_uses and promo_code_obj.max_uses > 0:
                 return Response({"detail": "This promo code has reached its usage limit"}, status=400)
             if PromoCodeUsage.objects.filter(code=promo_code, user=request.user, course_slug=promo_slug).exists():
-                # Idempotent: user already used this code. If they're already enrolled,
-                # return success so the frontend can navigate them to the course.
-                already_enrolled = False
-                if course_slug == ALL_COURSES_BUNDLE_SLUG:
-                    already_enrolled = True  # bundle: treat as enrolled
-                else:
-                    _c = Course.objects.filter(slug=course_slug, is_published=True).first()
-                    if _c and Enrollment.objects.filter(user=request.user, course=_c, is_paid=True).exists():
-                        already_enrolled = True
-                if already_enrolled:
+                # Usage already recorded. Check enrollment status.
+                _is_bundle = course_slug == ALL_COURSES_BUNDLE_SLUG
+                _c = None if _is_bundle else Course.objects.filter(slug=course_slug, is_published=True).first()
+                _enrolled = _is_bundle or (
+                    _c is not None and Enrollment.objects.filter(user=request.user, course=_c, is_paid=True).exists()
+                )
+                if _enrolled:
+                    # Already enrolled — idempotent success.
                     return Response({"free": True, "course_slug": course_slug, "amount_inr": 0})
-                return Response({"detail": "You have already used this promo code"}, status=400)
-            return Response({"detail": "Invalid or inactive promo code"}, status=400)
+                # Not yet enrolled (e.g. paid code, user retried after changing name).
+                # Allow the discount to apply again without re-recording usage.
+                is_promo_valid = True
+                promo_code_obj._skip_record_usage = True
+            else:
+                return Response({"detail": "Invalid or inactive promo code"}, status=400)
 
     is_bundle = course_slug == ALL_COURSES_BUNDLE_SLUG
     course = None
@@ -135,9 +137,8 @@ def create_order(request):
     if is_promo_valid and promo_code_obj:
         amount_inr = promo_code_obj.calculate_discounted_price(amount_inr)
 
-        # Record usage early so the code can't be reused if the user retries checkout.
-        # This trades off some false-positives (abandoned payments) for simplicity.
-        promo_code_obj.record_usage(request.user, promo_slug)
+        if not getattr(promo_code_obj, "_skip_record_usage", False):
+            promo_code_obj.record_usage(request.user, promo_slug)
 
     if amount_inr == 0:
         # Free access (promo code or free course): create enrollment directly
