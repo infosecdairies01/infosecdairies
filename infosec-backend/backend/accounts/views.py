@@ -111,9 +111,13 @@ def google_jwt(request):
     # Google-only accounts may not have a usable password, but should still be able
     # to sign in and access their existing purchases/courses.
     if getattr(user, "is_verified", False) and user.is_active:
-        tokens = _jwt_for_user(user)
-        data = {"user": UserSerializer(user).data, "tokens": tokens}
-        return Response(data, status=status.HTTP_200_OK)
+        try:
+            tokens = _jwt_for_user(user)
+            user_data = UserSerializer(user).data
+        except Exception:
+            logger.exception("google_jwt: token/serializer error for %s", user.email)
+            return Response({"detail": "Authentication error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"user": user_data, "tokens": tokens}, status=status.HTTP_200_OK)
 
     # Legacy case: users may have existing purchases/enrollments but still have
     # is_verified=False due to older flows/flags. Do not force them through
@@ -127,11 +131,11 @@ def google_jwt(request):
             has_purchase = CoursePurchase.objects.filter(user=user, status=CoursePurchase.STATUS_PAID).exists()
             if has_enrollment or has_purchase:
                 tokens = _jwt_for_user(user)
-                data = {"user": UserSerializer(user).data, "tokens": tokens}
-                return Response(data, status=status.HTTP_200_OK)
+                user_data = UserSerializer(user).data
+                return Response({"user": user_data, "tokens": tokens}, status=status.HTTP_200_OK)
         except Exception:
-            # If these checks fail for any reason, fall through to onboarding.
-            pass
+            logger.exception("google_jwt: legacy enrollment check failed for %s", user.email)
+            # Fall through to onboarding.
 
     # New Google user: require onboarding (set name + password) before OTP.
     return Response(
@@ -637,18 +641,28 @@ def google_token_redirect(request):
 
         user = request.user
         if not user.is_authenticated:
-            logger.warning("google_token_redirect: unauthenticated request, redirecting with error")
-            return HttpResponseRedirect(f"{target}?error=auth_failed")
+            logger.warning("google_token_redirect: unauthenticated request for target=%s", target)
+            return HttpResponseRedirect(f"{target}#error=auth_failed")
+
+        logger.info(
+            "google_token_redirect: user=%s is_verified=%s is_active=%s",
+            user.email, getattr(user, "is_verified", None), user.is_active,
+        )
 
         # Issue tokens for verified users (mirrors google_jwt logic)
         def _issue_tokens_redirect():
-            tokens = _jwt_for_user(user)
+            try:
+                tokens = _jwt_for_user(user)
+            except Exception:
+                logger.exception("google_token_redirect: JWT creation failed for %s", user.email)
+                return HttpResponseRedirect(f"{target}#error=auth_failed")
             fragment = urllib.parse.urlencode({
                 "access": tokens["access"],
                 "refresh": tokens["refresh"],
                 "email": user.email or "",
                 "full_name": getattr(user, "full_name", "") or "",
             })
+            logger.info("google_token_redirect: issuing tokens, redirecting to %s", target)
             return HttpResponseRedirect(f"{target}#{fragment}")
 
         if getattr(user, "is_verified", False) and user.is_active:
@@ -663,12 +677,19 @@ def google_token_redirect(request):
                     Enrollment.objects.filter(user=user).exists()
                     or CoursePurchase.objects.filter(user=user, status=CoursePurchase.STATUS_PAID).exists()
                 ):
+                    logger.info("google_token_redirect: legacy user with enrollment, issuing tokens")
                     return _issue_tokens_redirect()
             except Exception:
                 logger.exception("google_token_redirect: error checking enrollment/purchase for %s", user.email)
 
         # New Google user: redirect to onboarding on the originating frontend
-        onboarding_token = _onboarding_token_for_user(user)
+        logger.info("google_token_redirect: new user, redirecting to onboarding at %s", frontend_origin)
+        try:
+            onboarding_token = _onboarding_token_for_user(user)
+        except Exception:
+            logger.exception("google_token_redirect: onboarding token creation failed for %s", user.email)
+            return HttpResponseRedirect(f"{target}#error=auth_failed")
+
         onboarding_url = (
             f"{frontend_origin}/google/onboarding"
             f"?email={urllib.parse.quote(user.email)}"
@@ -677,5 +698,5 @@ def google_token_redirect(request):
         return HttpResponseRedirect(onboarding_url)
 
     except Exception:
-        logger.exception("google_token_redirect: unexpected error, redirecting to fallback")
-        return HttpResponseRedirect(f"{_safe_fallback}?error=auth_failed")
+        logger.exception("google_token_redirect: unexpected error for target=%s", request.GET.get("target", ""))
+        return HttpResponseRedirect(f"{_safe_fallback}#error=auth_failed")
