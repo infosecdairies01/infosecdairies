@@ -200,15 +200,18 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Where to send users after allauth login.
-# Routes through the backend's token-redirect view (same origin as the OAuth
-# session) so JWT tokens are issued server-side and passed via URL fragment to
-# the frontend — avoiding the cross-domain SameSite=Lax cookie limitation.
-# Set BACKEND_URL=https://api.infosecdairies.io in Railway environment variables.
+# If BACKEND_URL is set (e.g. https://api.infosecdairies.io), routes through the
+# backend's token-redirect view so JWT tokens are issued server-side and passed
+# via URL fragment — avoiding cross-domain SameSite=Lax cookie issues.
+# Without BACKEND_URL, falls back to the direct frontend callback (session flow).
 import urllib.parse as _urllib_parse
 _frontend_url = config("FRONTEND_URL", default="http://127.0.0.1:8081").rstrip("/")
-_backend_url = config("BACKEND_URL", default="http://127.0.0.1:8000").rstrip("/")
-_google_callback_target = _urllib_parse.quote(f"{_frontend_url}/auth/google-callback", safe="")
-LOGIN_REDIRECT_URL = f"{_backend_url}/api/auth/google/token-redirect/?target={_google_callback_target}"
+_backend_url = config("BACKEND_URL", default="").rstrip("/")
+if _backend_url:
+    _google_callback_target = _urllib_parse.quote(f"{_frontend_url}/auth/google-callback", safe="")
+    LOGIN_REDIRECT_URL = f"{_backend_url}/api/auth/google/token-redirect/?target={_google_callback_target}"
+else:
+    LOGIN_REDIRECT_URL = f"{_frontend_url}/auth/google-callback"
 
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http" if DEBUG else "https"
 
