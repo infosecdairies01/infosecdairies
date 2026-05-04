@@ -50,3 +50,22 @@ class LessonProgress(models.Model):
 
     def __str__(self) -> str:  # type: ignore[override]
         return f"{self.user.email} -> {self.course.slug} -> {self.lesson_id}"
+
+
+class QuizScore(models.Model):
+    """Server-authoritative record of a quiz attempt. Best score per (user, course, quiz) is kept."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    course_slug = models.CharField(max_length=200, db_index=True)
+    quiz_id = models.CharField(max_length=100)
+    score = models.PositiveIntegerField()
+    passed = models.BooleanField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "course_slug", "quiz_id")
+        indexes = [
+            models.Index(fields=["user", "course_slug"]),
+        ]
+
+    def __str__(self) -> str:  # type: ignore[override]
+        return f"{self.user.email} -> {self.course_slug}/{self.quiz_id}: {self.score}%"

@@ -1,15 +1,21 @@
 from django.conf import settings
 from django.core.cache import cache
 from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+from django.utils.html import escape
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 import logging
 import os
 import uuid
 import base64
-from django.utils.html import escape
+
+from accounts.email_templates import _send_html_email, get_certificate_template
+from .models import Certificate
+
+logger = logging.getLogger(__name__)
 
 
 def _rate_limit(key, limit, period_seconds):
@@ -20,16 +26,10 @@ def _rate_limit(key, limit, period_seconds):
     cache.set(key, count + 1, period_seconds)
     return False
 
-from accounts.email_templates import _send_html_email, get_certificate_template
-from .models import Certificate
 
-
-logger = logging.getLogger(__name__)
-
-@csrf_exempt
-@require_http_methods(["GET"])
+@api_view(["GET"])
 def lookup_certificate(request, cert_id):
-    """Lookup certificate by ID"""
+    """Lookup certificate by ID."""
     ip = (request.META.get("HTTP_X_FORWARDED_FOR", "") or request.META.get("REMOTE_ADDR", "unknown")).split(",")[0].strip()
     if _rate_limit(f"cert_lookup:{ip}", 30, 3600):
         return JsonResponse({"error": "Rate limit exceeded. Try again later."}, status=429)
@@ -49,66 +49,113 @@ def lookup_certificate(request, cert_id):
             'error': 'Certificate not found'
         }, status=404)
 
-@csrf_exempt
-@require_http_methods(["POST"])
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def upload_certificate(request):
-    import json
+    """
+    SECURITY: Requires JWT authentication + paid enrollment + server-side quiz completion.
+    - user_email in the body is IGNORED — always uses the authenticated user's email.
+    - course_slug must be a course the user is enrolled in and has paid for.
+    - User must have at least one passing QuizScore for the course.
+    """
+    from courses.models import Course, Enrollment
+    from courses.models import QuizScore
+
+    # Per-user rate limit: max 5 certificate uploads per hour
+    if _rate_limit(f"cert_upload:{request.user.id}", 5, 3600):
+        return JsonResponse({"error": "Too many certificate requests. Try again later."}, status=429)
+
+    image_data = request.data.get('image')
+    course_slug = (request.data.get('course_slug') or '').strip()
+    # Always use the authenticated user's email — never trust the request body for this
+    user_email = request.user.email
+
+    if not image_data:
+        return JsonResponse({'error': 'No image data provided'}, status=400)
+
+    if not course_slug:
+        return JsonResponse({'error': 'course_slug is required'}, status=400)
+
+    FREE_SLUG = "network-fundamentals"
+
+    # ── Verify the course exists ──
     try:
-        # Parse JSON body
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-        else:
-            data = request.POST
-        
-        image_data = data.get('image')
-        course_slug = data.get('course_slug', 'certificate')
-        user_email = data.get('user_email', 'user')
-        
-        if not image_data:
-            return JsonResponse({'error': 'No image data provided'}, status=400)
-        
-        # Remove data URL prefix if present
+        course = Course.objects.get(slug=course_slug, is_published=True)
+    except Course.DoesNotExist:
+        return JsonResponse({'error': 'Course not found'}, status=404)
+
+    # ── Verify paid enrollment (free course exempt) ──
+    if course_slug != FREE_SLUG:
+        enrolled = Enrollment.objects.filter(
+            user=request.user, course=course, is_paid=True
+        ).exists()
+        if not enrolled:
+            return JsonResponse(
+                {'error': 'You must be enrolled and have paid for this course to earn a certificate'},
+                status=403,
+            )
+
+    # ── Verify server-side quiz completion ──
+    has_passing_score = QuizScore.objects.filter(
+        user=request.user,
+        course_slug=course_slug,
+        passed=True,
+    ).exists()
+    if not has_passing_score:
+        return JsonResponse(
+            {'error': 'You must pass at least one quiz to earn this certificate'},
+            status=403,
+        )
+
+    # ── Process the image ──
+    try:
         if 'base64,' in image_data:
             image_data = image_data.split('base64,')[1]
-        
-        # Decode base64
         image_bytes = base64.b64decode(image_data)
-        
-        # Generate unique filename
-        filename = f"certificates/{course_slug}_{user_email.replace('@', '_').replace('.', '_')}_{uuid.uuid4().hex[:8]}.png"
-        
-        # Save to storage
-        path = default_storage.save(filename, ContentFile(image_bytes))
-        
-        # Get public URL
-        public_url = default_storage.url(path)
+    except Exception:
+        return JsonResponse({'error': 'Invalid image data'}, status=400)
 
-        # Ensure an absolute URL (LinkedIn must be able to fetch og:image)
-        if not (public_url.startswith("http://") or public_url.startswith("https://")):
-            if not public_url.startswith("/"):
-                public_url = f"/{public_url}"
-            public_url = f"{request.scheme}://{request.get_host()}{public_url}"
+    filename = (
+        f"certificates/{course_slug}_"
+        f"{user_email.replace('@', '_').replace('.', '_')}_"
+        f"{uuid.uuid4().hex[:8]}.png"
+    )
+    path = default_storage.save(filename, ContentFile(image_bytes))
+    public_url = default_storage.url(path)
 
-        try:
-            if user_email and "@" in user_email:
-                subject = "Your certificate is ready"
-                text_body, html_body = get_certificate_template(
-                    download_url=public_url,
-                    course_name=course_slug.replace('-', ' ').title()
-                )
-                from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
-                _send_html_email(subject, text_body, html_body, user_email, from_email=from_email, context="certificate")
-        except Exception:
-            logger.exception("Failed to send certificate email")
+    if not (public_url.startswith("http://") or public_url.startswith("https://")):
+        if not public_url.startswith("/"):
+            public_url = f"/{public_url}"
+        public_url = f"{request.scheme}://{request.get_host()}{public_url}"
 
-        return JsonResponse({
-            'success': True,
-            'url': public_url,
-            'path': path
-        })
-        
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    # ── Create a verifiable Certificate record ──
+    cert_id = uuid.uuid4().hex[:16]
+    Certificate.objects.create(
+        cert_id=cert_id,
+        student_name=request.user.get_full_name() or user_email,
+        course_name=course.title,
+        issue_date=str(timezone.now().date()),
+    )
+
+    # ── Send certificate email ──
+    try:
+        subject = "Your certificate is ready"
+        text_body, html_body = get_certificate_template(
+            download_url=public_url,
+            course_name=course_slug.replace('-', ' ').title()
+        )
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@infosecdairies.io")
+        _send_html_email(subject, text_body, html_body, user_email, from_email=from_email, context="certificate")
+    except Exception:
+        logger.exception("Failed to send certificate email")
+
+    return JsonResponse({
+        'success': True,
+        'url': public_url,
+        'path': path,
+        'cert_id': cert_id,
+    })
 
 
 def certificate_share(request):

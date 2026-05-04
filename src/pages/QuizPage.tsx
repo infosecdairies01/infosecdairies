@@ -298,8 +298,9 @@ const QuizPage = () => {
         }
       }
       
-      // Always save to database (both passed and failed)
-      saveQuizScoreToDatabase(quizId!, score.percentage);
+      // Submit full answers to backend — server validates independently and records score.
+      // selectedAnswers snapshot is captured at results time.
+      submitQuizToBackend(selectedAnswers);
       
       // Log activity for dashboard when quiz is passed
       if (passed && course) {
@@ -313,31 +314,31 @@ const QuizPage = () => {
     }
   }, [quizState, passed, score.percentage, slug, quizId, resolvedQuizId]);
 
-  // Save quiz score to database
-  const saveQuizScoreToDatabase = async (quizId: string, score: number) => {
+  // Submit quiz answers to backend for server-side validation and score recording.
+  // Sends the full answer map so the server can validate independently.
+  const submitQuizToBackend = async (answersMap: Record<string, number>): Promise<void> => {
     try {
       const accessToken = localStorage.getItem("accessToken");
       if (!accessToken) return;
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/quiz-scores/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          course_id: slug,
-          quiz_id: quizId,
-          score: score,
-          passed: score >= 70,
-        }),
-      });
+      const resolvedId = resolvedQuizId || quizId;
+      if (!resolvedId || !slug) return;
 
-      if (!response.ok) {
-        console.error('Failed to save quiz score to database');
-      }
-    } catch (error) {
-      console.error('Error saving quiz score:', error);
+      await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/quiz/${resolvedId}/submit/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ answers: answersMap }),
+        }
+      );
+      // We do not use the server score to replace the local score for UX speed,
+      // but the server record is now the authoritative source for certificates.
+    } catch {
+      // Network error — silent; server will show no passing score, certificate blocked
     }
   };
 

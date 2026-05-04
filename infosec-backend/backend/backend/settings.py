@@ -230,6 +230,8 @@ REST_FRAMEWORK = {
         "auth_register_ip": config("AUTH_THROTTLE_REGISTER_IP", default="5/min"),
         "auth_otp_ip": config("AUTH_THROTTLE_OTP_IP", default="5/min"),
         "auth_email": config("AUTH_THROTTLE_EMAIL", default="5/min"),
+        "payment_verify": config("PAYMENT_VERIFY_THROTTLE", default="10/min"),
+        "payment_create": config("PAYMENT_CREATE_THROTTLE", default="10/min"),
     },
 }
 
