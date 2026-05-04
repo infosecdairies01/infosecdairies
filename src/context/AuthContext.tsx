@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { apiUrl } from "@/services/api";
+import { verifyJwtLocally } from "@/lib/jwtVerify";
 
 interface AuthUser {
   email: string;
@@ -67,23 +68,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const accessToken = localStorage.getItem("accessToken");
     const refreshToken = localStorage.getItem("refreshToken");
 
-    // Restore session if we have an access token.
-    if (storedEmail && accessToken) {
-      setUser({ email: storedEmail, fullName: storedFullName || undefined });
-      return;
-    }
+    (async () => {
+      // Restore session only after cryptographically verifying the stored token.
+      // This instantly destroys any fake session an attacker may have injected.
+      if (storedEmail && accessToken) {
+        try {
+          const payload = await verifyJwtLocally(accessToken);
+          if (payload.email?.toLowerCase() === storedEmail.toLowerCase()) {
+            setUser({ email: storedEmail, fullName: storedFullName || undefined });
+            return;
+          }
+        } catch {
+          // Token invalid, tampered, or expired — fall through to refresh / logout
+        }
+      }
 
-    // If access token missing/expired but refresh exists, silently refresh.
-    if (storedEmail && refreshToken) {
-      (async () => {
+      // Access token missing / invalid: try silent refresh
+      if (storedEmail && refreshToken) {
         const ok = await refreshAccessToken();
         if (ok) {
-          setUser({ email: storedEmail, fullName: storedFullName || undefined });
-        } else {
-          logout();
+          // After refresh, the new access token is already stored; verify it too
+          const newToken = localStorage.getItem("accessToken");
+          if (newToken) {
+            try {
+              const payload = await verifyJwtLocally(newToken);
+              if (payload.email?.toLowerCase() === storedEmail.toLowerCase()) {
+                setUser({ email: storedEmail, fullName: storedFullName || undefined });
+                return;
+              }
+            } catch {
+              // Refreshed token also fails verification
+            }
+          }
         }
-      })();
-    }
+        logout();
+      }
+    })();
   }, []);
 
   // Keep the user logged in by refreshing access token periodically.

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { apiUrl } from "@/services/api";
+import { verifyJwtLocally } from "@/lib/jwtVerify";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -96,43 +97,72 @@ const Auth = () => {
         return;
       }
 
-      // Check if registration requires email verification
-      if (!isLogin && data.requires_verification) {
+      // After registration ALWAYS go to email verification — never trust the server flag.
+      // An attacker could change requires_verification:true → false in Burp to skip OTP.
+      // The backend enforces is_active=False so login would fail anyway, but we also
+      // enforce the redirect here so the UX is consistent and the account is usable.
+      if (!isLogin) {
         setSuccess("Verification code sent! Redirecting to verification page...");
         setTimeout(() => {
-          navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+          navigate(`/verify-email?email=${encodeURIComponent(data.email || email)}`);
         }, 1000);
         return;
       }
 
       const tokens = data.tokens;
 
-      // CRITICAL: Verify token cryptographically to prevent response manipulation attacks
-      // Attacker can modify 401 response to 200 with fake tokens - this catches that
-      if (tokens?.access) {
-        const verifyResponse = await fetch(apiUrl("/api/auth/verify/"), {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${tokens.access}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
-
-        if (!verifyResponse.ok) {
-          setError("Invalid session. Please try logging in again.");
-          setLoading(false);
-          return;
-        }
-
-        const verifyData = await verifyResponse.json();
-        if (!verifyData.valid) {
-          setError("Session validation failed. Please try again.");
-          setLoading(false);
-          return;
-        }
-      } else {
+      if (!tokens?.access) {
         setError("Authentication failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // PRIMARY SECURITY LAYER — RS256 local signature verification.
+      // Uses the RSA public key hardcoded in the browser bundle (src/lib/jwtVerify.ts).
+      // This is zero-network: nothing to intercept, nothing to replay.
+      // An attacker who intercepts BOTH the login response AND the verify response still
+      // cannot bypass this — they would need the RSA private key stored on the server.
+      let verifiedPayload: Awaited<ReturnType<typeof verifyJwtLocally>>;
+      try {
+        verifiedPayload = await verifyJwtLocally(tokens.access);
+      } catch {
+        setError("Authentication failed: invalid token signature.");
+        setLoading(false);
+        return;
+      }
+
+      // Confirm the token's email claim matches what the user typed.
+      if (
+        !verifiedPayload.email ||
+        verifiedPayload.email.toLowerCase() !== email.toLowerCase().trim()
+      ) {
+        setError("Authentication failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // SECONDARY LAYER — server verify (defense-in-depth).
+      // Even if somehow bypassed, the primary RS256 check above has already passed.
+      const verifyResponse = await fetch(apiUrl("/api/auth/verify/"), {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${tokens.access}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!verifyResponse.ok) {
+        setError("Invalid session. Please try logging in again.");
+        setLoading(false);
+        return;
+      }
+
+      const verifyData = await verifyResponse.json();
+      if (
+        !verifyData.valid ||
+        (verifyData.email && verifyData.email.toLowerCase() !== email.toLowerCase().trim())
+      ) {
+        setError("Session validation failed. Please try again.");
         setLoading(false);
         return;
       }

@@ -97,18 +97,23 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password")
+        # Strip any fields an attacker might inject (is_active, is_verified, is_staff…)
+        # New accounts are ALWAYS inactive + unverified regardless of request content.
+        validated_data.pop("is_active", None)
+        validated_data.pop("is_verified", None)
+        validated_data.pop("is_staff", None)
+        validated_data.pop("is_superuser", None)
         user = User(
             full_name=validated_data.get("full_name"),
             email=validated_data.get("email"),
             mobile=validated_data.get("mobile"),
             auth_provider=AuthProvider.EMAIL,
+            is_active=False,      # Must verify email before logging in
+            is_verified=False,    # Explicit — never trust the default
         )
         user.set_password(password)
         user.save()
 
-        # Ensure there's an EmailAddress entry for this user so that
-        # the email shows up under Admin -> Email addresses linked
-        # to the correct user account.
         EmailAddress.objects.get_or_create(
             user=user,
             email=user.email,
