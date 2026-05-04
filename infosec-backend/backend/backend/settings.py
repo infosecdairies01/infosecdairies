@@ -16,6 +16,19 @@ import dj_database_url
 from pathlib import Path
 from decouple import config
 
+
+def _load_jwt_key(env_var: str, filename: str) -> str:
+    """Load an RSA key: try env var first (Railway), fall back to local .pem file."""
+    # Railway / production: key stored as env var with literal \n
+    raw = config(env_var, default="").replace("\\n", "\n").strip()
+    if raw:
+        return raw
+    # Local dev: read from .pem file in BASE_DIR
+    pem_path = Path(__file__).resolve().parent.parent / filename
+    if pem_path.exists():
+        return pem_path.read_text().strip()
+    return ""
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -220,11 +233,19 @@ REST_FRAMEWORK = {
     },
 }
 
+_JWT_PRIVATE_KEY = _load_jwt_key("JWT_PRIVATE_KEY", "jwt_private.pem")
+_JWT_PUBLIC_KEY = _load_jwt_key("JWT_PUBLIC_KEY", "jwt_public.pem")
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
+    # RS256: frontend can verify signatures locally using the embedded public key,
+    # making it impossible to bypass with response manipulation (no server call needed).
+    "ALGORITHM": "RS256" if _JWT_PRIVATE_KEY else "HS256",
+    "SIGNING_KEY": _JWT_PRIVATE_KEY if _JWT_PRIVATE_KEY else SECRET_KEY,
+    "VERIFYING_KEY": _JWT_PUBLIC_KEY if _JWT_PUBLIC_KEY else SECRET_KEY,
 }
 
 # dj-rest-auth configuration: we're using SimpleJWT tokens, not DRF Token model

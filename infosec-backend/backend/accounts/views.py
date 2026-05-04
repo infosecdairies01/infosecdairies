@@ -51,8 +51,11 @@ def _send_email(subject: str, message: str, to_email: str, *, from_email: str, c
 
 def _jwt_for_user(user):
     refresh = RefreshToken.for_user(user)
+    access_token = refresh.access_token
+    # Embed email so the frontend can validate the claim locally without trusting any HTTP response
+    access_token["email"] = user.email
     return {
-        "access": str(refresh.access_token),
+        "access": str(access_token),
         "refresh": str(refresh),
     }
 
@@ -578,19 +581,20 @@ def login(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def verify_token(request):
-    """Verify if the provided JWT access token is valid.
+    """Cryptographically validate a JWT access token.
 
-    This endpoint cryptographically validates the token signature and expiry.
-    Used by frontend to prevent response manipulation attacks.
+    Returns the email embedded in the token so the frontend can confirm the token
+    belongs to the user who just logged in, preventing cross-user token injection.
     """
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         return Response({"valid": False, "detail": "Authorization header required"}, status=status.HTTP_401_UNAUTHORIZED)
 
-    token = auth_header.split(" ")[1]
+    token = auth_header.split(" ", 1)[1].strip()
     try:
-        AccessToken(token)  # Validates signature, expiry, and issuer
-        return Response({"valid": True}, status=status.HTTP_200_OK)
+        access_token = AccessToken(token)  # Validates signature, expiry, and issuer
+        email = access_token.get("email", "")
+        return Response({"valid": True, "email": email}, status=status.HTTP_200_OK)
     except TokenError as e:
         return Response({"valid": False, "detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
 
