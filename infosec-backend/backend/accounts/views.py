@@ -50,7 +50,20 @@ def _send_email(subject: str, message: str, to_email: str, *, from_email: str, c
 
 
 def _jwt_for_user(user):
-    refresh = RefreshToken.for_user(user)
+    from rest_framework_simplejwt.settings import api_settings as _jwt_settings
+    try:
+        refresh = RefreshToken.for_user(user)
+    except Exception:
+        # BlacklistMixin.for_user() throws if the token_blacklist DB tables are
+        # missing (e.g. migrations not yet applied). Fall back to creating the
+        # token directly without the outstanding-token DB write.
+        logger.warning(
+            "_jwt_for_user: RefreshToken.for_user failed for %s, "
+            "falling back to direct token creation (blacklist skipped)",
+            getattr(user, "email", user.pk),
+        )
+        refresh = RefreshToken()
+        refresh[_jwt_settings.USER_ID_CLAIM] = user.pk
     access_token = refresh.access_token
     # Embed email so the frontend can validate the claim locally without trusting any HTTP response
     access_token["email"] = user.email
