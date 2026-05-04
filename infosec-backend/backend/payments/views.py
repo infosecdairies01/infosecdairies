@@ -6,6 +6,7 @@ import logging
 import razorpay
 from razorpay.errors import BadRequestError
 from django.conf import settings
+from django.core.cache import cache as _django_cache
 from django.core.mail import send_mail
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -21,6 +22,15 @@ from .models import CoursePurchase, PromoCode, PromoCodeUsage
 
 
 logger = logging.getLogger(__name__)
+
+
+def _payment_rate_limit(key: str, limit: int, period: int) -> bool:
+    """Return True if the caller exceeded the rate limit."""
+    count = _django_cache.get(key, 0)
+    if count >= limit:
+        return True
+    _django_cache.set(key, count + 1, period)
+    return False
 
 
 FREE_COURSE_SLUG = "network-fundamentals"
@@ -89,6 +99,10 @@ def _clean_razorpay_cred(value: str) -> str:
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_order(request):
+    # Rate limit: 10 order creations per user per minute
+    if _payment_rate_limit(f"pay_create:{request.user.id}", 10, 60):
+        return Response({"detail": "Too many requests. Please wait a moment."}, status=429)
+
     course_slug = request.data.get("course_slug")
     purchaser_name = request.data.get("full_name")
     promo_code = request.data.get("promo_code", "").strip().upper()
@@ -126,8 +140,16 @@ def create_order(request):
                 if _enrolled:
                     # Already enrolled — idempotent success.
                     return Response({"free": True, "course_slug": course_slug, "amount_inr": 0})
-                # Not yet enrolled (e.g. paid code, user retried after changing name).
-                # Allow the discount to apply again without re-recording usage.
+                # Not yet enrolled (e.g. user retried after dismissing payment modal).
+                # Cap retries to prevent abuse of limited-use promo codes.
+                retry_key = f"promo_retry:{request.user.id}:{promo_code}:{promo_slug}"
+                retry_count = _django_cache.get(retry_key, 0)
+                if retry_count >= 3:
+                    return Response(
+                        {"detail": "Too many promo code retry attempts. Please contact support."},
+                        status=429,
+                    )
+                _django_cache.set(retry_key, retry_count + 1, 3600)
                 is_promo_valid = True
                 promo_code_obj._skip_record_usage = True
             else:
@@ -281,6 +303,10 @@ def create_order(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def verify_payment(request):
+    # Rate limit: 10 verification attempts per user per minute
+    if _payment_rate_limit(f"pay_verify:{request.user.id}", 10, 60):
+        return Response({"detail": "Too many payment verification attempts. Please wait."}, status=429)
+
     order_id = request.data.get("razorpay_order_id")
     payment_id = request.data.get("razorpay_payment_id")
     signature = request.data.get("razorpay_signature")

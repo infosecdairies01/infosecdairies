@@ -7,8 +7,10 @@ from .views import (
     course_access_token,
     lesson_progress,
     mark_lesson_complete,
+    submit_quiz,
+    course_completion,
+    my_quiz_scores,
 )
-
 
 urlpatterns = [
     path("", course_list, name="course-list"),
@@ -17,11 +19,12 @@ urlpatterns = [
     path("<slug:slug>/enrollment/", enrollment_status, name="course-enrollment-status"),
     path("<slug:slug>/access-token/", course_access_token, name="course-access-token"),
     path("<slug:slug>/progress/", lesson_progress, name="course-lesson-progress"),
+    path("<slug:slug>/completion/", course_completion, name="course-completion"),
+    path("<slug:slug>/quiz-scores/", my_quiz_scores, name="course-quiz-scores"),
+    path("<slug:slug>/quiz/<str:quiz_id>/submit/", submit_quiz, name="course-quiz-submit"),
     path(
         "<slug:slug>/lessons/<str:lesson_id>/complete/",
         mark_lesson_complete,
         name="course-lesson-complete",
     ),
 ]
-
-

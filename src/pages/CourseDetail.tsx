@@ -151,6 +151,8 @@ const CourseDetail = () => {
   const [enrollError, setEnrollError] = useState<string | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [quizScores, setQuizScores] = useState<Record<string, number>>({});
+  // null = not yet fetched, true/false = server response
+  const [serverCompleted, setServerCompleted] = useState<boolean | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareModalText, setShareModalText] = useState("");
   const [shareModalUrl, setShareModalUrl] = useState("");
@@ -227,7 +229,26 @@ const CourseDetail = () => {
     setQuizScores(scores);
   }, [slug]);
 
-  // Listen for quiz completion events
+  // Fetch server-authoritative completion status for certificate gating.
+  // The server checks QuizScore records — impossible to fake via localStorage.
+  useEffect(() => {
+    if (!slug || !user) return;
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) return;
+
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/completion/`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && typeof data.completed === "boolean") {
+          setServerCompleted(data.completed);
+        }
+      })
+      .catch(() => {});
+  }, [slug, user]);
+
+  // Listen for quiz completion events and re-check server completion
   useEffect(() => {
     const handleQuizCompleted = (event: CustomEvent) => {
       const { quizId, score, passed } = event.detail;
@@ -236,7 +257,7 @@ const CourseDetail = () => {
         [quizId]: score
       }));
       
-      // If quiz was passed, also mark it as completed
+      // If quiz was passed, also mark it as completed locally and re-check server
       if (passed) {
         setCompletedLessonIds(prev => {
           if (!prev.includes(quizId)) {
@@ -244,10 +265,21 @@ const CourseDetail = () => {
           }
           return prev;
         });
+        // Re-fetch server completion so certificate unlocks immediately after passing
+        const accessToken = localStorage.getItem("accessToken");
+        if (accessToken && slug) {
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/completion/`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+              if (data && typeof data.completed === "boolean") {
+                setServerCompleted(data.completed);
+              }
+            })
+            .catch(() => {});
+        }
       }
-      
-      // Note: Quiz status updates are handled via localStorage and quizScores state
-      // The course data structure is static, so we rely on localStorage for completion tracking
     };
 
     window.addEventListener('quizCompleted', handleQuizCompleted as EventListener);
@@ -734,21 +766,29 @@ const CourseDetail = () => {
   const handleShareOnLinkedIn = async () => {
     if (!course || !user) return;
 
+    // Server-side completion guard — prevents certificate without passing a quiz
+    if (serverCompleted === false) {
+      setEnrollError("Please pass at least one quiz before sharing your certificate.");
+      return;
+    }
+
     const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.infosecdairies.io/`;
 
     try {
       const cert = await generateCertificatePngDataUrl();
       if (!cert) return;
 
+      const accessToken = localStorage.getItem("accessToken");
       const uploadRes = await fetch(apiUrl("/api/certificates/upload/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify({
           image: cert.dataUrl,
           course_slug: slug || "certificate",
-          user_email: user?.email || "user",
+          // user_email is intentionally omitted — backend uses authenticated user's email
         }),
       });
 
@@ -788,6 +828,12 @@ const CourseDetail = () => {
   };
 
   const handleDownloadCertificate = async () => {
+    // Server-side completion guard — prevents certificate without passing a quiz
+    if (serverCompleted === false) {
+      setEnrollError("Please pass at least one quiz before downloading your certificate.");
+      return;
+    }
+
     try {
       const cert = await generateCertificatePngDataUrl();
       if (!cert) {
