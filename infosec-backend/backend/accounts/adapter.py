@@ -101,20 +101,18 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 existing_user.save()
                 
         except User.DoesNotExist:
-            # No existing user with this email - proceed with new account creation
-            pass
-
-        if getattr(sociallogin.account, "provider", None) == "google":
-            user = sociallogin.user
-            try:
-                if getattr(user, "auth_provider", None) != "google":
-                    user.auth_provider = "google"
-                # Brand new Google user: require onboarding + OTP before issuing JWT.
-                user.set_unusable_password()
-                user.is_verified = False
-                user.save()
-            except Exception:
-                pass
+            # No existing user with this email — new account creation.
+            # Brand new Google user: require onboarding + OTP before issuing JWT.
+            if getattr(sociallogin.account, "provider", None) == "google":
+                user = sociallogin.user
+                try:
+                    if getattr(user, "auth_provider", None) != "google":
+                        user.auth_provider = "google"
+                    user.set_unusable_password()
+                    user.is_verified = False
+                    user.save()
+                except Exception:
+                    pass
 
     def is_auto_signup_allowed(self, request, sociallogin):
         """

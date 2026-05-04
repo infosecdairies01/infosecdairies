@@ -200,11 +200,15 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Where to send users after allauth login.
-# Point this at a frontend callback that will exchange the
-# session-based login for JWT tokens and then redirect into
-# the app dashboard.
+# Routes through the backend's token-redirect view (same origin as the OAuth
+# session) so JWT tokens are issued server-side and passed via URL fragment to
+# the frontend — avoiding the cross-domain SameSite=Lax cookie limitation.
+# Set BACKEND_URL=https://api.infosecdairies.io in Railway environment variables.
+import urllib.parse as _urllib_parse
 _frontend_url = config("FRONTEND_URL", default="http://127.0.0.1:8081").rstrip("/")
-LOGIN_REDIRECT_URL = f"{_frontend_url}/auth/google-callback"
+_backend_url = config("BACKEND_URL", default="http://127.0.0.1:8000").rstrip("/")
+_google_callback_target = _urllib_parse.quote(f"{_frontend_url}/auth/google-callback", safe="")
+LOGIN_REDIRECT_URL = f"{_backend_url}/api/auth/google/token-redirect/?target={_google_callback_target}"
 
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http" if DEBUG else "https"
 
