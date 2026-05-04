@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import {
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/context/AuthContext";
+import { useCourseAccess } from "@/hooks/useCourseAccess";
 import {
   Collapsible,
   CollapsibleContent,
@@ -138,8 +139,14 @@ const CourseDetail = () => {
     "modules"
   );
   const [openModules, setOpenModules] = useState<string[]>(["1", "2"]);
-  const [isEnrolled, setIsEnrolled] = useState(false);
-  const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+  // Secure enrollment gate — backed by RS256-signed token verified locally.
+  // Intercepting + modifying the API response cannot grant access because
+  // the RSA signature check will reject any tampered token.
+  const { accessState, recheck: recheckAccess } = useCourseAccess(
+    isCourseProgressEnabled ? slug : undefined
+  );
+  const isEnrolled = accessState === "granted";
+  const checkingEnrollment = accessState === "loading";
   const [enrollLoading, setEnrollLoading] = useState(false);
   const [enrollError, setEnrollError] = useState<string | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
@@ -250,59 +257,7 @@ const CourseDetail = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!slug || !isCourseProgressEnabled) return;
-
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      setIsEnrolled(false);
-      return;
-    }
-
-    const checkEnrollment = async () => {
-      try {
-        setCheckingEnrollment(true);
-        setEnrollError(null);
-        
-        console.log('Checking enrollment for slug:', slug);
-        console.log('Access token exists:', !!accessToken);
-        
-        const res = await fetch(apiUrl(`/api/courses/${slug}/enrollment/`), {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        console.log('Enrollment response status:', res.status);
-
-        if (res.status === 401) {
-          // Token invalid/expired - force re-auth
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("userEmail");
-          navigate("/auth");
-          setIsEnrolled(false);
-          return;
-        }
-
-        if (!res.ok) {
-          console.log('Enrollment response not OK:', res.statusText);
-          setIsEnrolled(false);
-          return;
-        }
-        const data = await res.json();
-        console.log('Enrollment data:', data);
-        setIsEnrolled(data.status === "enrolled");
-      } catch (err) {
-        console.error('Enrollment check error:', err);
-        setIsEnrolled(false);
-      } finally {
-        setCheckingEnrollment(false);
-      }
-    };
-
-    checkEnrollment();
-  }, [slug, isCourseProgressEnabled, navigate]);
+  // Enrollment is now handled by useCourseAccess (RS256-verified) above.
 
   const staticCourse = useMemo(
     () =>
@@ -963,8 +918,8 @@ const CourseDetail = () => {
         return;
       }
 
-      // Mark as enrolled in state
-      setIsEnrolled(true);
+      // Re-fetch the signed access token — this re-validates enrollment via backend
+      recheckAccess();
 
       // After successful enrollment, immediately jump to the first lesson
       if (course && course.modules && course.modules.length > 0) {

@@ -14,6 +14,7 @@ import { getLessonContentFromPerCourse } from "@/data/lessons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiUrl } from "@/services/api";
 import { logActivity } from "./Dashboard";
+import { useCourseAccess } from "@/hooks/useCourseAccess";
 
 // Import course backgrounds
 import socFundamentalsBg from "@/assets/soc-course-bg.jpg";
@@ -197,6 +198,12 @@ const LabQuestionsSection = ({ scenario, questions }: { scenario?: string; quest
 const LessonViewer = () => {
   const { slug, lessonId } = useParams<{ slug: string; lessonId: string }>();
   const navigate = useNavigate();
+
+  // SECURITY: verify paid enrollment via RS256-signed token before rendering any content.
+  // Changing the API response in Burp Suite cannot bypass this — the RSA signature
+  // check runs locally in the browser and rejects any modified token.
+  const { accessState } = useCourseAccess(slug);
+
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
   const [markingComplete, setMarkingComplete] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -621,6 +628,22 @@ const LessonViewer = () => {
   if (!course) {
     console.warn('LessonViewer redirect: course not found, going back to /courses');
     return <Navigate to="/courses" replace />;
+  }
+
+  // Enrollment gate — do not render any content until the RS256 access token is verified.
+  if (accessState === "loading") {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Verifying access...</p>
+      </main>
+    );
+  }
+  if (accessState === "unauthenticated") {
+    return <Navigate to="/auth" replace />;
+  }
+  if (accessState === "denied") {
+    // Not enrolled or not paid — send to course page where they can purchase
+    return <Navigate to={`/courses/${slug}`} replace />;
   }
 
   if (!lessonId || !currentLesson) {
