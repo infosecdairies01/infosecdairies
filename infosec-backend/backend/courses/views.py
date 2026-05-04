@@ -1,6 +1,10 @@
+from datetime import timedelta
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import AccessToken
 from django.shortcuts import get_object_or_404
 from .models import Course, Enrollment, LessonProgress
 from .serializers import CourseSerializer, LessonProgressSerializer
@@ -69,12 +73,40 @@ def enroll(request, slug):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def enrollment_status(request, slug):
+    """Legacy plain-text status — kept for backwards compat but no longer used for access gating."""
     course = get_object_or_404(Course, slug=slug, is_published=True)
     exists = Enrollment.objects.filter(user=request.user, course=course).exists()
     if not exists:
         return Response({"status": "not_enrolled"})
     enrollment = Enrollment.objects.get(user=request.user, course=course)
     return Response({"status": "enrolled", "is_paid": enrollment.is_paid})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def course_access_token(request, slug):
+    """Issue a short-lived RS256-signed token proving paid enrollment for a course.
+
+    The frontend verifies this token's RSA signature locally using the embedded
+    public key (src/lib/jwtVerify.ts). Because the token is cryptographically signed:
+    - Intercepting the response and changing enrolled/is_paid has no effect —
+      the modified token fails the RSA signature check in the browser.
+    - A 403 here cannot be spoofed into a 200 because there is no token to verify.
+    """
+    course = get_object_or_404(Course, slug=slug, is_published=True)
+    enrollment, denied = _ensure_enrolled_and_paid(request.user, course)
+    if denied:
+        return denied
+
+    token = AccessToken.for_user(request.user)
+    token["course_slug"] = slug
+    token["enrolled"] = True
+    token["is_paid"] = bool(enrollment.is_paid or slug == FREE_COURSE_SLUG)
+    token["email"] = request.user.email
+    token["token_type"] = "course_access"
+    token.set_exp(lifetime=timedelta(hours=2))
+
+    return Response({"access_token": str(token)}, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
