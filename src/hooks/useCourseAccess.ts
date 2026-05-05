@@ -21,10 +21,12 @@ const SESSION_KEY = (slug: string) => `course_access_token_${slug}`;
 export function useCourseAccess(slug: string | undefined): {
   accessState: CourseAccessState;
   isPaid: boolean;
+  isStaff: boolean;
   recheck: () => void;
 } {
   const [accessState, setAccessState] = useState<CourseAccessState>("loading");
   const [isPaid, setIsPaid] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
 
   const verify = useCallback(async () => {
     if (!slug) {
@@ -51,6 +53,7 @@ export function useCourseAccess(slug: string | undefined): {
           payload.token_type === "course_access"
         ) {
           setIsPaid(payload.is_paid === true);
+          setIsStaff(payload.is_staff === true);
           setAccessState("granted");
           return;
         }
@@ -100,6 +103,7 @@ export function useCourseAccess(slug: string | undefined): {
       // Valid — cache in sessionStorage so we don't hit the backend on every render
       sessionStorage.setItem(SESSION_KEY(slug), data.access_token);
       setIsPaid(payload.is_paid === true);
+      setIsStaff(payload.is_staff === true);
       setAccessState("granted");
     } catch {
       // Network error OR signature verification failed
@@ -111,5 +115,5 @@ export function useCourseAccess(slug: string | undefined): {
     verify();
   }, [verify]);
 
-  return { accessState, isPaid, recheck: verify };
+  return { accessState, isPaid, isStaff, recheck: verify };
 }

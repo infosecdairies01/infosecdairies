@@ -96,6 +96,7 @@ def course_access_token(request, slug):
         token["course_slug"] = slug
         token["enrolled"] = True
         token["is_paid"] = True
+        token["is_staff"] = True
         token["email"] = request.user.email
         token["token_type"] = "course_access"
         token.set_exp(lifetime=timedelta(hours=2))
