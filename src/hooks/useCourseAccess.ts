@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiUrl } from "@/services/api";
 import { verifyJwtLocally } from "@/lib/jwtVerify";
+import { useAuth } from "@/context/AuthContext";
 
 export type CourseAccessState = "loading" | "granted" | "denied" | "unauthenticated";
 
@@ -24,9 +25,18 @@ export function useCourseAccess(slug: string | undefined): {
   isStaff: boolean;
   recheck: () => void;
 } {
+  const { isAuthenticated } = useAuth();
   const [accessState, setAccessState] = useState<CourseAccessState>("loading");
   const [isPaid, setIsPaid] = useState(false);
   const [isStaff, setIsStaff] = useState(false);
+
+  // Instantly lock out when the user logs out — don't wait for the next verify() cycle
+  useEffect(() => {
+    if (!isAuthenticated) {
+      if (slug) sessionStorage.removeItem(SESSION_KEY(slug));
+      setAccessState("unauthenticated");
+    }
+  }, [isAuthenticated, slug]);
 
   const verify = useCallback(async () => {
     if (!slug) {

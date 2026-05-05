@@ -66,6 +66,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (userEmail) {
       localStorage.removeItem(`user_activity_log_${userEmail}`);
     }
+    // Clear all cached course access tokens so the lesson gate re-checks immediately
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith("course_access_token_")) sessionStorage.removeItem(key);
+    }
     setUser(null);
   };
 

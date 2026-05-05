@@ -116,7 +116,7 @@ const Navbar = () => {
                 <button
                   type="button"
                   className="text-left text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
-                  onClick={() => { logout(); closeMenu(); }}
+                  onClick={() => { logout(); closeMenu(); navigate("/"); }}
                 >
                   Logout
                 </button>
