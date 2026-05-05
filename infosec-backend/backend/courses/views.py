@@ -87,15 +87,36 @@ def enrollment_status(request, slug):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def course_access_token(request, slug):
-    """Issue a short-lived RS256-signed token proving paid enrollment for a course.
-
-    The frontend verifies this token's RSA signature locally using the embedded
-    public key (src/lib/jwtVerify.ts). Because the token is cryptographically signed:
-    - Intercepting the response and changing enrolled/is_paid has no effect —
-      the modified token fails the RSA signature check in the browser.
-    - A 403 here cannot be spoofed into a 200 because there is no token to verify.
-    """
+    """Issue a short-lived RS256-signed token proving paid enrollment for a course."""
     course = get_object_or_404(Course, slug=slug, is_published=True)
+
+    # Staff / superusers can access any course for testing without an enrollment record.
+    if request.user.is_staff or request.user.is_superuser:
+        token = AccessToken.for_user(request.user)
+        token["course_slug"] = slug
+        token["enrolled"] = True
+        token["is_paid"] = True
+        token["email"] = request.user.email
+        token["token_type"] = "course_access"
+        token.set_exp(lifetime=timedelta(hours=2))
+        return Response({"access_token": str(token)}, status=status.HTTP_200_OK)
+
+    # Free course: auto-create enrollment so users don't need a separate enroll step.
+    if slug == FREE_COURSE_SLUG:
+        enrollment, _ = Enrollment.objects.get_or_create(
+            user=request.user,
+            course=course,
+            defaults={"is_paid": False},
+        )
+        token = AccessToken.for_user(request.user)
+        token["course_slug"] = slug
+        token["enrolled"] = True
+        token["is_paid"] = True
+        token["email"] = request.user.email
+        token["token_type"] = "course_access"
+        token.set_exp(lifetime=timedelta(hours=2))
+        return Response({"access_token": str(token)}, status=status.HTTP_200_OK)
+
     enrollment, denied = _ensure_enrolled_and_paid(request.user, course)
     if denied:
         return denied
@@ -103,7 +124,7 @@ def course_access_token(request, slug):
     token = AccessToken.for_user(request.user)
     token["course_slug"] = slug
     token["enrolled"] = True
-    token["is_paid"] = bool(enrollment.is_paid or slug == FREE_COURSE_SLUG)
+    token["is_paid"] = bool(enrollment.is_paid)
     token["email"] = request.user.email
     token["token_type"] = "course_access"
     token.set_exp(lifetime=timedelta(hours=2))
