@@ -202,7 +202,7 @@ const LessonViewer = () => {
   // SECURITY: verify paid enrollment via RS256-signed token before rendering any content.
   // Changing the API response in Burp Suite cannot bypass this — the RSA signature
   // check runs locally in the browser and rejects any modified token.
-  const { accessState } = useCourseAccess(slug);
+  const { accessState, isStaff } = useCourseAccess(slug);
 
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
   const [markingComplete, setMarkingComplete] = useState(false);
@@ -584,6 +584,7 @@ const LessonViewer = () => {
   // ─── Gate check: wait for progress to load before evaluating ───
   useEffect(() => {
     if (!slug || !lessonId || !course || !progressLoaded) return;
+    if (isStaff) return;
 
     const currentModuleIndex = course.modules.findIndex((m) =>
       m.lessons.some((l) => l.id === lessonId),
@@ -623,7 +624,7 @@ const LessonViewer = () => {
 
     // Redirect to the previous module quiz
     navigate(`/courses/${slug}/quiz/${gateQuizId}`, { replace: true });
-  }, [slug, lessonId, course, progressLoaded, completedLessonIds, navigate]);
+  }, [slug, lessonId, course, progressLoaded, completedLessonIds, isStaff, navigate]);
 
   if (!course) {
     console.warn('LessonViewer redirect: course not found, going back to /courses');
