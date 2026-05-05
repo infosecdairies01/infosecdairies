@@ -1,4 +1,4 @@
-import type { Course } from "@/data/courses";
+import type { Course } from "@/data/types";
 
 export const courses: Course[] = [
   {
