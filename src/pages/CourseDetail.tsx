@@ -139,6 +139,16 @@ const CourseDetail = () => {
     "modules"
   );
   const [openModules, setOpenModules] = useState<string[]>(["1", "2"]);
+
+  // Only some courses are fully implemented with enrollment/progress
+  // Must be declared before useCourseAccess which depends on it
+  const isCourseProgressEnabled = useMemo(() => {
+    if (!slug) return false;
+    return staticCourses.some(
+      (c) => c.id === slug || c.id === getCourseIdFromSlug(slug)
+    );
+  }, [slug]);
+
   // Secure enrollment gate — backed by RS256-signed token verified locally.
   // Intercepting + modifying the API response cannot grant access because
   // the RSA signature check will reject any tampered token.
@@ -157,14 +167,6 @@ const CourseDetail = () => {
   const [shareModalText, setShareModalText] = useState("");
   const [shareModalUrl, setShareModalUrl] = useState("");
   const [copied, setCopied] = useState(false);
-
-  // Only some courses are fully implemented with enrollment/progress
-  const isCourseProgressEnabled = useMemo(() => {
-    if (!slug) return false;
-    return staticCourses.some(
-      (c) => c.id === slug || c.id === getCourseIdFromSlug(slug)
-    );
-  }, [slug]);
 
   const displayPriceInr = useMemo(() => {
     if (!slug) return null;
