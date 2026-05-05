@@ -60,7 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userFullName");
-    localStorage.removeItem("userId");
+    // userId is intentionally NOT removed here — it must survive logout so that
+    // the next login can detect a different user_id (deleted + re-registered account)
+    // and wipe the stale quiz/lesson cache.
     if (userEmail) {
       localStorage.removeItem(`user_activity_log_${userEmail}`);
     }
