@@ -51,26 +51,62 @@ def _send_email(subject: str, message: str, to_email: str, *, from_email: str, c
 
 def _jwt_for_user(user):
     from rest_framework_simplejwt.settings import api_settings as _jwt_settings
+    from django.conf import settings as _django_settings
     try:
         refresh = RefreshToken.for_user(user)
     except Exception:
-        # BlacklistMixin.for_user() throws if the token_blacklist DB tables are
-        # missing (e.g. migrations not yet applied). Fall back to creating the
-        # token directly without the outstanding-token DB write.
+        # BlacklistMixin.for_user() throws if token_blacklist DB tables are missing.
         logger.warning(
-            "_jwt_for_user: RefreshToken.for_user failed for %s, "
-            "falling back to direct token creation (blacklist skipped)",
+            "_jwt_for_user: RefreshToken.for_user failed for %s (blacklist DB issue), "
+            "falling back to direct token creation",
             getattr(user, "email", user.pk),
         )
         refresh = RefreshToken()
         refresh[_jwt_settings.USER_ID_CLAIM] = user.pk
+
     access_token = refresh.access_token
     # Embed email so the frontend can validate the claim locally without trusting any HTTP response
     access_token["email"] = user.email
-    return {
-        "access": str(access_token),
-        "refresh": str(refresh),
-    }
+
+    try:
+        return {
+            "access": str(access_token),
+            "refresh": str(refresh),
+        }
+    except Exception:
+        # JWT signing failed — most likely a bad SIGNING_KEY (e.g. malformed RS256 key).
+        # Emergency fallback: sign with HS256 + SECRET_KEY which is always available.
+        logger.exception(
+            "_jwt_for_user: JWT signing failed for %s "
+            "(algorithm=%s signing_key_set=%s) — falling back to HS256",
+            getattr(user, "email", user.pk),
+            _jwt_settings.ALGORITHM,
+            bool(_jwt_settings.SIGNING_KEY),
+        )
+        import jwt as _pyjwt
+        from datetime import datetime, timezone as _tz
+        now = datetime.now(_tz.utc)
+        secret = _django_settings.SECRET_KEY
+
+        access_payload = {
+            "token_type": "access",
+            "exp": int((now + timedelta(minutes=30)).timestamp()),
+            "iat": int(now.timestamp()),
+            "jti": secrets.token_hex(16),
+            _jwt_settings.USER_ID_CLAIM: user.pk,
+            "email": user.email,
+        }
+        refresh_payload = {
+            "token_type": "refresh",
+            "exp": int((now + timedelta(days=30)).timestamp()),
+            "iat": int(now.timestamp()),
+            "jti": secrets.token_hex(16),
+            _jwt_settings.USER_ID_CLAIM: user.pk,
+        }
+        return {
+            "access": _pyjwt.encode(access_payload, secret, algorithm="HS256"),
+            "refresh": _pyjwt.encode(refresh_payload, secret, algorithm="HS256"),
+        }
 
 
 def _onboarding_token_for_user(user):

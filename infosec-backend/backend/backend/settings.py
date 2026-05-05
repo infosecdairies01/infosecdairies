@@ -29,6 +29,18 @@ def _load_jwt_key(env_var: str, filename: str) -> str:
         return pem_path.read_text().strip()
     return ""
 
+
+def _is_valid_rsa_private_key(key_str: str) -> bool:
+    """Return True only if key_str can actually be loaded as an RSA private key."""
+    if not key_str:
+        return False
+    try:
+        from cryptography.hazmat.primitives.serialization import load_pem_private_key
+        load_pem_private_key(key_str.encode(), password=None)
+        return True
+    except Exception:
+        return False
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -244,16 +256,29 @@ REST_FRAMEWORK = {
 _JWT_PRIVATE_KEY = _load_jwt_key("JWT_PRIVATE_KEY", "jwt_private.pem")
 _JWT_PUBLIC_KEY = _load_jwt_key("JWT_PUBLIC_KEY", "jwt_public.pem")
 
+# Only use RS256 if the private key is cryptographically valid.
+# A key string that looks non-empty but is malformed (wrong format, bad encoding,
+# truncated) will fail PyJWT signing at runtime. Validate now so we fall back to
+# HS256 safely rather than crashing on every login request.
+_USE_RS256 = _is_valid_rsa_private_key(_JWT_PRIVATE_KEY)
+
+import sys as _sys
+print(
+    f"[jwt-config] USE_RS256={_USE_RS256} "
+    f"private_key_set={bool(_JWT_PRIVATE_KEY)} "
+    f"public_key_set={bool(_JWT_PUBLIC_KEY)}",
+    file=_sys.stderr, flush=True,
+)
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    # RS256: frontend can verify signatures locally using the embedded public key,
-    # making it impossible to bypass with response manipulation (no server call needed).
-    "ALGORITHM": "RS256" if _JWT_PRIVATE_KEY else "HS256",
-    "SIGNING_KEY": _JWT_PRIVATE_KEY if _JWT_PRIVATE_KEY else SECRET_KEY,
-    "VERIFYING_KEY": _JWT_PUBLIC_KEY if _JWT_PUBLIC_KEY else SECRET_KEY,
+    # RS256 only when a valid private key is available; falls back to HS256.
+    "ALGORITHM": "RS256" if _USE_RS256 else "HS256",
+    "SIGNING_KEY": _JWT_PRIVATE_KEY if _USE_RS256 else SECRET_KEY,
+    "VERIFYING_KEY": _JWT_PUBLIC_KEY if _USE_RS256 else SECRET_KEY,
 }
 
 # dj-rest-auth configuration: we're using SimpleJWT tokens, not DRF Token model
