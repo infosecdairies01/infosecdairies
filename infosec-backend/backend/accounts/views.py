@@ -409,10 +409,11 @@ def register(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Create user but keep inactive until email verified
-    user = serializer.save(is_active=False)
+    user = serializer.save()
 
-    # Generate OTP for email verification
+    # Expire any old unused OTPs so only the fresh code works
+    LoginOtp.objects.filter(user=user, used=False).update(used=True)
+
     code = f"{secrets.randbelow(1_000_000):06d}"
     expires_at = timezone.now() + timedelta(minutes=10)
     LoginOtp.objects.create(user=user, code=code, expires_at=expires_at)

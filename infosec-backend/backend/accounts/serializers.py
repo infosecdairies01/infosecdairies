@@ -89,27 +89,45 @@ class RegisterSerializer(serializers.ModelSerializer):
             )
             if domain in blocked_domains:
                 raise serializers.ValidationError("Disposable email addresses are not allowed.")
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError(
-                "An account with this email already exists. Please sign in instead."
-            )
+        existing = User.objects.filter(email=email).first()
+        if existing:
+            # Block re-registration only for active/verified accounts, or social accounts.
+            # An inactive+unverified email account means the user registered but never
+            # completed OTP verification (e.g. closed the tab). We allow re-registration
+            # so they can get a fresh OTP instead of being permanently stuck.
+            if existing.is_active or existing.is_verified or existing.auth_provider != AuthProvider.EMAIL:
+                raise serializers.ValidationError(
+                    "An account with this email already exists. Please sign in instead."
+                )
         return email
 
     def create(self, validated_data):
         password = validated_data.pop("password")
-        # Strip any fields an attacker might inject (is_active, is_verified, is_staff…)
-        # New accounts are ALWAYS inactive + unverified regardless of request content.
         validated_data.pop("is_active", None)
         validated_data.pop("is_verified", None)
         validated_data.pop("is_staff", None)
         validated_data.pop("is_superuser", None)
+
+        email = validated_data.get("email")
+
+        # Re-registration: update the stale unverified account instead of creating a duplicate
+        existing = User.objects.filter(
+            email=email, is_active=False, is_verified=False, auth_provider=AuthProvider.EMAIL
+        ).first()
+        if existing:
+            existing.full_name = validated_data.get("full_name", existing.full_name)
+            existing.mobile = validated_data.get("mobile", existing.mobile)
+            existing.set_password(password)
+            existing.save(update_fields=["full_name", "mobile", "password"])
+            return existing
+
         user = User(
             full_name=validated_data.get("full_name"),
-            email=validated_data.get("email"),
+            email=email,
             mobile=validated_data.get("mobile"),
             auth_provider=AuthProvider.EMAIL,
-            is_active=False,      # Must verify email before logging in
-            is_verified=False,    # Explicit — never trust the default
+            is_active=False,
+            is_verified=False,
         )
         user.set_password(password)
         user.save()

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/services/api";
 import { verifyJwtLocally } from "@/lib/jwtVerify";
 
@@ -16,49 +16,86 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const REFRESH_INTERVAL_MS = 10 * 60 * 1000;
+const REFRESH_LOCK_KEY = "token_refresh_lock";
+const REFRESH_LOCK_TTL_MS = 15 * 1000;
+
+/** Decode a JWT payload without verifying the signature (safe for cache-invalidation only). */
+function decodeJwtUserId(token: string): number | null {
+  try {
+    const payloadB64 = token.split(".")[1];
+    const b64 = payloadB64.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded));
+    return typeof payload.user_id === "number" ? payload.user_id : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Wipe all quiz scores and lesson-progress entries from localStorage.
+ * Called whenever we detect a different user_id logging into the same browser
+ * (i.e. the previous account was deleted and a new one created with the same email).
+ */
+function clearUserLocalCache() {
+  const toRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key) continue;
+    if (key.startsWith("quiz_") || key.startsWith("completed_lessons_")) {
+      toRemove.push(key);
+    }
+  }
+  toRemove.forEach((k) => localStorage.removeItem(k));
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const refreshingRef = useRef(false);
 
   const logout = () => {
-    // Get userEmail before removing it from localStorage
     const userEmail = localStorage.getItem("userEmail");
-    
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userFullName");
-    
-    // Clear user-specific activity data when logging out
+    localStorage.removeItem("userId");
     if (userEmail) {
-      const userSpecificKey = `user_activity_log_${userEmail}`;
-      localStorage.removeItem(userSpecificKey);
+      localStorage.removeItem(`user_activity_log_${userEmail}`);
     }
-    
     setUser(null);
   };
 
   const refreshAccessToken = async (): Promise<boolean> => {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (!refreshToken) return false;
+    const lock = localStorage.getItem(REFRESH_LOCK_KEY);
+    if (lock) {
+      const lockTime = parseInt(lock, 10);
+      if (Date.now() - lockTime < REFRESH_LOCK_TTL_MS) return true;
+    }
+    if (refreshingRef.current) return true;
+    refreshingRef.current = true;
+    localStorage.setItem(REFRESH_LOCK_KEY, String(Date.now()));
+
     try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) return false;
       const res = await fetch(apiUrl("/api/auth/token/refresh/"), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh: refreshToken }),
       });
       if (!res.ok) return false;
       const data = await res.json();
       if (!data?.access) return false;
       localStorage.setItem("accessToken", data.access);
-      // Support refresh rotation
-      if (data.refresh) {
-        localStorage.setItem("refreshToken", data.refresh);
-      }
+      if (data.refresh) localStorage.setItem("refreshToken", data.refresh);
       return true;
     } catch {
       return false;
+    } finally {
+      refreshingRef.current = false;
+      localStorage.removeItem(REFRESH_LOCK_KEY);
     }
   };
 
@@ -69,35 +106,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const refreshToken = localStorage.getItem("refreshToken");
 
     (async () => {
-      // Restore session only after cryptographically verifying the stored token.
-      // This instantly destroys any fake session an attacker may have injected.
       if (storedEmail && accessToken) {
         try {
           const payload = await verifyJwtLocally(accessToken);
           if (payload.email?.toLowerCase() === storedEmail.toLowerCase()) {
+            // Check if user_id matches what we stored — mismatch means the account
+            // was deleted and a new one was created with the same email.
+            const storedUserId = localStorage.getItem("userId");
+            const tokenUserId = payload.user_id;
+            if (storedUserId && tokenUserId && String(tokenUserId) !== storedUserId) {
+              clearUserLocalCache();
+            }
+            if (tokenUserId) localStorage.setItem("userId", String(tokenUserId));
             setUser({ email: storedEmail, fullName: storedFullName || undefined });
             return;
           }
         } catch {
-          // Token invalid, tampered, or expired — fall through to refresh / logout
+          // token invalid/expired — fall through to refresh
         }
       }
 
-      // Access token missing / invalid: try silent refresh
       if (storedEmail && refreshToken) {
         const ok = await refreshAccessToken();
         if (ok) {
-          // After refresh, the new access token is already stored; verify it too
           const newToken = localStorage.getItem("accessToken");
           if (newToken) {
             try {
               const payload = await verifyJwtLocally(newToken);
               if (payload.email?.toLowerCase() === storedEmail.toLowerCase()) {
+                const storedUserId = localStorage.getItem("userId");
+                const tokenUserId = payload.user_id;
+                if (storedUserId && tokenUserId && String(tokenUserId) !== storedUserId) {
+                  clearUserLocalCache();
+                }
+                if (tokenUserId) localStorage.setItem("userId", String(tokenUserId));
                 setUser({ email: storedEmail, fullName: storedFullName || undefined });
                 return;
               }
             } catch {
-              // Refreshed token also fails verification
+              // refreshed token also invalid
             }
           }
         }
@@ -106,28 +153,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })();
   }, []);
 
-  // Keep the user logged in by refreshing access token periodically.
+  // Periodic silent refresh + visibility-change recovery
   useEffect(() => {
     if (!user) return;
-    const intervalMs = 10 * 60 * 1000; // 10 minutes
+
     const id = window.setInterval(async () => {
       const ok = await refreshAccessToken();
-      if (!ok) {
-        logout();
-      }
-    }, intervalMs);
+      if (!ok) logout();
+    }, REFRESH_INTERVAL_MS);
 
-    return () => window.clearInterval(id);
+    const handleVisibility = async () => {
+      if (document.visibilityState === "visible") {
+        const token = localStorage.getItem("accessToken");
+        let needsRefresh = true;
+        if (token) {
+          try {
+            await verifyJwtLocally(token);
+            needsRefresh = false;
+          } catch {
+            // expired
+          }
+        }
+        if (needsRefresh) {
+          const ok = await refreshAccessToken();
+          if (!ok) logout();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [user]);
+
+  // Sync logout across tabs
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "userEmail" && e.newValue === null) {
+        setUser(null);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   const login: AuthContextValue["login"] = (data) => {
     const { email, fullName, tokens } = data;
+
     if (tokens?.access) {
       localStorage.setItem("accessToken", tokens.access);
+
+      // Detect account replacement: same email, new user_id (account was deleted & re-created)
+      const newUserId = decodeJwtUserId(tokens.access);
+      const storedUserId = localStorage.getItem("userId");
+      if (newUserId !== null) {
+        if (storedUserId && String(newUserId) !== storedUserId) {
+          clearUserLocalCache();
+        }
+        localStorage.setItem("userId", String(newUserId));
+      }
     }
-    if (tokens?.refresh) {
-      localStorage.setItem("refreshToken", tokens.refresh);
-    }
+
+    if (tokens?.refresh) localStorage.setItem("refreshToken", tokens.refresh);
     localStorage.setItem("userEmail", email);
     if (fullName) {
       localStorage.setItem("userFullName", fullName);
@@ -137,20 +226,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser({ email, fullName });
   };
 
-  const value: AuthContextValue = {
-    user,
-    isAuthenticated: !!user,
-    login,
-    logout,
-  };
+  const value: AuthContextValue = { user, isAuthenticated: !!user, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextValue => {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 };
