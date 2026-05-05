@@ -626,6 +626,21 @@ const LessonViewer = () => {
     navigate(`/courses/${slug}/quiz/${gateQuizId}`, { replace: true });
   }, [slug, lessonId, course, progressLoaded, completedLessonIds, isStaff, navigate]);
 
+  // These must stay above early-returns so hook count is stable across renders
+  const quizScoreData = useMemo(() => {
+    if (!slug || !lessonId) return null;
+    const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
+    const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
+    const resolvedKey = `quiz_${slug}_${resolvedId}`;
+    const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
+    return { score, hasScore: score !== null };
+  }, [slug, lessonId, lessonContent?.quiz]);
+
+  const isQuizLesson = useMemo(() => {
+    return Boolean(lessonContent?.quiz) ||
+      Boolean(currentLesson?.title.toLowerCase().includes('quiz'));
+  }, [lessonContent?.quiz, currentLesson?.title]);
+
   if (!course) {
     console.warn('LessonViewer redirect: course not found, going back to /courses');
     return <Navigate to="/courses" replace />;
@@ -663,7 +678,7 @@ const LessonViewer = () => {
     const targetModuleIndex = course.modules.findIndex((m) =>
       m.lessons.some((l) => l.id === newLessonId),
     );
-    if (targetModuleIndex > 0) {
+    if (!isStaff && targetModuleIndex > 0) {
       const isMovingToDifferentModule = targetModuleIndex !== currentModuleIndex;
 
       if (isMovingToDifferentModule) {
@@ -760,22 +775,6 @@ const LessonViewer = () => {
       setMarkingComplete(false);
     }
   };
-
-  // Memoized quiz score data to fix INP performance issue
-  const quizScoreData = useMemo(() => {
-    if (!slug || !lessonId) return null;
-    const rawKey = `quiz_${slug}_${lessonContent?.quiz || lessonId}`;
-    const resolvedId = resolveQuizStorageId(lessonContent?.quiz || lessonId || "");
-    const resolvedKey = `quiz_${slug}_${resolvedId}`;
-    const score = localStorage.getItem(rawKey) ?? localStorage.getItem(resolvedKey);
-    return { score, hasScore: score !== null };
-  }, [slug, lessonId, lessonContent?.quiz]);
-
-  // Memoized quiz lesson detection — rely solely on lesson title
-  const isQuizLesson = useMemo(() => {
-    return Boolean(lessonContent?.quiz) ||
-      Boolean(currentLesson?.title.toLowerCase().includes('quiz'));
-  }, [lessonContent?.quiz, currentLesson?.title]);
 
   // Parse markdown-like content to JSX
   const renderContent = (content: string) => {
