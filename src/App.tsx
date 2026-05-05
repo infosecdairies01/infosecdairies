@@ -33,6 +33,7 @@ import CourseCheckout from "./pages/CourseCheckout";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import GoogleOnboarding from "./pages/GoogleOnboarding";
+import CookieConsent from "./components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <CookieConsent />
         <AuthProvider>
           <BrowserRouter>
             <Routes>
