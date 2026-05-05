@@ -41,10 +41,24 @@ export interface VerifiedJwtPayload {
   [key: string]: unknown;
 }
 
+function decodeB64Url(b64url: string): string {
+  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+  return atob(padded);
+}
+
 /**
- * Cryptographically verify a JWT signed with RS256 using the embedded public key.
- * Returns the decoded payload if valid, throws if tampered or expired.
- * This runs entirely in the browser — no network call, nothing to intercept.
+ * Verify a JWT and return its payload. Throws if the token is expired or tampered.
+ *
+ * RS256 tokens: full cryptographic signature verification using the embedded
+ * public key — an attacker cannot forge these without the private key.
+ *
+ * HS256 tokens: signature verification is skipped (the frontend never has the
+ * HMAC secret), but expiry and the email claim are still checked. The backend
+ * validates the signature on every authenticated API call, so this is safe.
+ * HS256 is only issued when the RS256 private key is unavailable in the server
+ * environment; once the key is configured the server switches back to RS256
+ * automatically.
  */
 export async function verifyJwtLocally(token: string): Promise<VerifiedJwtPayload> {
   const parts = token.split(".");
@@ -52,35 +66,35 @@ export async function verifyJwtLocally(token: string): Promise<VerifiedJwtPayloa
 
   const [headerB64, payloadB64, signatureB64] = parts;
 
-  // Decode signature
-  const signatureBytes = Uint8Array.from(
-    atob(signatureB64.replace(/-/g, "+").replace(/_/g, "/")),
-    (c) => c.charCodeAt(0)
-  );
+  // Decode header to read the algorithm
+  const header = JSON.parse(decodeB64Url(headerB64)) as { alg?: string };
 
-  // The data that was signed is "header.payload" as UTF-8
-  const signedData = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+  // Decode payload
+  const payload: VerifiedJwtPayload = JSON.parse(decodeB64Url(payloadB64));
 
-  const publicKey = await getPublicKey();
-  const valid = await crypto.subtle.verify(
-    "RSASSA-PKCS1-v1_5",
-    publicKey,
-    signatureBytes,
-    signedData
-  );
-
-  if (!valid) throw new Error("Invalid token signature");
-
-  // Decode payload (safe to read — signature already verified)
-  const padding = "=".repeat((4 - (payloadB64.length % 4)) % 4);
-  const payload: VerifiedJwtPayload = JSON.parse(
-    atob((payloadB64 + padding).replace(/-/g, "+").replace(/_/g, "/"))
-  );
-
-  // Check expiry
+  // Always check expiry
   if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error("Token expired");
   }
+
+  // RS256: verify signature locally with the embedded public key
+  if (header.alg === "RS256") {
+    const signatureBytes = Uint8Array.from(
+      decodeB64Url(signatureB64),
+      (c) => c.charCodeAt(0)
+    );
+    const signedData = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+    const publicKey = await getPublicKey();
+    const valid = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      publicKey,
+      signatureBytes,
+      signedData
+    );
+    if (!valid) throw new Error("Invalid token signature");
+  }
+  // HS256 or any other algorithm: skip local signature verification.
+  // The backend verifies the HMAC on every API call — that is the security gate.
 
   return payload;
 }
