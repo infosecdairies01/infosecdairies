@@ -10,6 +10,7 @@ export interface LessonContent {
   courseId: string;
   title: string;
   content: string;
+  quiz?: string;
   keyTakeaways?: string[];
   practicalExercise?: {
     title: string;

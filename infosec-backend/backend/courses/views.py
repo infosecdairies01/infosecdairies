@@ -149,7 +149,7 @@ def lesson_progress(request, slug):
     return Response(serializer.data)
 
 
-_LESSON_ID_RE = _re.compile(r"^[\d]+\.[\d]+$|^[a-z0-9_-]{1,60}$")
+_LESSON_ID_RE = _re.compile(r"^[a-z0-9_-]*[\d]+\.[\d]+$|^[a-z0-9_-]{1,60}$|^[\d]+\.[\d]+$")
 
 
 @api_view(["POST"])

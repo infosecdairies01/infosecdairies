@@ -355,43 +355,37 @@ const CourseDetail = () => {
 
     const fetchProgress = async () => {
       try {
-        let backendIds: string[] = [];
-
-        if (accessToken) {
-          const res = await fetch(apiUrl(`/api/courses/${slug}/progress/`), {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
-
-          if (res.status === 401) {
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            localStorage.removeItem("userEmail");
-            navigate("/auth");
-            return;
-          }
-
-          if (res.ok) {
-            const data: any[] = await res.json();
-            backendIds = data
-              .map((item) =>
-                item && item.lesson_id != null ? String(item.lesson_id) : null,
-              )
-              .filter((id: string | null): id is string => Boolean(id));
-            
-            // If backend has no progress, clear localStorage to prevent stale data
-            if (backendIds.length === 0) {
-              const completedKey = `completed_lessons_${slug}`;
-              localStorage.removeItem(completedKey);
-            }
-          }
+        if (!accessToken) {
+          setCompletedLessonIds([]);
+          return;
         }
 
-        const completedKey = `completed_lessons_${slug}`;
-        const localIds = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
-        const merged = Array.from(new Set([...(backendIds || []), ...(localIds || [])]));
-        setCompletedLessonIds(merged);
+        const res = await fetch(apiUrl(`/api/courses/${slug}/progress/`), {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("userEmail");
+          navigate("/auth");
+          return;
+        }
+
+        if (res.ok) {
+          const data: any[] = await res.json();
+          const backendIds = data
+            .map((item) =>
+              item && item.lesson_id != null ? String(item.lesson_id) : null,
+            )
+            .filter((id: string | null): id is string => Boolean(id));
+          
+          setCompletedLessonIds(backendIds);
+        } else {
+          setCompletedLessonIds([]);
+        }
       } catch {
         // best-effort; keep existing state on failure
       }
