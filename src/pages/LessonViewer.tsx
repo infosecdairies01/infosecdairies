@@ -518,40 +518,42 @@ const LessonViewer = () => {
 
     const fetchProgress = async () => {
       try {
-        let backendIds: string[] = [];
-
-        if (accessToken) {
-          const res = await fetch(apiUrl(`/api/courses/${slug}/progress/`), {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
-
-          if (res.status === 401) {
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            localStorage.removeItem("userEmail");
-            navigate("/auth");
-            return;
-          }
-
-          if (res.ok) {
-            const data: any[] = await res.json();
-            backendIds = data
-              .map((item) =>
-                item && item.lesson_id != null ? String(item.lesson_id) : null,
-              )
-              .filter((id: string | null): id is string => Boolean(id));
-          }
+        if (!accessToken) {
+          setCompletedLessonIds([]);
+          setProgressLoaded(true);
+          return;
         }
 
-        const completedKey = `completed_lessons_${slug}`;
-        const localIds = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
-        const merged = Array.from(new Set([...(backendIds || []), ...(localIds || [])]));
-        setCompletedLessonIds(merged);
+        const res = await fetch(apiUrl(`/api/courses/${slug}/progress/`), {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("userEmail");
+          navigate("/auth");
+          return;
+        }
+
+        if (res.ok) {
+          const data: any[] = await res.json();
+          const backendIds = data
+            .map((item) =>
+              item && item.lesson_id != null ? String(item.lesson_id) : null,
+            )
+            .filter((id: string | null): id is string => Boolean(id));
+          
+          setCompletedLessonIds(backendIds);
+        } else {
+          setCompletedLessonIds([]);
+        }
+        
         setProgressLoaded(true);
       } catch {
-        // best-effort; if it fails, keep existing local state
+        // best-effort; if it fails, keep existing state
         setProgressLoaded(true);
       }
     };
@@ -566,6 +568,55 @@ const LessonViewer = () => {
       setIsCompleted(false);
     }
   }, [currentLesson?.id, completedLessonIds]);
+
+  const markLessonComplete = async (): Promise<boolean> => {
+    if (!slug || !lessonId || markingComplete || isCompleted) return false;
+
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      navigate("/auth");
+      return false;
+    }
+
+    try {
+      setMarkingComplete(true);
+
+      const res = await fetch(apiUrl(`/api/courses/${slug}/lessons/${lessonId}/complete/`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userEmail");
+        navigate("/auth");
+        return false;
+      }
+
+      if (!res.ok) {
+        return false;
+      }
+
+      setIsCompleted(true);
+      setCompletedLessonIds((prev) =>
+        prev.includes(lessonId) ? prev : [...prev, lessonId]
+      );
+      
+      if (course && currentLesson) {
+        logActivity('lesson', currentLesson.title, course.title);
+      }
+      
+      return true;
+    } catch (err) {
+      return false;
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
 
   useEffect(() => {
     if (!isCourseProgressEnabled || !currentLesson) return;
@@ -725,55 +776,6 @@ const LessonViewer = () => {
 
     navigate(`/courses/${slug}/lesson/${newLessonId}`);
     return true;
-  };
-
-  const markLessonComplete = async (): Promise<boolean> => {
-    if (!slug || !lessonId || markingComplete || isCompleted) return false;
-
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      navigate("/auth");
-      return false;
-    }
-
-    try {
-      setMarkingComplete(true);
-
-      const res = await fetch(apiUrl(`/api/courses/${slug}/lessons/${lessonId}/complete/`), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("userEmail");
-        navigate("/auth");
-        return false;
-      }
-
-      if (!res.ok) {
-        return false;
-      }
-
-      setIsCompleted(true);
-      setCompletedLessonIds((prev) =>
-        prev.includes(lessonId) ? prev : [...prev, lessonId]
-      );
-      
-      if (course && currentLesson) {
-        logActivity('lesson', currentLesson.title, course.title);
-      }
-      
-      return true;
-    } catch (err) {
-      return false;
-    } finally {
-      setMarkingComplete(false);
-    }
   };
 
   // Parse markdown-like content to JSX
