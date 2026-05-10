@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Phone, Clock, Users, Calendar, ChevronRight, CheckCircle2, BookOpen, Target, GraduationCap, Send, Loader2 } from "lucide-react";
+import { Clock, Users, Calendar, ChevronRight, CheckCircle2, BookOpen, Target, GraduationCap, Send, Loader2 } from "lucide-react";
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -128,14 +128,6 @@ const LiveCourseDetail = () => {
               <p className="text-sm text-muted-foreground uppercase tracking-wider">Course Fee</p>
               <p className="text-3xl md:text-4xl font-bold text-primary">{course.fee}</p>
             </div>
-            <div className="hidden md:block w-px h-12 bg-border" />
-            <a 
-              href="tel:+917337489944" 
-              className="flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/25"
-            >
-              <Phone className="w-5 h-5" />
-              <span className="font-semibold">Call: +91 7337489944</span>
-            </a>
           </div>
         </div>
       </section>
@@ -296,20 +288,6 @@ const LiveCourseDetail = () => {
                     {loading ? "Submitting..." : "Submit Inquiry"}
                   </Button>
                 </form>
-
-                <div className="mt-6 pt-6 border-t border-border">
-                  <p className="text-sm text-muted-foreground mb-3">Or reach us directly:</p>
-                  <a 
-                    href="tel:+917337489944" 
-                    className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors"
-                  >
-                    <Phone className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="font-semibold text-primary">+91 7337489944</p>
-                      <p className="text-xs text-muted-foreground">Available Mon-Sat, 10AM-7PM</p>
-                    </div>
-                  </a>
-                </div>
 
                 <div className="mt-6 p-4 rounded-lg bg-muted/30">
                   <h4 className="font-semibold mb-2">Course Fee</h4>
