@@ -568,7 +568,7 @@ const LessonViewer = () => {
   }, [currentLesson?.id, completedLessonIds]);
 
   useEffect(() => {
-    if (!isCourseProgressEnabled || !currentLesson) return;
+    if (!isCourseProgressEnabled || !currentLesson || !progressLoaded) return;
     // Never auto-complete quiz lessons — completion is handled by QuizPage on pass
     if (currentLesson.title.toLowerCase().includes('quiz')) return;
 
@@ -579,7 +579,7 @@ const LessonViewer = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [currentLesson?.id, isCourseProgressEnabled]);
+  }, [currentLesson?.id, isCourseProgressEnabled, progressLoaded]);
 
   // ─── Gate check: wait for progress to load before evaluating ───
   useEffect(() => {
@@ -763,7 +763,13 @@ const LessonViewer = () => {
       setCompletedLessonIds((prev) =>
         prev.includes(lessonId) ? prev : [...prev, lessonId]
       );
-      
+
+      const completedKey = `completed_lessons_${slug}`;
+      const stored = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
+      if (!stored.includes(lessonId)) {
+        localStorage.setItem(completedKey, JSON.stringify([...stored, lessonId]));
+      }
+
       if (course && currentLesson) {
         logActivity('lesson', currentLesson.title, course.title);
       }
