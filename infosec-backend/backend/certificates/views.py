@@ -27,6 +27,18 @@ def _rate_limit(key, limit, period_seconds):
     return False
 
 
+def _completion_date_for(user, course):
+    """Return ISO date string of when user last completed a lesson/quiz for this course."""
+    from courses.models import LessonProgress, QuizScore
+    lp = LessonProgress.objects.filter(user=user, course=course).order_by('-completed_at').first()
+    if lp:
+        return str(lp.completed_at.date())
+    qs = QuizScore.objects.filter(user=user, course_slug=course.slug, passed=True).order_by('-submitted_at').first()
+    if qs:
+        return str(qs.submitted_at.date())
+    return str(timezone.now().date())
+
+
 @api_view(["GET"])
 def lookup_certificate(request, cert_id):
     """Lookup certificate by ID."""
@@ -41,13 +53,50 @@ def lookup_certificate(request, cert_id):
             'studentName': certificate.student_name,
             'courseName': certificate.course_name,
             'issueDate': certificate.issue_date,
-            'verified': True
+            'verified': True,
         })
     except Certificate.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Certificate not found'}, status=404)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_certificate(request, slug):
+    """
+    Return this user's certificate for the given course slug (if it exists),
+    or the server-computed completion date + current name (for first-time generation).
+    Always returns studentName and issueDate so the client can draw the canvas
+    with the correct frozen values.
+    """
+    from courses.models import Course
+
+    ip = (request.META.get("HTTP_X_FORWARDED_FOR", "") or request.META.get("REMOTE_ADDR", "unknown")).split(",")[0].strip()
+    if _rate_limit(f"cert_my:{ip}:{request.user.id}", 60, 3600):
+        return JsonResponse({"error": "Rate limit exceeded."}, status=429)
+
+    # If cert already exists, return the frozen stored values
+    existing = Certificate.objects.filter(user=request.user, course_slug=slug).first()
+    if existing:
         return JsonResponse({
-            'success': False,
-            'error': 'Certificate not found'
-        }, status=404)
+            'exists': True,
+            'certId': existing.cert_id,
+            'studentName': existing.student_name,
+            'issueDate': existing.issue_date,
+            'courseName': existing.course_name,
+        })
+
+    # Cert not yet generated — return completion date so client uses the right date
+    try:
+        course = Course.objects.get(slug=slug, is_published=True)
+        completion_date = _completion_date_for(request.user, course)
+    except Course.DoesNotExist:
+        completion_date = str(timezone.now().date())
+
+    return JsonResponse({
+        'exists': False,
+        'studentName': request.user.get_full_name() or request.user.email,
+        'issueDate': completion_date,
+    })
 
 
 @api_view(["POST"])
@@ -58,34 +107,43 @@ def upload_certificate(request):
     - user_email in the body is IGNORED — always uses the authenticated user's email.
     - course_slug must be a course the user is enrolled in and has paid for.
     - User must have at least one passing QuizScore for the course.
+    - If a cert already exists for this user+course, returns the existing one (no re-upload).
+    - issue_date is taken from server-side completion records, never from the client.
+    - student_name is frozen from the DB at generation time (username changes have no effect).
     """
-    from courses.models import Course, Enrollment
-    from courses.models import QuizScore
+    from courses.models import Course, Enrollment, QuizScore
 
-    # Per-user rate limit: max 5 certificate uploads per hour
     if _rate_limit(f"cert_upload:{request.user.id}", 5, 3600):
         return JsonResponse({"error": "Too many certificate requests. Try again later."}, status=429)
 
     image_data = request.data.get('image')
     course_slug = (request.data.get('course_slug') or '').strip()
-    # Always use the authenticated user's email — never trust the request body for this
     user_email = request.user.email
 
     if not image_data:
         return JsonResponse({'error': 'No image data provided'}, status=400)
-
     if not course_slug:
         return JsonResponse({'error': 'course_slug is required'}, status=400)
 
     FREE_SLUG = "network-fundamentals"
 
-    # ── Verify the course exists ──
+    # If cert already exists for this user+course, return it — no re-upload
+    existing = Certificate.objects.filter(user=request.user, course_slug=course_slug).first()
+    if existing:
+        return JsonResponse({
+            'success': True,
+            'cert_id': existing.cert_id,
+            'issue_date': existing.issue_date,
+            'student_name': existing.student_name,
+            'already_exists': True,
+        })
+
     try:
         course = Course.objects.get(slug=course_slug, is_published=True)
     except Course.DoesNotExist:
         return JsonResponse({'error': 'Course not found'}, status=404)
 
-    # ── Verify paid enrollment (free course exempt) ──
+    # Verify paid enrollment (free course exempt)
     if course_slug != FREE_SLUG:
         enrolled = Enrollment.objects.filter(
             user=request.user, course=course, is_paid=True
@@ -96,7 +154,7 @@ def upload_certificate(request):
                 status=403,
             )
 
-    # ── Verify server-side quiz completion ──
+    # Verify server-side quiz completion
     has_passing_score = QuizScore.objects.filter(
         user=request.user,
         course_slug=course_slug,
@@ -108,7 +166,13 @@ def upload_certificate(request):
             status=403,
         )
 
-    # ── Process the image ──
+    # Completion date from server records — never trust the client
+    completion_date = _completion_date_for(request.user, course)
+
+    # Freeze name at generation time — username changes after this have no effect
+    frozen_name = request.user.get_full_name() or user_email
+
+    # Process image
     try:
         if 'base64,' in image_data:
             image_data = image_data.split('base64,')[1]
@@ -129,16 +193,17 @@ def upload_certificate(request):
             public_url = f"/{public_url}"
         public_url = f"{request.scheme}://{request.get_host()}{public_url}"
 
-    # ── Create a verifiable Certificate record ──
     cert_id = uuid.uuid4().hex[:16]
     Certificate.objects.create(
         cert_id=cert_id,
-        student_name=request.user.get_full_name() or user_email,
+        user=request.user,
+        course_slug=course_slug,
+        student_name=frozen_name,
         course_name=course.title,
-        issue_date=str(timezone.now().date()),
+        issue_date=completion_date,
+        image_url=public_url,
     )
 
-    # ── Send certificate email ──
     try:
         subject = "Your certificate is ready"
         text_body, html_body = get_certificate_template(
@@ -155,6 +220,8 @@ def upload_certificate(request):
         'url': public_url,
         'path': path,
         'cert_id': cert_id,
+        'issue_date': completion_date,
+        'student_name': frozen_name,
     })
 
 
