@@ -52,16 +52,16 @@ const courseBackgrounds: Record<string, string> = {
 };
 
 const certificateTemplatesBySlug: Record<string, string> = {
-  "blue-team-soc-fundamentals": "/certs/blue team soc analyst.jpeg",
-  "detection-engineering-basics": "/certs/Detection Engineering Basics course copy.jpg.jpeg",
-  "incident-response-fundamentals": "/certs/Incident Response course copy.jpg.jpeg",
-  "log-analysis-for-beginners": "/certs/Log Analysis for Beginners course copy.jpg.jpeg",
-  "malware-analysis-fundamentals": "/certs/Malware Analysis Fundamentals Courses copy.jpg.jpeg",
-  "network-fundamentals": "/certs/network fundaments.jpeg",
-  "network-security-monitoring": "/certs/Network Security Monitoring course copy.jpg.jpeg",
-  "siem-fundamentals": "/certs/SIEM Fundamentals course copy.jpg.jpeg",
-  "soc-analyst-path": "/certs/soc analyst learing path.jpeg",
-  "threat-hunting-fundamentals": "/certs/Threat Hunting Fundamentals course copy.jpg.jpeg",
+  "blue-team-soc-fundamentals": "/certs/cc/blue team soc analyst.png",
+  "detection-engineering-basics": "/certs/cc/Detection Engineering Basics course copy.png",
+  "incident-response-fundamentals": "/certs/cc/Incident Response course copy.png",
+  "log-analysis-for-beginners": "/certs/cc/Log Analysis for Beginners course copy.png",
+  "malware-analysis-fundamentals": "/certs/cc/Malware Analysis Fundamentals Courses copy.png",
+  "network-fundamentals": "/certs/cc/network fundaments.png",
+  "network-security-monitoring": "/certs/cc/Network Security Monitoring course copy.jpg",
+  "siem-fundamentals": "/certs/cc/SIEM Fundamentals course copy.jpg",
+  "soc-analyst-path": "/certs/cc/soc analyst learing path.png",
+  "threat-hunting-fundamentals": "/certs/cc/Threat Hunting Fundamentals course copy.png",
 };
 
 const wrapText = (
