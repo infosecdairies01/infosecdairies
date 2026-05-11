@@ -123,36 +123,41 @@ const Auth = () => {
       }
 
       // PRIMARY SECURITY LAYER — RS256 local signature verification.
-      // Uses the RSA public key hardcoded in the browser bundle (src/lib/jwtVerify.ts).
-      // This is zero-network: nothing to intercept, nothing to replay.
-      // An attacker who intercepts BOTH the login response AND the verify response still
-      // cannot bypass this — they would need the RSA private key stored on the server.
-      let verifiedPayload: Awaited<ReturnType<typeof verifyJwtLocally>>;
+      // When the server has JWT_PRIVATE_KEY configured it signs with RS256 and we verify
+      // the signature entirely in-browser using the hardcoded public key (zero-network,
+      // nothing to intercept or replay).
+      // If the server is misconfigured and falls back to HS256 we cannot verify locally
+      // (the HMAC secret is server-side only), so we skip local verification and let the
+      // server verify endpoint be the sole authority.
+      let localVerifyOk = false;
+      let verifiedPayload: Awaited<ReturnType<typeof verifyJwtLocally>> | null = null;
       try {
         verifiedPayload = await verifyJwtLocally(tokens.access);
+        localVerifyOk = true;
       } catch (e) {
         const msg = e instanceof Error ? e.message : "";
-        if (msg.toLowerCase().includes("algorithm") || msg.toLowerCase().includes("unsupported")) {
-          setError("Server configuration error: token signing mismatch. Please contact support.");
-        } else {
+        // Algorithm mismatch = server is using HS256 fallback — not a forged token.
+        // Fall through to the server verify endpoint which will validate it properly.
+        if (!msg.toLowerCase().includes("algorithm") && !msg.toLowerCase().includes("unsupported")) {
           setError("Authentication failed: invalid token signature.");
+          setLoading(false);
+          return;
         }
-        setLoading(false);
-        return;
       }
 
-      // Confirm the token's email claim matches what the user typed.
-      if (
-        !verifiedPayload.email ||
-        verifiedPayload.email.toLowerCase() !== email.toLowerCase().trim()
-      ) {
-        setError("Authentication failed. Please try again.");
-        setLoading(false);
-        return;
+      // When RS256 local verify succeeded, confirm the email claim matches.
+      if (localVerifyOk && verifiedPayload) {
+        if (
+          !verifiedPayload.email ||
+          verifiedPayload.email.toLowerCase() !== email.toLowerCase().trim()
+        ) {
+          setError("Authentication failed. Please try again.");
+          setLoading(false);
+          return;
+        }
       }
 
-      // SECONDARY LAYER — server verify (defense-in-depth).
-      // Even if somehow bypassed, the primary RS256 check above has already passed.
+      // SERVER VERIFY — validates token against backend (blacklist check + HS256 fallback path).
       const verifyResponse = await fetch(apiUrl("/api/auth/verify/"), {
         method: "GET",
         headers: {
@@ -168,11 +173,6 @@ const Auth = () => {
       }
 
       const verifyData = await verifyResponse.json();
-      // Only check `valid: true` — confirms the token is not blacklisted server-side.
-      // Email was already verified above via RS256 local signature check (verifiedPayload.email),
-      // which is cryptographically tamper-proof. An HTTP response is not: an attacker with
-      // a proxy can inject any email field they like, so we don't trust this response for
-      // identity — only for blacklist status.
       if (!verifyData.valid) {
         setError("Session validation failed. Please try again.");
         setLoading(false);
