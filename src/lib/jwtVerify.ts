@@ -77,24 +77,26 @@ export async function verifyJwtLocally(token: string): Promise<VerifiedJwtPayloa
     throw new Error("Token expired");
   }
 
-  // RS256: verify signature locally with the embedded public key
-  if (header.alg === "RS256") {
-    const signatureBytes = Uint8Array.from(
-      decodeB64Url(signatureB64),
-      (c) => c.charCodeAt(0)
-    );
-    const signedData = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
-    const publicKey = await getPublicKey();
-    const valid = await crypto.subtle.verify(
-      "RSASSA-PKCS1-v1_5",
-      publicKey,
-      signatureBytes,
-      signedData
-    );
-    if (!valid) throw new Error("Invalid token signature");
+  // Only RS256 is accepted. Allowing HS256/none lets an attacker forge a token with
+  // any payload (we can't verify HMAC without the server secret), bypass the local
+  // check, and access all static lesson/quiz content without a paid account.
+  if (header.alg !== "RS256") {
+    throw new Error(`Unsupported token algorithm: ${header.alg}. Only RS256 is accepted.`);
   }
-  // HS256 or any other algorithm: skip local signature verification.
-  // The backend verifies the HMAC on every API call — that is the security gate.
+
+  const signatureBytes = Uint8Array.from(
+    decodeB64Url(signatureB64),
+    (c) => c.charCodeAt(0)
+  );
+  const signedData = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+  const publicKey = await getPublicKey();
+  const valid = await crypto.subtle.verify(
+    "RSASSA-PKCS1-v1_5",
+    publicKey,
+    signatureBytes,
+    signedData
+  );
+  if (!valid) throw new Error("Invalid token signature");
 
   return payload;
 }
