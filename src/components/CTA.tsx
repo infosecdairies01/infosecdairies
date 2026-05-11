@@ -53,7 +53,7 @@ const CTA = () => {
               asChild
             >
               <a
-                href="https://www.linkedin.com/company/blueteamers"
+                href="https://www.linkedin.com/company/blueteamers/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
