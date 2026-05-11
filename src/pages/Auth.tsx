@@ -158,9 +158,12 @@ const Auth = () => {
       }
 
       const verifyData = await verifyResponse.json();
+      // Require both `valid: true` AND a matching email — an attacker who modifies the
+      // response to `{"valid": true}` (no email field) must still be rejected.
       if (
         !verifyData.valid ||
-        (verifyData.email && verifyData.email.toLowerCase() !== email.toLowerCase().trim())
+        !verifyData.email ||
+        verifyData.email.toLowerCase() !== email.toLowerCase().trim()
       ) {
         setError("Session validation failed. Please try again.");
         setLoading(false);
