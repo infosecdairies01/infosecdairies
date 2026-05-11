@@ -158,13 +158,12 @@ const Auth = () => {
       }
 
       const verifyData = await verifyResponse.json();
-      // Require both `valid: true` AND a matching email — an attacker who modifies the
-      // response to `{"valid": true}` (no email field) must still be rejected.
-      if (
-        !verifyData.valid ||
-        !verifyData.email ||
-        verifyData.email.toLowerCase() !== email.toLowerCase().trim()
-      ) {
+      // Only check `valid: true` — confirms the token is not blacklisted server-side.
+      // Email was already verified above via RS256 local signature check (verifiedPayload.email),
+      // which is cryptographically tamper-proof. An HTTP response is not: an attacker with
+      // a proxy can inject any email field they like, so we don't trust this response for
+      // identity — only for blacklist status.
+      if (!verifyData.valid) {
         setError("Session validation failed. Please try again.");
         setLoading(false);
         return;
