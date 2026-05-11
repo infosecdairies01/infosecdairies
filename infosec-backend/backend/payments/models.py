@@ -37,12 +37,13 @@ class PromoCode(models.Model):
         if self.max_uses > 0 and self.current_uses >= self.max_uses:
             return False
 
-        # Global promo code (course_slug == "all") is reusable for the same user,
-        # but only once per target course/bundle.
+        # Global promo code (course_slug == "all"): one use per user, period.
+        # Checking only against the target course would let an attacker apply
+        # the same code to every course individually and enroll in all of them free.
         if self.course_slug == "all":
             if not target_course_slug:
                 return False
-            if PromoCodeUsage.objects.filter(code=self.code, course_slug=target_course_slug, user=user).exists():
+            if PromoCodeUsage.objects.filter(code=self.code, user=user).exists():
                 return False
         else:
             # Check if user already used this code for this promo row

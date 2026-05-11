@@ -197,7 +197,7 @@ const About = () => {
               Share knowledge, ask questions, and stay updated with the latest in defensive security.
             </p>
             <a
-              href="https://www.linkedin.com/company/blueteamers"
+              href="https://www.linkedin.com/company/blueteamers/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"

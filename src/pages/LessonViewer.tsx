@@ -619,7 +619,7 @@ const LessonViewer = () => {
   };
 
   useEffect(() => {
-    if (!isCourseProgressEnabled || !currentLesson) return;
+    if (!isCourseProgressEnabled || !currentLesson || !progressLoaded) return;
     // Never auto-complete quiz lessons — completion is handled by QuizPage on pass
     if (currentLesson.title.toLowerCase().includes('quiz')) return;
 
@@ -630,7 +630,7 @@ const LessonViewer = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [currentLesson?.id, isCourseProgressEnabled]);
+  }, [currentLesson?.id, isCourseProgressEnabled, progressLoaded]);
 
   // ─── Gate check: wait for progress to load before evaluating ───
   useEffect(() => {
@@ -778,6 +778,64 @@ const LessonViewer = () => {
     return true;
   };
 
+<<<<<<< HEAD
+=======
+  const markLessonComplete = async (): Promise<boolean> => {
+    if (!slug || !lessonId || markingComplete || isCompleted) return false;
+
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      navigate("/auth");
+      return false;
+    }
+
+    try {
+      setMarkingComplete(true);
+
+      const res = await fetch(apiUrl(`/api/courses/${slug}/lessons/${lessonId}/complete/`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userEmail");
+        navigate("/auth");
+        return false;
+      }
+
+      if (!res.ok) {
+        return false;
+      }
+
+      setIsCompleted(true);
+      setCompletedLessonIds((prev) =>
+        prev.includes(lessonId) ? prev : [...prev, lessonId]
+      );
+
+      const completedKey = `completed_lessons_${slug}`;
+      const stored = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
+      if (!stored.includes(lessonId)) {
+        localStorage.setItem(completedKey, JSON.stringify([...stored, lessonId]));
+      }
+
+      if (course && currentLesson) {
+        logActivity('lesson', currentLesson.title, course.title);
+      }
+      
+      return true;
+    } catch (err) {
+      return false;
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
+
+>>>>>>> a163dd77dfb4b3e3481b85decaa0a8cdedf1b2ab
   // Parse markdown-like content to JSX
   const renderContent = (content: string) => {
     const lines = content.trim().split('\n');

@@ -25,6 +25,7 @@ const Auth = () => {
     const value = password || "";
     return {
       minLen: value.length >= 10,
+      maxLen: value.length <= 15 && value.length > 0,
       upper: /[A-Z]/.test(value),
       lower: /[a-z]/.test(value),
       digit: /\d/.test(value),
@@ -54,6 +55,10 @@ const Auth = () => {
     if (!isLogin) {
       if (!firstName || !lastName) {
         setError("First name and last name are required for sign up.");
+        return;
+      }
+      if (password.length > 15) {
+        setError("Password must be at most 15 characters.");
         return;
       }
       if (password !== confirmPassword) {
@@ -118,31 +123,41 @@ const Auth = () => {
       }
 
       // PRIMARY SECURITY LAYER — RS256 local signature verification.
-      // Uses the RSA public key hardcoded in the browser bundle (src/lib/jwtVerify.ts).
-      // This is zero-network: nothing to intercept, nothing to replay.
-      // An attacker who intercepts BOTH the login response AND the verify response still
-      // cannot bypass this — they would need the RSA private key stored on the server.
-      let verifiedPayload: Awaited<ReturnType<typeof verifyJwtLocally>>;
+      // When the server has JWT_PRIVATE_KEY configured it signs with RS256 and we verify
+      // the signature entirely in-browser using the hardcoded public key (zero-network,
+      // nothing to intercept or replay).
+      // If the server is misconfigured and falls back to HS256 we cannot verify locally
+      // (the HMAC secret is server-side only), so we skip local verification and let the
+      // server verify endpoint be the sole authority.
+      let localVerifyOk = false;
+      let verifiedPayload: Awaited<ReturnType<typeof verifyJwtLocally>> | null = null;
       try {
         verifiedPayload = await verifyJwtLocally(tokens.access);
-      } catch {
-        setError("Authentication failed: invalid token signature.");
-        setLoading(false);
-        return;
+        localVerifyOk = true;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "";
+        // Algorithm mismatch = server is using HS256 fallback — not a forged token.
+        // Fall through to the server verify endpoint which will validate it properly.
+        if (!msg.toLowerCase().includes("algorithm") && !msg.toLowerCase().includes("unsupported")) {
+          setError("Authentication failed: invalid token signature.");
+          setLoading(false);
+          return;
+        }
       }
 
-      // Confirm the token's email claim matches what the user typed.
-      if (
-        !verifiedPayload.email ||
-        verifiedPayload.email.toLowerCase() !== email.toLowerCase().trim()
-      ) {
-        setError("Authentication failed. Please try again.");
-        setLoading(false);
-        return;
+      // When RS256 local verify succeeded, confirm the email claim matches.
+      if (localVerifyOk && verifiedPayload) {
+        if (
+          !verifiedPayload.email ||
+          verifiedPayload.email.toLowerCase() !== email.toLowerCase().trim()
+        ) {
+          setError("Authentication failed. Please try again.");
+          setLoading(false);
+          return;
+        }
       }
 
-      // SECONDARY LAYER — server verify (defense-in-depth).
-      // Even if somehow bypassed, the primary RS256 check above has already passed.
+      // SERVER VERIFY — validates token against backend (blacklist check + HS256 fallback path).
       const verifyResponse = await fetch(apiUrl("/api/auth/verify/"), {
         method: "GET",
         headers: {
@@ -158,10 +173,7 @@ const Auth = () => {
       }
 
       const verifyData = await verifyResponse.json();
-      if (
-        !verifyData.valid ||
-        (verifyData.email && verifyData.email.toLowerCase() !== email.toLowerCase().trim())
-      ) {
+      if (!verifyData.valid) {
         setError("Session validation failed. Please try again.");
         setLoading(false);
         return;
@@ -256,6 +268,7 @@ const Auth = () => {
                   placeholder="••••••••"
                   className="bg-background pr-10"
                   value={password}
+                  maxLength={15}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
@@ -277,6 +290,9 @@ const Auth = () => {
                   <div className="space-y-1 text-xs">
                     <div className={passwordRules.minLen ? "text-green-500" : "text-muted-foreground"}>
                       At least 10 characters
+                    </div>
+                    <div className={password.length === 0 ? "text-muted-foreground" : passwordRules.maxLen ? "text-green-500" : "text-red-500"}>
+                      At most 15 characters
                     </div>
                     <div className={passwordRules.upper ? "text-green-500" : "text-muted-foreground"}>
                       One uppercase letter (A-Z)
@@ -305,6 +321,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     className="bg-background pr-10"
                     value={confirmPassword}
+                    maxLength={15}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                   <button

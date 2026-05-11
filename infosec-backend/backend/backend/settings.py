@@ -270,6 +270,23 @@ print(
     file=_sys.stderr, flush=True,
 )
 
+_is_production = bool(
+    config("RAILWAY_PUBLIC_DOMAIN", default="") or
+    config("RAILWAY_ENVIRONMENT", default="") or
+    not config("DEBUG", default=False, cast=bool)
+)
+if not _USE_RS256 and _is_production:
+    print(
+        "\n"
+        "╔══════════════════════════════════════════════════════════════════╗\n"
+        "║  CRITICAL: JWT_PRIVATE_KEY is not set (or is invalid).          ║\n"
+        "║  Falling back to HS256 signing. The frontend requires RS256 and  ║\n"
+        "║  ALL LOGINS WILL FAIL with 'invalid token signature'.            ║\n"
+        "║  Fix: set JWT_PRIVATE_KEY and JWT_PUBLIC_KEY as env vars.        ║\n"
+        "╚══════════════════════════════════════════════════════════════════╝\n",
+        file=_sys.stderr, flush=True,
+    )
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=60),
@@ -339,6 +356,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'accounts.validators.PasswordComplexityValidator',
+    },
+    {
+        'NAME': 'accounts.validators.MaximumLengthValidator',
+        'OPTIONS': {
+            'max_length': 15,
+        },
     },
 ]
 
