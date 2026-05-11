@@ -340,6 +340,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'accounts.validators.PasswordComplexityValidator',
     },
+    {
+        'NAME': 'accounts.validators.MaximumLengthValidator',
+        'OPTIONS': {
+            'max_length': 15,
+        },
+    },
 ]
 
 
