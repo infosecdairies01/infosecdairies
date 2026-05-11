@@ -25,6 +25,7 @@ const Auth = () => {
     const value = password || "";
     return {
       minLen: value.length >= 10,
+      maxLen: value.length <= 15 && value.length > 0,
       upper: /[A-Z]/.test(value),
       lower: /[a-z]/.test(value),
       digit: /\d/.test(value),
@@ -54,6 +55,10 @@ const Auth = () => {
     if (!isLogin) {
       if (!firstName || !lastName) {
         setError("First name and last name are required for sign up.");
+        return;
+      }
+      if (password.length > 15) {
+        setError("Password must be at most 15 characters.");
         return;
       }
       if (password !== confirmPassword) {
@@ -258,6 +263,7 @@ const Auth = () => {
                   placeholder="••••••••"
                   className="bg-background pr-10"
                   value={password}
+                  maxLength={15}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
@@ -279,6 +285,9 @@ const Auth = () => {
                   <div className="space-y-1 text-xs">
                     <div className={passwordRules.minLen ? "text-green-500" : "text-muted-foreground"}>
                       At least 10 characters
+                    </div>
+                    <div className={password.length === 0 ? "text-muted-foreground" : passwordRules.maxLen ? "text-green-500" : "text-red-500"}>
+                      At most 15 characters
                     </div>
                     <div className={passwordRules.upper ? "text-green-500" : "text-muted-foreground"}>
                       One uppercase letter (A-Z)
@@ -307,6 +316,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     className="bg-background pr-10"
                     value={confirmPassword}
+                    maxLength={15}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                   <button
