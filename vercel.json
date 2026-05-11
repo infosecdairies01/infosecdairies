@@ -3,6 +3,7 @@
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/share/(.*)", "destination": "/share/$1" },
+    { "source": "/api/:path*", "destination": "https://api.infosecdairies.io/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
