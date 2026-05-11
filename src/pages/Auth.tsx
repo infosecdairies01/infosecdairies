@@ -130,8 +130,13 @@ const Auth = () => {
       let verifiedPayload: Awaited<ReturnType<typeof verifyJwtLocally>>;
       try {
         verifiedPayload = await verifyJwtLocally(tokens.access);
-      } catch {
-        setError("Authentication failed: invalid token signature.");
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "";
+        if (msg.toLowerCase().includes("algorithm") || msg.toLowerCase().includes("unsupported")) {
+          setError("Server configuration error: token signing mismatch. Please contact support.");
+        } else {
+          setError("Authentication failed: invalid token signature.");
+        }
         setLoading(false);
         return;
       }
