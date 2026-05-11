@@ -22,3 +22,25 @@ class PasswordComplexityValidator:
 
     def get_help_text(self):
         return _("Your password must contain at least one lowercase letter, one uppercase letter, one number, and one symbol.")
+
+
+class MaximumLengthValidator:
+    """Reject passwords longer than max_length characters.
+
+    Plugs into AUTH_PASSWORD_VALIDATORS so it applies everywhere
+    validate_password() is called: registration, password reset, Google onboarding.
+    """
+
+    def __init__(self, max_length=15):
+        self.max_length = max_length
+
+    def validate(self, password, user=None):
+        if password and len(password) > self.max_length:
+            raise ValidationError(
+                _(f"Password must be at most {self.max_length} characters."),
+                code="password_too_long",
+                params={"max_length": self.max_length},
+            )
+
+    def get_help_text(self):
+        return _(f"Your password must contain no more than {self.max_length} characters.")

@@ -379,6 +379,10 @@ const Dashboard = () => {
                       setNameError("Name cannot be empty");
                       return;
                     }
+                    if (/<|>/.test(trimmed)) {
+                      setNameError("Name cannot contain < or > characters.");
+                      return;
+                    }
 
                     const accessToken = localStorage.getItem("accessToken");
                     if (!accessToken) {
@@ -399,7 +403,12 @@ const Dashboard = () => {
                       });
 
                       if (!res.ok) {
-                        setNameError("Could not update name. Please try again.");
+                        try {
+                          const errData = await res.json();
+                          setNameError(errData.detail || "Could not update name. Please try again.");
+                        } catch {
+                          setNameError("Could not update name. Please try again.");
+                        }
                         return;
                       }
 

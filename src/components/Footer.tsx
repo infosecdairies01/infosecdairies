@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="flex flex-col items-center gap-4">
           <div className="flex items-center gap-4">
             <a
-              href="https://www.linkedin.com/company/blueteamers"
+              href="https://www.linkedin.com/company/blueteamers/"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-full bg-muted/50 hover:bg-[#0077B5]/20 transition-colors group"

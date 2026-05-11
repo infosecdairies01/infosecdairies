@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Phone, Clock, Users, Calendar, ChevronRight, CheckCircle2, BookOpen, Target, GraduationCap, Send, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Clock, Users, Calendar, ChevronRight, CheckCircle2, BookOpen, Target, GraduationCap, Send, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getLiveCourseById } from "@/data/liveCourses";
@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { apiUrl } from "@/services/api";
 
 const LiveCourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
   const course = getLiveCourseById(courseId || "");
 
   const [formData, setFormData] = useState({
@@ -20,8 +23,20 @@ const LiveCourseDetail = () => {
     email: "",
     message: ""
   });
+  const [autofilled, setAutofilled] = useState(false);
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.fullName || user.email || "",
+        email: user.email || "",
+      }));
+      setAutofilled(true);
+    }
+  }, [isAuthenticated, user]);
 
   if (!course) {
     navigate("/courses");
@@ -31,13 +46,19 @@ const LiveCourseDetail = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
-      const response = await fetch("/api/leads/create/", {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(apiUrl("/api/leads/create/"), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           course_name: course.title,
           name: formData.name,
@@ -53,7 +74,7 @@ const LiveCourseDetail = () => {
           title: "Inquiry Submitted!",
           description: "We'll contact you shortly to discuss enrollment.",
         });
-        setFormData({ name: "", email: "", message: "" });
+        setFormData(prev => ({ ...prev, message: "" }));
       } else {
         const data = await response.json();
         toast({
@@ -128,14 +149,6 @@ const LiveCourseDetail = () => {
               <p className="text-sm text-muted-foreground uppercase tracking-wider">Course Fee</p>
               <p className="text-3xl md:text-4xl font-bold text-primary">{course.fee}</p>
             </div>
-            <div className="hidden md:block w-px h-12 bg-border" />
-            <a 
-              href="tel:+917337489944" 
-              className="flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/25"
-            >
-              <Phone className="w-5 h-5" />
-              <span className="font-semibold">Call: +91 7337489944</span>
-            </a>
           </div>
         </div>
       </section>
@@ -255,8 +268,14 @@ const LiveCourseDetail = () => {
               <div className="sticky top-24 bg-card/50 backdrop-blur-lg rounded-2xl border border-border p-6">
                 <h3 className="text-xl font-bold mb-2">Enroll Now</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Fill the form below or call us directly for enrollment details.
+                  Fill the form below for enrollment details.
                 </p>
+
+                {autofilled && (
+                  <div className="mb-4 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary">
+                    Details pre-filled from your account
+                  </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
@@ -296,20 +315,6 @@ const LiveCourseDetail = () => {
                     {loading ? "Submitting..." : "Submit Inquiry"}
                   </Button>
                 </form>
-
-                <div className="mt-6 pt-6 border-t border-border">
-                  <p className="text-sm text-muted-foreground mb-3">Or reach us directly:</p>
-                  <a 
-                    href="tel:+917337489944" 
-                    className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors"
-                  >
-                    <Phone className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="font-semibold text-primary">+91 7337489944</p>
-                      <p className="text-xs text-muted-foreground">Available Mon-Sat, 10AM-7PM</p>
-                    </div>
-                  </a>
-                </div>
 
                 <div className="mt-6 p-4 rounded-lg bg-muted/30">
                   <h4 className="font-semibold mb-2">Course Fee</h4>

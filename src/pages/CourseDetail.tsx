@@ -52,16 +52,16 @@ const courseBackgrounds: Record<string, string> = {
 };
 
 const certificateTemplatesBySlug: Record<string, string> = {
-  "blue-team-soc-fundamentals": "/certs/blue team soc analyst.jpeg",
-  "detection-engineering-basics": "/certs/Detection Engineering Basics course copy.jpg.jpeg",
-  "incident-response-fundamentals": "/certs/Incident Response course copy.jpg.jpeg",
-  "log-analysis-for-beginners": "/certs/Log Analysis for Beginners course copy.jpg.jpeg",
-  "malware-analysis-fundamentals": "/certs/Malware Analysis Fundamentals Courses copy.jpg.jpeg",
-  "network-fundamentals": "/certs/network fundaments.jpeg",
-  "network-security-monitoring": "/certs/Network Security Monitoring course copy.jpg.jpeg",
-  "siem-fundamentals": "/certs/SIEM Fundamentals course copy.jpg.jpeg",
-  "soc-analyst-path": "/certs/soc analyst learing path.jpeg",
-  "threat-hunting-fundamentals": "/certs/Threat Hunting Fundamentals course copy.jpg.jpeg",
+  "blue-team-soc-fundamentals": "/certs/cc/blue team soc analyst.png",
+  "detection-engineering-basics": "/certs/cc/Detection Engineering Basics course copy.png",
+  "incident-response-fundamentals": "/certs/cc/Incident Response course copy.png",
+  "log-analysis-for-beginners": "/certs/cc/Log Analysis for Beginners course copy.png",
+  "malware-analysis-fundamentals": "/certs/cc/Malware Analysis Fundamentals Courses copy.png",
+  "network-fundamentals": "/certs/cc/network fundaments.png",
+  "network-security-monitoring": "/certs/cc/Network Security Monitoring course copy.jpg",
+  "siem-fundamentals": "/certs/cc/SIEM Fundamentals course copy.jpg",
+  "soc-analyst-path": "/certs/cc/soc analyst learing path.png",
+  "threat-hunting-fundamentals": "/certs/cc/Threat Hunting Fundamentals course copy.png",
 };
 
 const wrapText = (
@@ -167,6 +167,16 @@ const CourseDetail = () => {
   const [shareModalText, setShareModalText] = useState("");
   const [shareModalUrl, setShareModalUrl] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Frozen cert metadata fetched from server — name/date are locked at generation time.
+  interface CertMeta {
+    exists: boolean;
+    studentName: string;
+    issueDate: string; // ISO "YYYY-MM-DD"
+    certId?: string;
+    courseName?: string;
+  }
+  const [certMeta, setCertMeta] = useState<CertMeta | null>(null);
 
   const displayPriceInr = useMemo(() => {
     if (!slug) return null;
@@ -285,11 +295,35 @@ const CourseDetail = () => {
     };
 
     window.addEventListener('quizCompleted', handleQuizCompleted as EventListener);
-    
+
     return () => {
       window.removeEventListener('quizCompleted', handleQuizCompleted as EventListener);
     };
   }, []);
+
+  // Fetch frozen cert metadata (name + completion date) from the server.
+  // This runs once per course visit so we always use the server-locked values.
+  useEffect(() => {
+    if (!slug || !user) return;
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) return;
+    fetch(apiUrl(`/api/certificates/my/${slug}/`), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setCertMeta({
+            exists: data.exists,
+            studentName: data.studentName,
+            issueDate: data.issueDate,
+            certId: data.certId,
+            courseName: data.courseName,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [slug, user]);
 
   // Enrollment is now handled by useCourseAccess (RS256-verified) above.
 
@@ -687,12 +721,13 @@ const CourseDetail = () => {
   const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
   const isCourseCompleted = totalLessons > 0 && completedLessons >= totalLessons;
 
-  const generateCertificatePngDataUrl = async () => {
+  const generateCertificatePngDataUrl = async (certName: string, certDate: string) => {
     try {
       if (!course) return null;
 
-    const displayName = (user?.fullName || "Student").trim();
-    const issueDate = new Date().toLocaleDateString("en-GB", {
+    const displayName = certName.trim() || "Student";
+    // Add T12:00:00 to avoid off-by-one day from timezone conversion
+    const issueDate = new Date(certDate + "T12:00:00").toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "long",
       year: "numeric",
@@ -799,44 +834,59 @@ const CourseDetail = () => {
     }
   };
 
+  // Upload cert to backend (first time only). Returns upload data or null.
+  const uploadCertIfNeeded = async (dataUrl: string): Promise<{cert_id?: string; issue_date?: string; student_name?: string; url?: string} | null> => {
+    if (certMeta?.certId) return null; // already uploaded
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) return null;
+    try {
+      const res = await fetch(apiUrl("/api/certificates/upload/"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ image: dataUrl, course_slug: slug || "certificate" }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  };
+
   const handleShareOnLinkedIn = async () => {
     if (!course || !user) return;
 
-    // Server-side completion guard — prevents certificate without passing a quiz
     if (serverCompleted === false) {
       setEnrollError("Please pass at least one quiz before sharing your certificate.");
       return;
     }
 
+    // Use frozen server values — falls back to current user if certMeta not loaded yet
+    const name = certMeta?.studentName || (user?.fullName || "Student");
+    const date = certMeta?.issueDate || new Date().toISOString().slice(0, 10);
+
     const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.infosecdairies.io/`;
 
     try {
-      const cert = await generateCertificatePngDataUrl();
+      const cert = await generateCertificatePngDataUrl(name, date);
       if (!cert) return;
 
-      const accessToken = localStorage.getItem("accessToken");
-      const uploadRes = await fetch(apiUrl("/api/certificates/upload/"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        body: JSON.stringify({
-          image: cert.dataUrl,
-          course_slug: slug || "certificate",
-          // user_email is intentionally omitted — backend uses authenticated user's email
-        }),
-      });
+      const uploadData = await uploadCertIfNeeded(cert.dataUrl);
 
-      if (!uploadRes.ok) {
-        throw new Error("Failed to upload certificate");
+      if (uploadData?.cert_id) {
+        setCertMeta(prev => prev ? {
+          ...prev,
+          exists: true,
+          certId: uploadData.cert_id,
+          studentName: uploadData.student_name || prev.studentName,
+          issueDate: uploadData.issue_date || prev.issueDate,
+        } : prev);
       }
 
-      const uploadData = await uploadRes.json();
       const imgUrl: string | undefined = uploadData?.url;
-      if (!imgUrl) {
-        throw new Error("Invalid upload response");
-      }
+      if (!imgUrl) throw new Error("No image URL");
 
       const shareParams = new URLSearchParams({
         img: imgUrl,
@@ -845,17 +895,12 @@ const CourseDetail = () => {
         date: cert.issueDate,
       });
 
-      // LinkedIn only shows an image preview when a URL is shared.
-      // We share a backend OG-enabled page so LinkedIn can fetch og:image.
       const sharePageUrl = apiUrl(`/api/certificates/share/?${shareParams.toString()}`);
-      
-      // Show modal with pre-written text first
       setShareModalText(shareText);
       setShareModalUrl(sharePageUrl);
       setShowShareModal(true);
-      
+
     } catch {
-      // Fallback: show modal with static share page
       const fallbackSharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
       setShareModalText(shareText);
       setShareModalUrl(fallbackSharePageUrl);
@@ -864,17 +909,32 @@ const CourseDetail = () => {
   };
 
   const handleDownloadCertificate = async () => {
-    // Server-side completion guard — prevents certificate without passing a quiz
     if (serverCompleted === false) {
       setEnrollError("Please pass at least one quiz before downloading your certificate.");
       return;
     }
 
+    // Use frozen server values — falls back gracefully if certMeta not loaded yet
+    const name = certMeta?.studentName || (user?.fullName || "Student");
+    const date = certMeta?.issueDate || new Date().toISOString().slice(0, 10);
+
     try {
-      const cert = await generateCertificatePngDataUrl();
+      const cert = await generateCertificatePngDataUrl(name, date);
       if (!cert) {
         setEnrollError("Could not generate certificate. Please try again.");
         return;
+      }
+
+      // Upload once (first time); subsequent downloads skip the upload
+      const uploadData = await uploadCertIfNeeded(cert.dataUrl);
+      if (uploadData?.cert_id) {
+        setCertMeta(prev => prev ? {
+          ...prev,
+          exists: true,
+          certId: uploadData.cert_id,
+          studentName: uploadData.student_name || prev.studentName,
+          issueDate: uploadData.issue_date || prev.issueDate,
+        } : prev);
       }
 
       const a = document.createElement("a");
