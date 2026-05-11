@@ -74,32 +74,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
-  const refreshAccessToken = async (): Promise<boolean> => {
+  const refreshAccessToken = async (): Promise<"ok" | "auth_error" | "network_error"> => {
     const lock = localStorage.getItem(REFRESH_LOCK_KEY);
     if (lock) {
       const lockTime = parseInt(lock, 10);
-      if (Date.now() - lockTime < REFRESH_LOCK_TTL_MS) return true;
+      if (Date.now() - lockTime < REFRESH_LOCK_TTL_MS) return "ok";
     }
-    if (refreshingRef.current) return true;
+    if (refreshingRef.current) return "ok";
     refreshingRef.current = true;
     localStorage.setItem(REFRESH_LOCK_KEY, String(Date.now()));
 
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) return false;
+      if (!refreshToken) return "auth_error";
       const res = await fetch(apiUrl("/api/auth/token/refresh/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh: refreshToken }),
       });
-      if (!res.ok) return false;
+      // 400/401 = token genuinely invalid or blacklisted → must logout
+      if (res.status === 400 || res.status === 401) return "auth_error";
+      // 5xx / unexpected status = server down, Railway restarting, etc. → wait, retry later
+      if (!res.ok) return "network_error";
       const data = await res.json();
-      if (!data?.access) return false;
+      if (!data?.access) return "auth_error";
       localStorage.setItem("accessToken", data.access);
       if (data.refresh) localStorage.setItem("refreshToken", data.refresh);
-      return true;
+      return "ok";
     } catch {
-      return false;
+      // fetch threw = network unreachable, Railway cold start, DNS failure, etc.
+      return "network_error";
     } finally {
       refreshingRef.current = false;
       localStorage.removeItem(REFRESH_LOCK_KEY);
@@ -134,8 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (storedEmail && refreshToken) {
-        const ok = await refreshAccessToken();
-        if (ok) {
+        const result = await refreshAccessToken();
+        if (result === "ok") {
           const newToken = localStorage.getItem("accessToken");
           if (newToken) {
             try {
@@ -155,7 +159,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
         }
-        logout();
+        // On startup, a network_error means the backend is unreachable — don't wipe the
+        // session. The user will appear logged out but tokens are preserved; the interval
+        // will recover the session once the backend comes back.
+        if (result === "auth_error") logout();
       }
     })();
   }, []);
@@ -165,26 +172,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
 
     const id = window.setInterval(async () => {
-      const ok = await refreshAccessToken();
-      if (!ok) logout();
+      // If the device has no internet at all, skip entirely — no reason to attempt.
+      if (!navigator.onLine) return;
+
+      // Only hit the network when the access token is actually close to expiring
+      // (<10 min left). A 2-hour token does not need 12 network calls per session.
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        try {
+          const payload = await verifyJwtLocally(token);
+          if (payload.exp && payload.exp > Math.floor(Date.now() / 1000) + 600) return;
+        } catch { /* expired — fall through to refresh */ }
+      }
+
+      const result = await refreshAccessToken();
+      // auth_error = token blacklisted / truly invalid → logout
+      // network_error = Railway restarting, cold start, transient glitch → skip, retry next tick
+      if (result === "auth_error") logout();
     }, REFRESH_INTERVAL_MS);
 
     const handleVisibility = async () => {
-      if (document.visibilityState === "visible") {
-        const token = localStorage.getItem("accessToken");
-        let needsRefresh = true;
-        if (token) {
-          try {
-            await verifyJwtLocally(token);
-            needsRefresh = false;
-          } catch {
-            // expired
-          }
-        }
-        if (needsRefresh) {
-          const ok = await refreshAccessToken();
-          if (!ok) logout();
-        }
+      if (document.visibilityState !== "visible") return;
+      if (!navigator.onLine) return;
+
+      const token = localStorage.getItem("accessToken");
+      let needsRefresh = true;
+      if (token) {
+        try {
+          await verifyJwtLocally(token);
+          needsRefresh = false;
+        } catch { /* expired */ }
+      }
+      if (needsRefresh) {
+        const result = await refreshAccessToken();
+        if (result === "auth_error") logout();
+        // network_error → stay logged in, tokens preserved, retry when interval fires
       }
     };
 
