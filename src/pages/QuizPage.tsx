@@ -267,18 +267,19 @@ const QuizPage = () => {
 
   // ─── FIX: Save quiz score under BOTH the raw quizId AND resolvedQuizId ───
   // This ensures LessonViewer's gate check (which looks up by resolvedQuizId
-  // like "q6") always finds the score, even when the URL used "6.5".
+  // like "q6") always finds the stored score, even when the URL used "6.5".
   useEffect(() => {
-    if (quizState === "results") {
-      // Save under raw quizId (e.g., "6.5") — used by the quiz score display in LessonViewer
-      const rawKey = `quiz_${slug}_${quizId}`;
-      localStorage.setItem(rawKey, score.percentage.toString());
+    const handleQuizCompletion = async () => {
+      if (quizState === "results") {
+        // Save under raw quizId (e.g., "6.5") — used by the quiz score display in LessonViewer
+        const rawKey = `quiz_${slug}_${quizId}`;
+        localStorage.setItem(rawKey, score.percentage.toString());
 
-      // ALSO save under resolvedQuizId (e.g., "q6") — used by the module gate check
-      if (resolvedQuizId && resolvedQuizId !== quizId) {
-        const resolvedKey = `quiz_${slug}_${resolvedQuizId}`;
-        localStorage.setItem(resolvedKey, score.percentage.toString());
-      }
+        // ALSO save under resolvedQuizId (e.g., "q6") — used by the module gate check
+        if (resolvedQuizId && resolvedQuizId !== quizId) {
+          const resolvedKey = `quiz_${slug}_${resolvedQuizId}`;
+          localStorage.setItem(resolvedKey, score.percentage.toString());
+        }
 
       // Mark lesson as completed ONLY if passed
       if (passed) {
@@ -296,6 +297,25 @@ const QuizPage = () => {
         if (changed) {
           localStorage.setItem(completedKey, JSON.stringify(completedLessons));
         }
+
+        // Also mark quiz as completed in backend database
+        const accessToken = localStorage.getItem("accessToken");
+        if (accessToken && slug) {
+          for (const id of idsToMark) {
+            try {
+              await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/lessons/${id}/complete/`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              });
+            } catch (err) {
+              // Continue even if backend call fails
+              console.warn("Failed to mark quiz complete in backend:", err);
+            }
+          }
+        }
       }
       
       // Submit full answers to backend — server validates independently and records score.
@@ -312,6 +332,9 @@ const QuizPage = () => {
         detail: { quizId, score: score.percentage, courseId: slug, passed } 
       }));
     }
+    };
+
+    handleQuizCompletion();
   }, [quizState, passed, score.percentage, slug, quizId, resolvedQuizId]);
 
   // Submit quiz answers to backend for server-side validation and score recording.

@@ -489,6 +489,22 @@ const CourseDetail = () => {
       return nsmQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
 
+    if (slug === "network-fundamentals") {
+      const nfQuizMap: Record<string, string> = {
+        "nf-q1": "nf-q1",
+        "nf-q2": "nf-q2",
+        "nf-q3": "nf-q3",
+        "nf-q4": "nf-q4",
+        "nf-q5": "nf-q5",
+        "nf-q6": "nf-q6",
+        "nf-q7": "nf-q7",
+        "nf-q8": "nf-q8",
+        "nf-q9": "nf-q9",
+        "nf-q10": "nf-q10",
+      };
+      return nfQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
     if (slug === "log-analysis-for-beginners") {
       const laQuizMap: Record<string, string> = {
         "1.5": "la-q1",
@@ -523,6 +539,30 @@ const CourseDetail = () => {
         "6.5": "de-q6",
       };
       return deQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
+    if (slug === "siem-fundamentals") {
+      const siemQuizMap: Record<string, string> = {
+        "1.5": "siem-q1",
+        "2.5": "siem-q2",
+        "3.5": "siem-q3",
+        "4.5": "siem-q4",
+        "5.5": "siem-q5",
+        "6.5": "siem-q6",
+      };
+      return siemQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
+    }
+
+    if (slug === "incident-response-fundamentals") {
+      const irQuizMap: Record<string, string> = {
+        "1.5": "ir-q1",
+        "2.5": "ir-q2",
+        "3.5": "ir-q3",
+        "4.5": "ir-q4",
+        "5.5": "ir-q5",
+        "6.5": "ir-q6",
+      };
+      return irQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
 
     if (slug === "malware-analysis-fundamentals") {
