@@ -50,15 +50,10 @@ function decodeB64Url(b64url: string): string {
 /**
  * Verify a JWT and return its payload. Throws if the token is expired or tampered.
  *
- * RS256 tokens: full cryptographic signature verification using the embedded
- * public key — an attacker cannot forge these without the private key.
- *
- * HS256 tokens: signature verification is skipped (the frontend never has the
- * HMAC secret), but expiry and the email claim are still checked. The backend
- * validates the signature on every authenticated API call, so this is safe.
- * HS256 is only issued when the RS256 private key is unavailable in the server
- * environment; once the key is configured the server switches back to RS256
- * automatically.
+ * Only RS256 is accepted. Full cryptographic signature verification using the embedded
+ * public key — an attacker cannot forge these without the server's private key.
+ * Any other algorithm (HS256, none, etc.) is rejected outright to prevent algorithm
+ * confusion attacks where an attacker forges a token with an arbitrary payload.
  */
 export async function verifyJwtLocally(token: string): Promise<VerifiedJwtPayload> {
   const parts = token.split(".");
