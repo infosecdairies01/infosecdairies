@@ -21,8 +21,10 @@ const LiveCourseDetail = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     message: ""
   });
+  const [phoneError, setPhoneError] = useState("");
   const [autofilled, setAutofilled] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -43,8 +45,20 @@ const LiveCourseDetail = () => {
     return null;
   }
 
+  const sanitizeText = (val: string) =>
+    val.replace(/[<>"'`]/g, "").slice(0, 2000);
+
+  const PHONE_RE = /^[+\d][\d\s\-(). ]{5,19}$/;
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^+\d\s\-().]/g, "").slice(0, 20);
+    setFormData({ ...formData, phone: raw });
+    setPhoneError(raw && !PHONE_RE.test(raw) ? "Enter a valid phone number." : "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (phoneError) return;
     setLoading(true);
 
     try {
@@ -60,10 +74,11 @@ const LiveCourseDetail = () => {
         method: "POST",
         headers,
         body: JSON.stringify({
-          course_name: course.title,
-          name: formData.name,
+          course_name: sanitizeText(course.title),
+          name: sanitizeText(formData.name),
           email: formData.email,
-          message: formData.message,
+          phone: formData.phone,
+          message: sanitizeText(formData.message),
           country: "",
           city: ""
         }),
@@ -74,7 +89,7 @@ const LiveCourseDetail = () => {
           title: "Inquiry Submitted!",
           description: "We'll contact you shortly to discuss enrollment.",
         });
-        setFormData(prev => ({ ...prev, message: "" }));
+        setFormData(prev => ({ ...prev, phone: "", message: "" }));
       } else {
         const data = await response.json();
         toast({
@@ -296,6 +311,20 @@ const LiveCourseDetail = () => {
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       required
                     />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-1.5 block">Phone Number</label>
+                    <Input
+                      type="tel"
+                      placeholder="e.g. +91 98765 43210"
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      maxLength={20}
+                      required
+                    />
+                    {phoneError && (
+                      <p className="text-xs text-destructive mt-1">{phoneError}</p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-1.5 block">Message (Optional)</label>

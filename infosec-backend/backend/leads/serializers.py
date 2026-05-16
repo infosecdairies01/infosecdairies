@@ -1,6 +1,10 @@
+import re
 from django.utils.html import strip_tags
 from rest_framework import serializers
 from .models import Lead
+
+_PHONE_RE = re.compile(r'^[+\d][\d\s\-().]{5,19}$')
+_NAME_RE = re.compile(r"^[\w\s'\-.,]{1,255}$", re.UNICODE)
 
 
 class LeadSerializer(serializers.ModelSerializer):
@@ -19,13 +23,19 @@ class LeadSerializer(serializers.ModelSerializer):
         return cleaned
 
     def validate_name(self, value):
-        return self._no_html("name", value)
+        cleaned = self._no_html("name", value)
+        if cleaned and not _NAME_RE.match(cleaned):
+            raise serializers.ValidationError("Name contains invalid characters.")
+        return cleaned
 
     def validate_course_name(self, value):
         return self._no_html("course_name", value)
 
     def validate_message(self, value):
-        return self._no_html("message", value)
+        cleaned = self._no_html("message", value)
+        if cleaned and len(cleaned) > 2000:
+            raise serializers.ValidationError("Message too long (max 2000 characters).")
+        return cleaned
 
     def validate_country(self, value):
         return self._no_html("country", value)
@@ -34,4 +44,7 @@ class LeadSerializer(serializers.ModelSerializer):
         return self._no_html("city", value)
 
     def validate_phone(self, value):
-        return self._no_html("phone", value)
+        cleaned = self._no_html("phone", value)
+        if cleaned and not _PHONE_RE.match(cleaned):
+            raise serializers.ValidationError("Enter a valid phone number (digits, +, -, spaces, parentheses only).")
+        return cleaned
