@@ -69,6 +69,6 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Backup saved → {out_path}  ({len(data)} objects)"
+                f"Backup saved: {out_path}  ({len(data)} objects)"
             )
         )
