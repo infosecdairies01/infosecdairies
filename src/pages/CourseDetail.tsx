@@ -248,7 +248,7 @@ const CourseDetail = () => {
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) return;
 
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/completion/`, {
+    fetch(apiUrl(`/api/courses/${slug}/completion/`), {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((r) => (r.ok ? r.json() : null))
@@ -280,7 +280,7 @@ const CourseDetail = () => {
         // Re-fetch server completion so certificate unlocks immediately after passing
         const accessToken = localStorage.getItem("accessToken");
         if (accessToken && slug) {
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/completion/`, {
+          fetch(apiUrl(`/api/courses/${slug}/completion/`), {
             headers: { Authorization: `Bearer ${accessToken}` },
           })
             .then((r) => (r.ok ? r.json() : null))
