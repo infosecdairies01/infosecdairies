@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { ALL_COURSES_BUNDLE_SLUG, ALL_COURSES_BUNDLE_PRICE_INR, getCourseBySlug, getCoursePriceInr } from "@/data/courses";
+import { apiUrl } from "@/services/api";
 
 declare global {
   interface Window {
@@ -86,7 +87,7 @@ const CourseCheckout = () => {
     }
 
     const createOrder = async (token: string) =>
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/create-order/`, {
+      fetch(apiUrl("/api/payments/create-order/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +172,7 @@ const CourseCheckout = () => {
   const refreshAccessToken = async (): Promise<string | null> => {
     const refreshToken = localStorage.getItem("refreshToken");
     if (!refreshToken) return null;
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/token/refresh/`, {
+    const res = await fetch(apiUrl("/api/auth/token/refresh/"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -232,7 +233,7 @@ const CourseCheckout = () => {
     try {
       // 1) Create order
       const createOrder = async (token: string) =>
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/create-order/`, {
+        fetch(apiUrl("/api/payments/create-order/"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -309,7 +310,7 @@ const CourseCheckout = () => {
       // Test mode: skip Razorpay and auto-verify
       if (data.test_mode) {
         const verify = async (token: string) =>
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/verify/`, {
+          fetch(apiUrl("/api/payments/verify/"), {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -373,7 +374,7 @@ const CourseCheckout = () => {
         order_id: data.order_id,
         handler: async (response: any) => {
           const verify = async (token: string) =>
-            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/verify/`, {
+            fetch(apiUrl("/api/payments/verify/"), {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

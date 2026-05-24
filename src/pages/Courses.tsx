@@ -6,6 +6,7 @@ import { ALL_COURSES_BUNDLE_PRICE_INR, ALL_COURSES_BUNDLE_SLUG, getCoursePriceIn
 import { getLiveCourseCardData } from "@/data/liveCourses";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "@/services/api";
 
 const Courses = () => {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ const Courses = () => {
       }
       
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/my-purchases/`, {
+        const res = await fetch(apiUrl("/api/payments/my-purchases/"), {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         

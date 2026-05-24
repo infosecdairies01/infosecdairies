@@ -10,6 +10,7 @@ import { getCourseById } from "@/data/courses";
 import { getQuizById, QuizData, QuizQuestion } from "@/data/quizData";
 import { Button } from "@/components/ui/button";
 import { logActivity } from "./Dashboard";
+import { apiUrl } from "@/services/api";
 
 type QuizState = "intro" | "active" | "review" | "results";
 
@@ -303,7 +304,7 @@ const QuizPage = () => {
         if (accessToken && slug) {
           for (const id of idsToMark) {
             try {
-              await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/lessons/${id}/complete/`, {
+              await fetch(apiUrl(`/api/courses/${slug}/lessons/${id}/complete/`), {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -348,7 +349,7 @@ const QuizPage = () => {
       if (!resolvedId || !slug) return;
 
       await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/courses/${slug}/quiz/${resolvedId}/submit/`,
+        apiUrl(`/api/courses/${slug}/quiz/${resolvedId}/submit/`),
         {
           method: "POST",
           headers: {
