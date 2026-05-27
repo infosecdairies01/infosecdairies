@@ -6,6 +6,7 @@ from .views import (
     enrollment_status,
     course_access_token,
     lesson_progress,
+    lesson_content,
     mark_lesson_complete,
     submit_quiz,
     course_completion,
@@ -22,6 +23,12 @@ urlpatterns = [
     path("<slug:slug>/completion/", course_completion, name="course-completion"),
     path("<slug:slug>/quiz-scores/", my_quiz_scores, name="course-quiz-scores"),
     path("<slug:slug>/quiz/<str:quiz_id>/submit/", submit_quiz, name="course-quiz-submit"),
+    # Lesson endpoints — order matters: specific paths before parameterised ones.
+    path(
+        "<slug:slug>/lessons/<str:lesson_id>/content/",
+        lesson_content,
+        name="lesson-content",
+    ),
     path(
         "<slug:slug>/lessons/<str:lesson_id>/complete/",
         mark_lesson_complete,

@@ -9,12 +9,12 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { getCourseById, Course, Lesson, Module } from "@/data/courses";
-import { getLessonContent, LessonContent, LabQuestion } from "@/data/lessonContent";
-import { getLessonContentFromPerCourse } from "@/data/lessons";
+import type { LessonContent, LabQuestion } from "@/data/lessonContent";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiUrl } from "@/services/api";
 import { logActivity } from "./Dashboard";
 import { useCourseAccess } from "@/hooks/useCourseAccess";
+import { useLessonContent } from "@/hooks/useLessonContent";
 
 // Import course backgrounds
 import socFundamentalsBg from "@/assets/soc-course-bg.jpg";
@@ -200,9 +200,14 @@ const LessonViewer = () => {
   const navigate = useNavigate();
 
   // SECURITY: verify paid enrollment via RS256-signed token before rendering any content.
-  // Changing the API response in Burp Suite cannot bypass this — the RSA signature
-  // check runs locally in the browser and rejects any modified token.
+  // Layer 1: only RS256 accepted — HS256/none forgery attempts are rejected outright.
+  // Layer 2: token user_id is bound to the current session — stolen tokens are rejected.
+  // Layer 3: lesson content is fetched from the backend (never in the JS bundle).
   const { accessState, isStaff } = useCourseAccess(slug);
+
+  // Fetch lesson content from the backend API.
+  // Only fires once accessState === "granted" — no wasted 403s.
+  const { lessonContent, contentLoading } = useLessonContent(slug, lessonId, accessState);
 
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
   const [markingComplete, setMarkingComplete] = useState(false);
@@ -398,9 +403,6 @@ const LessonViewer = () => {
   }, [slug]);
 
   const course = getCourseById(courseIdForMeta);
-  const lessonContentFromMain = getLessonContent(lessonsCourseId, lessonId || "");
-  const lessonContentFromPerCourse = getLessonContentFromPerCourse(lessonsCourseId, lessonId || "");
-  const lessonContent = lessonContentFromMain || lessonContentFromPerCourse;
 
   // Get all lessons flattened for navigation
   const allLessons = useMemo(() => {
@@ -703,7 +705,7 @@ const LessonViewer = () => {
     return <Navigate to="/courses" replace />;
   }
 
-  // Enrollment gate — do not render any content until the RS256 access token is verified.
+  // ── Gate 1: enrollment check (RS256 + user binding) ──────────────────────
   if (accessState === "loading") {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
@@ -715,8 +717,19 @@ const LessonViewer = () => {
     return <Navigate to="/auth" replace />;
   }
   if (accessState === "denied") {
-    // Not enrolled or not paid — send to course page where they can purchase
+    // Not enrolled or not paid — send to course page where they can purchase.
     return <Navigate to={`/courses/${slug}`} replace />;
+  }
+
+  // ── Gate 2: lesson content loading ────────────────────────────────────────
+  // Only shows while the backend responds; sessionStorage cache makes this
+  // instant on subsequent navigations within the same session.
+  if (contentLoading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading lesson...</p>
+      </main>
+    );
   }
 
   if (!lessonId || !currentLesson) {

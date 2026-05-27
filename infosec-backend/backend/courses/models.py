@@ -69,3 +69,40 @@ class QuizScore(models.Model):
 
     def __str__(self) -> str:  # type: ignore[override]
         return f"{self.user.email} -> {self.course_slug}/{self.quiz_id}: {self.score}%"
+
+
+class LessonContent(models.Model):
+    """
+    Server-authoritative lesson content (markdown text, key takeaways, exercises, resources).
+
+    Security model
+    ─────────────
+    Content is NEVER bundled into the frontend JS. It is served only to authenticated,
+    enrolled, and (for paid courses) paid users via GET /api/courses/{slug}/lessons/{id}/content/.
+    This prevents bundle-extraction attacks where an attacker downloads the Vite JS
+    bundle and reads every lesson without a paid account.
+
+    Populated by:  python manage.py import_lesson_content
+    """
+    course_slug = models.CharField(
+        max_length=200,
+        db_index=True,
+        help_text="URL slug of the course (e.g. 'blue-team-soc-fundamentals')",
+    )
+    lesson_id = models.CharField(
+        max_length=100,
+        help_text="Lesson ID as used in the frontend routing (e.g. '1.1', 'la-2.3')",
+    )
+    content_json = models.JSONField(
+        help_text="Full lesson payload: content, keyTakeaways, practicalExercise, additionalResources",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("course_slug", "lesson_id")
+        indexes = [
+            models.Index(fields=["course_slug", "lesson_id"], name="lc_slug_lesson_idx"),
+        ]
+
+    def __str__(self) -> str:  # type: ignore[override]
+        return f"{self.course_slug}/{self.lesson_id}"
