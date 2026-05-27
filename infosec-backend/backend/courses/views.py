@@ -1,4 +1,5 @@
 import re as _re
+import logging as _logging
 from datetime import timedelta
 
 from django.core.cache import cache as _cache
@@ -8,8 +9,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
 from django.shortcuts import get_object_or_404
-from .models import Course, Enrollment, LessonProgress, QuizScore
+from .models import Course, Enrollment, LessonProgress, QuizScore, LessonContent
 from .serializers import CourseSerializer, LessonProgressSerializer
+
+_logger = _logging.getLogger(__name__)
+
+# Cache-Control lifetime for lesson content (private = per-user, not CDN-cached).
+_LESSON_CONTENT_CACHE_SECONDS = 3600  # 1 hour
 
 
 FREE_COURSE_SLUG = "network-fundamentals"
@@ -341,4 +347,66 @@ def my_quiz_scores(request, slug):
         {"quiz_id": s.quiz_id, "score": s.score, "passed": s.passed}
         for s in scores
     ])
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Secure lesson content delivery
+# ──────────────────────────────────────────────────────────────────────────────
+
+_LESSON_ID_CONTENT_RE = _re.compile(r"^[a-zA-Z0-9_.:-]{1,80}$")
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def lesson_content(request, slug, lesson_id):
+    """
+    Return the full lesson content JSON for an enrolled, paid user.
+
+    Security properties
+    ───────────────────
+    • Requires a valid JWT (IsAuthenticated) — unauthenticated callers → 401.
+    • Checks the DB for a current enrollment record for *this* user (not a JWT claim)
+      → an attacker with a stolen course-access token cannot fetch content, because
+      the enrollment check runs against request.user which comes from the *auth* JWT,
+      not from any forged course-access token.
+    • Responds with Cache-Control: private so CDNs never cache user-specific content.
+    • Validates lesson_id format to prevent path-traversal style abuse.
+    • Staff/superusers bypass the enrollment check (for admin previews).
+    """
+    # Basic format guard — prevent garbage / injection attempts in the URL segment.
+    if not lesson_id or not _LESSON_ID_CONTENT_RE.match(lesson_id):
+        return Response({"detail": "Invalid lesson_id format."}, status=400)
+
+    course = get_object_or_404(Course, slug=slug, is_published=True)
+
+    # Staff bypass — they can preview any lesson without an enrollment record.
+    is_staff = request.user.is_staff or request.user.is_superuser
+
+    if not is_staff:
+        # Free course: auto-create enrollment so the user doesn't need a separate
+        # enroll step before reading lesson content.
+        if slug == FREE_COURSE_SLUG:
+            Enrollment.objects.get_or_create(
+                user=request.user,
+                course=course,
+                defaults={"is_paid": False},
+            )
+
+        _, denied = _ensure_enrolled_and_paid(request.user, course)
+        if denied:
+            _logger.warning(
+                "lesson_content access denied: user=%s course=%s lesson=%s",
+                request.user.pk,
+                slug,
+                lesson_id,
+            )
+            return denied
+
+    content_obj = get_object_or_404(LessonContent, course_slug=slug, lesson_id=lesson_id)
+
+    response = Response(content_obj.content_json)
+    # private: CDN must not cache this — it is user-specific.
+    # max-age=3600: browser may cache for 1 hour to avoid repeat fetches per session.
+    response["Cache-Control"] = f"private, max-age={_LESSON_CONTENT_CACHE_SECONDS}"
+    return response
 
