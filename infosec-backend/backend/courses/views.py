@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
 from django.shortcuts import get_object_or_404
 from .models import Course, Enrollment, LessonProgress, QuizScore, LessonContent
+from payments.models import CoursePurchase
 from .serializers import CourseSerializer, LessonProgressSerializer
 
 _logger = _logging.getLogger(__name__)
@@ -19,6 +20,7 @@ _LESSON_CONTENT_CACHE_SECONDS = 3600  # 1 hour
 
 
 FREE_COURSE_SLUG = "network-fundamentals"
+ALL_COURSES_BUNDLE_SLUG = "all-courses-bundle"
 
 
 def _ensure_enrolled_and_paid(user, course: Course):
@@ -125,13 +127,42 @@ def course_access_token(request, slug):
         return Response({"access_token": str(token)}, status=status.HTTP_200_OK)
 
     enrollment, denied = _ensure_enrolled_and_paid(request.user, course)
+
+    # Auto-heal: user has a verified payment in CoursePurchase but the enrollment
+    # flag was never flipped (e.g. verify_payment endpoint crashed mid-flight).
+    # Fix it now so the user is never locked out of content they paid for.
     if denied:
-        return denied
+        paid_purchase = CoursePurchase.objects.filter(
+            user=request.user,
+            status=CoursePurchase.STATUS_PAID,
+            course_slug__in=[slug, ALL_COURSES_BUNDLE_SLUG],
+        ).first()
+        if not paid_purchase:
+            return denied
+        # Signature was already verified when purchase was created — safe to grant.
+        if paid_purchase.course_slug == ALL_COURSES_BUNDLE_SLUG:
+            for c in Course.objects.filter(is_published=True):
+                enr, _ = Enrollment.objects.get_or_create(
+                    user=request.user, course=c, defaults={"is_paid": True}
+                )
+                if not enr.is_paid:
+                    enr.is_paid = True
+                    enr.save(update_fields=["is_paid"])
+        enrollment, _ = Enrollment.objects.get_or_create(
+            user=request.user, course=course, defaults={"is_paid": True}
+        )
+        if not enrollment.is_paid:
+            enrollment.is_paid = True
+            enrollment.save(update_fields=["is_paid"])
+        _logger.info(
+            "auto-healed enrollment user=%s course=%s purchase=%s",
+            request.user.email, slug, paid_purchase.razorpay_order_id,
+        )
 
     token = AccessToken.for_user(request.user)
     token["course_slug"] = slug
     token["enrolled"] = True
-    token["is_paid"] = bool(enrollment.is_paid)
+    token["is_paid"] = True
     token["email"] = request.user.email
     token["token_type"] = "course_access"
     token.set_exp(lifetime=timedelta(hours=2))

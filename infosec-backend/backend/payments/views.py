@@ -12,7 +12,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from courses.models import Course, Enrollment
@@ -391,6 +391,82 @@ def verify_payment(request):
         logger.exception("Failed to send payment receipt email")
 
     return Response({"success": True, "course_slug": purchase.course_slug})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def razorpay_webhook(request):
+    """
+    Razorpay calls this server-to-server when a payment is captured.
+    Grants enrollment even if the frontend's verify_payment call failed.
+    Configure in Razorpay dashboard → Webhooks → URL: /api/payments/webhook/
+    Active event: payment.captured
+    """
+    webhook_secret = _clean_razorpay_cred(getattr(settings, "RAZORPAY_WEBHOOK_SECRET", ""))
+    if not webhook_secret:
+        logger.error("RAZORPAY_WEBHOOK_SECRET not configured — webhook ignored")
+        return Response(status=400)
+
+    body = request.body
+    signature = request.headers.get("X-Razorpay-Signature", "")
+    expected = hmac.new(webhook_secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected, signature):
+        logger.warning("Razorpay webhook: invalid signature")
+        return Response(status=400)
+
+    event = request.data.get("event", "")
+    if event != "payment.captured":
+        return Response({"status": "ignored"})
+
+    try:
+        payment_entity = request.data["payload"]["payment"]["entity"]
+        order_id = payment_entity.get("order_id")
+        payment_id = payment_entity.get("id")
+    except (KeyError, TypeError):
+        return Response(status=400)
+
+    if not order_id:
+        return Response(status=400)
+
+    purchase = CoursePurchase.objects.filter(razorpay_order_id=order_id).first()
+    if not purchase:
+        logger.warning("Razorpay webhook: unknown order_id=%s", order_id)
+        return Response({"status": "unknown_order"})
+
+    if purchase.status == CoursePurchase.STATUS_PAID:
+        return Response({"status": "already_processed"})
+
+    with transaction.atomic():
+        purchase.status = CoursePurchase.STATUS_PAID
+        purchase.razorpay_payment_id = payment_id
+        purchase.paid_at = timezone.now()
+        purchase.save(update_fields=["status", "razorpay_payment_id", "paid_at"])
+
+        if purchase.course_slug == ALL_COURSES_BUNDLE_SLUG:
+            for c in Course.objects.filter(is_published=True):
+                enr, _ = Enrollment.objects.get_or_create(
+                    user=purchase.user, course=c, defaults={"is_paid": True}
+                )
+                if not enr.is_paid:
+                    enr.is_paid = True
+                    enr.save(update_fields=["is_paid"])
+        else:
+            course = Course.objects.filter(
+                slug=purchase.course_slug, is_published=True
+            ).first()
+            if course:
+                enr, _ = Enrollment.objects.get_or_create(
+                    user=purchase.user, course=course, defaults={"is_paid": True}
+                )
+                if not enr.is_paid:
+                    enr.is_paid = True
+                    enr.save(update_fields=["is_paid"])
+
+    logger.info(
+        "Razorpay webhook: enrollment granted user=%s course=%s order=%s payment=%s",
+        purchase.user.email, purchase.course_slug, order_id, payment_id,
+    )
+    return Response({"status": "ok"})
 
 
 @api_view(["GET"])
