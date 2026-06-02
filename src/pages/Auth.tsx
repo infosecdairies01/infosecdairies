@@ -35,7 +35,9 @@ const Auth = () => {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "";
+  const isSafeRedirect = (p: string) => p.startsWith("/") && !p.startsWith("//") && !p.startsWith("/\\");
+  const rawRedirect = searchParams.get("redirect") || "";
+  const redirectTo = isSafeRedirect(rawRedirect) ? rawRedirect : "";
   const { login } = useAuth();
 
   const handleGoogleLogin = () => {
