@@ -13,7 +13,8 @@ const VerifyEmail = () => {
   const { login } = useAuth();
   
   const [email, setEmail] = useState(searchParams.get("email") || "");
-  const redirectTo = searchParams.get("redirect") || "";
+  const rawRedirect = searchParams.get("redirect") || "";
+  const redirectTo = (rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") && !rawRedirect.startsWith("/\\")) ? rawRedirect : "";
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);

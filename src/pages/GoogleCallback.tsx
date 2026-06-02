@@ -34,9 +34,10 @@ const GoogleCallback = () => {
 
           if (access && email) {
             login({ email, fullName, tokens: { access, refresh: refresh || undefined } });
-            const savedRedirect = sessionStorage.getItem("authRedirect");
+            const raw = sessionStorage.getItem("authRedirect") || "";
             sessionStorage.removeItem("authRedirect");
-            navigate(savedRedirect || "/dashboard", { replace: true });
+            const dest = (raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\")) ? raw : "/dashboard";
+            navigate(dest, { replace: true });
             return;
           }
         }
@@ -79,9 +80,10 @@ const GoogleCallback = () => {
         }
 
         login({ email: user.email, fullName: user.full_name, tokens });
-        const savedRedirect = sessionStorage.getItem("authRedirect");
+        const raw = sessionStorage.getItem("authRedirect") || "";
         sessionStorage.removeItem("authRedirect");
-        navigate(savedRedirect || "/dashboard", { replace: true });
+        const dest = (raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\")) ? raw : "/dashboard";
+        navigate(dest, { replace: true });
       } catch {
         setError("Network error while completing Google login.");
       }
