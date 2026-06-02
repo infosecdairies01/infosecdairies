@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,9 +34,12 @@ const Auth = () => {
   }, [password]);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "";
   const { login } = useAuth();
 
   const handleGoogleLogin = () => {
+    if (redirectTo) sessionStorage.setItem("authRedirect", redirectTo);
     const frontendCallback = `${window.location.origin}/auth/google-callback`;
     const tokenRedirectPath = `/api/auth/google/token-redirect/?target=${encodeURIComponent(frontendCallback)}`;
     window.location.href = apiUrl(`/accounts/google/login/?next=${encodeURIComponent(tokenRedirectPath)}`);
@@ -109,7 +112,8 @@ const Auth = () => {
       if (!isLogin) {
         setSuccess("Verification code sent! Redirecting to verification page...");
         setTimeout(() => {
-          navigate(`/verify-email?email=${encodeURIComponent(data.email || email)}`);
+          const verifyUrl = `/verify-email?email=${encodeURIComponent(data.email || email)}${redirectTo ? `&redirect=${encodeURIComponent(redirectTo)}` : ""}`;
+          navigate(verifyUrl);
         }, 1000);
         return;
       }
@@ -189,7 +193,7 @@ const Auth = () => {
       setSuccess(isLogin ? "Logged in successfully." : "Account created successfully.");
 
       setTimeout(() => {
-        navigate("/courses");
+        navigate(redirectTo || "/courses");
       }, 800);
     } catch (err) {
       setError("Network error. Please check your connection and try again.");
