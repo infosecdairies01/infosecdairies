@@ -82,7 +82,7 @@ const CourseCheckout = () => {
 
     let accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
-      navigate("/auth");
+      navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/checkout`)}`);
       return;
     }
 
@@ -191,7 +191,7 @@ const CourseCheckout = () => {
 
   const handleAuthFailure = () => {
     logout();
-    navigate("/auth");
+    navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/checkout`)}`);
   };
 
   const parseResponse = async (res: Response): Promise<any> => {
@@ -225,7 +225,7 @@ const CourseCheckout = () => {
 
     let accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
-      navigate("/auth");
+      navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/checkout`)}`);
       setSubmitting(false);
       return;
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
+import { Link, useParams, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import {
   Shield, ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen,
@@ -198,6 +198,7 @@ const LabQuestionsSection = ({ scenario, questions }: { scenario?: string; quest
 const LessonViewer = () => {
   const { slug, lessonId } = useParams<{ slug: string; lessonId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // SECURITY: verify paid enrollment via RS256-signed token before rendering any content.
   // Layer 1: only RS256 accepted — HS256/none forgery attempts are rejected outright.
@@ -536,7 +537,7 @@ const LessonViewer = () => {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
           localStorage.removeItem("userEmail");
-          navigate("/auth");
+          navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/lesson/${lessonId}`)}`);
           return;
         }
 
@@ -547,7 +548,7 @@ const LessonViewer = () => {
               item && item.lesson_id != null ? String(item.lesson_id) : null,
             )
             .filter((id: string | null): id is string => Boolean(id));
-          
+
           setCompletedLessonIds(backendIds);
         } else {
           setCompletedLessonIds([]);
@@ -576,7 +577,7 @@ const LessonViewer = () => {
 
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
-      navigate("/auth");
+      navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/lesson/${lessonId}`)}`);
       return false;
     }
 
@@ -595,7 +596,7 @@ const LessonViewer = () => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userEmail");
-        navigate("/auth");
+        navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/lesson/${lessonId}`)}`);
         return false;
       }
 
@@ -714,7 +715,7 @@ const LessonViewer = () => {
     );
   }
   if (accessState === "unauthenticated") {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to={`/auth?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
   if (accessState === "denied") {
     // Not enrolled or not paid — send to course page where they can purchase.

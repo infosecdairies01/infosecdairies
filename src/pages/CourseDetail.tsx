@@ -404,7 +404,7 @@ const CourseDetail = () => {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
           localStorage.removeItem("userEmail");
-          navigate("/auth");
+          navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}`)}`);
           return;
         }
 
@@ -1050,7 +1050,7 @@ const CourseDetail = () => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userEmail");
-        navigate("/auth");
+        navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}`)}`);
         return;
       }
 

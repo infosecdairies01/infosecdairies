@@ -13,6 +13,7 @@ const VerifyEmail = () => {
   const { login } = useAuth();
   
   const [email, setEmail] = useState(searchParams.get("email") || "");
+  const redirectTo = searchParams.get("redirect") || "";
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -92,10 +93,10 @@ const VerifyEmail = () => {
         tokens 
       });
 
-      setSuccess("Email verified! Redirecting to courses...");
-      
+      setSuccess("Email verified! Redirecting...");
+
       setTimeout(() => {
-        navigate("/courses");
+        navigate(redirectTo || "/courses");
       }, 1000);
     } catch (err) {
       setError("Network error. Please check your connection and try again.");
