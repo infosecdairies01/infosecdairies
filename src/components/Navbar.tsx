@@ -24,6 +24,12 @@ const Navbar = () => {
       isActive(path) ? "text-[#7bff81]" : "text-[#00ffc8] hover:text-[#7bff81]"
     }`;
 
+  // Build auth link that returns user to current page after login.
+  // Skip redirect for auth-flow pages themselves so we don't loop.
+  const AUTH_FLOW_PATHS = ["/auth", "/verify-email", "/forgot-password", "/google/onboarding", "/auth/google-callback"];
+  const isAuthPage = AUTH_FLOW_PATHS.some((p) => location.pathname.startsWith(p));
+  const authLink = isAuthPage ? "/auth" : `/auth?redirect=${encodeURIComponent(location.pathname)}`;
+
   const closeMenu = () => setMenuOpen(false);
 
   return (
@@ -43,7 +49,7 @@ const Navbar = () => {
               </Link>
             ))}
             {!isAuthenticated ? (
-              <Link to="/auth" className="text-sm font-medium text-[#00ffc8] hover:text-[#7bff81] transition-colors">
+              <Link to={authLink} className="text-sm font-medium text-[#00ffc8] hover:text-[#7bff81] transition-colors">
                 Login / Sign Up
               </Link>
             ) : (
@@ -98,7 +104,7 @@ const Navbar = () => {
             ))}
             {!isAuthenticated ? (
               <Link
-                to="/auth"
+                to={authLink}
                 className="text-sm font-medium text-[#00ffc8] hover:text-[#7bff81] transition-colors"
                 onClick={closeMenu}
               >
