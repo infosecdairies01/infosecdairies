@@ -94,7 +94,7 @@ def my_certificate(request, slug):
 
     return JsonResponse({
         'exists': False,
-        'studentName': request.user.get_full_name() or request.user.email,
+        'studentName': request.user.full_name or request.user.email,
         'issueDate': completion_date,
     })
 
@@ -170,7 +170,7 @@ def upload_certificate(request):
     completion_date = _completion_date_for(request.user, course)
 
     # Freeze name at generation time — username changes after this have no effect
-    frozen_name = request.user.get_full_name() or user_email
+    frozen_name = request.user.full_name or user_email
 
     # Process image
     try:
