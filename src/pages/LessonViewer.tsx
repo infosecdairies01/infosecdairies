@@ -39,41 +39,67 @@ const courseBackgrounds: Record<string, string> = {
   "network-fundamentals": networkFundamentalsBg,
 };
 
-const LabQuestionsSection = ({ scenario, questions }: { scenario?: string; questions: LabQuestion[] }) => {
+interface LabSubmitResult {
+  correct: boolean;
+  attempts: number;
+  reference_answer: string | null;
+}
+
+const LabQuestionsSection = ({
+  scenario,
+  questions,
+  slug,
+  lessonId,
+}: {
+  scenario?: string;
+  questions: LabQuestion[];
+  slug: string;
+  lessonId: string;
+}) => {
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
   const [showHint, setShowHint] = useState<Record<string, boolean>>({});
   const [showAnswer, setShowAnswer] = useState<Record<string, boolean>>({});
-  const [attempts, setAttempts] = useState<Record<string, number>>({});
-  const [locked, setLocked] = useState<Record<string, boolean>>({});
+  const [results, setResults] = useState<Record<string, LabSubmitResult>>({});
+  const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
 
-  const handleSubmit = (qId: string, q: LabQuestion) => {
-    const newAttempts = (attempts[qId] || 0) + 1;
-    setAttempts(prev => ({ ...prev, [qId]: newAttempts }));
-    setSubmitted(prev => ({ ...prev, [qId]: true }));
+  const isLocked = (qId: string) => {
+    const r = results[qId];
+    return submitted[qId] && !!r && (r.correct || r.attempts >= 4);
+  };
 
-    const user = (userAnswers[qId] || "").trim().toLowerCase();
-    const correct = q.answer.toLowerCase();
-    const keywords = correct.split(/[\s,—-]+/).filter(w => w.length > 3);
-    const matchCount = keywords.filter(kw => user.includes(kw)).length;
-    const isRight = matchCount >= Math.min(2, keywords.length) || user.includes(correct.substring(0, 20).toLowerCase());
-
-    if (isRight || newAttempts >= 4) {
-      setLocked(prev => ({ ...prev, [qId]: true }));
+  const handleSubmit = async (qId: string) => {
+    const answer = (userAnswers[qId] || "").trim();
+    if (!answer || submitting[qId]) return;
+    setSubmitting(prev => ({ ...prev, [qId]: true }));
+    try {
+      const authToken = localStorage.getItem("accessToken");
+      const res = await fetch(
+        apiUrl(`/api/courses/${slug}/lessons/${lessonId}/lab-questions/${qId}/submit/`),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          },
+          body: JSON.stringify({ answer }),
+        }
+      );
+      if (res.ok) {
+        const data: LabSubmitResult = await res.json();
+        setResults(prev => ({ ...prev, [qId]: data }));
+        setSubmitted(prev => ({ ...prev, [qId]: true }));
+      }
+    } catch {
+      // network error — leave input intact so the user can retry
+    } finally {
+      setSubmitting(prev => ({ ...prev, [qId]: false }));
     }
   };
 
   const handleRetry = (qId: string) => {
     setUserAnswers(prev => ({ ...prev, [qId]: "" }));
     setSubmitted(prev => ({ ...prev, [qId]: false }));
-  };
-
-  const isCorrect = (q: LabQuestion) => {
-    const user = (userAnswers[q.id] || "").trim().toLowerCase();
-    const correct = q.answer.toLowerCase();
-    const keywords = correct.split(/[\s,—-]+/).filter(w => w.length > 3);
-    const matchCount = keywords.filter(kw => user.includes(kw)).length;
-    return matchCount >= Math.min(2, keywords.length) || user.includes(correct.substring(0, 20).toLowerCase());
   };
 
   return (
@@ -90,107 +116,119 @@ const LabQuestionsSection = ({ scenario, questions }: { scenario?: string; quest
         </div>
       )}
 
-      {questions.map((q, idx) => (
-        <div key={q.id} className="p-4 rounded-lg bg-background/40 border border-white/[0.06] space-y-3">
-          <div className="flex items-start gap-2">
-            <span className="flex-shrink-0 w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center font-bold mt-0.5">
-              {idx + 1}
-            </span>
-            <p className="text-sm font-medium text-foreground">{q.question}</p>
-          </div>
+      {questions.map((q, idx) => {
+        const result = results[q.id];
+        const locked = isLocked(q.id);
+        const isSubmitted = submitted[q.id];
+        const isSubmitting = submitting[q.id];
+        const correct = result?.correct ?? false;
+        const attemptsExhausted = (result?.attempts ?? 0) >= 4;
 
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Type your answer..."
-              value={userAnswers[q.id] || ""}
-              onChange={e => setUserAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-              onKeyDown={e => { if (e.key === "Enter" && userAnswers[q.id]?.trim() && !locked[q.id] && !submitted[q.id]) handleSubmit(q.id, q); }}
-              disabled={locked[q.id]}
-              className="flex-1 px-3 py-2 text-sm rounded-md bg-background/60 border border-white/[0.1] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-cyan-500/50 disabled:opacity-60"
-            />
-            {!locked[q.id] && !submitted[q.id] && (
-              <button
-                onClick={() => handleSubmit(q.id, q)}
-                disabled={!userAnswers[q.id]?.trim()}
-                className="px-3 py-2 rounded-md bg-cyan-600/80 text-white text-sm font-medium hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
-              >
-                <Send className="w-3.5 h-3.5" />
-                Submit
-              </button>
-            )}
-          </div>
+        return (
+          <div key={q.id} className="p-4 rounded-lg bg-background/40 border border-white/[0.06] space-y-3">
+            <div className="flex items-start gap-2">
+              <span className="flex-shrink-0 w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center font-bold mt-0.5">
+                {idx + 1}
+              </span>
+              <p className="text-sm font-medium text-foreground">{q.question}</p>
+            </div>
 
-          {q.hint && !locked[q.id] && !submitted[q.id] && (
-            <button
-              onClick={() => setShowHint(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
-              className="text-xs text-yellow-500/80 hover:text-yellow-400 flex items-center gap-1 transition-colors"
-            >
-              <Lightbulb className="w-3 h-3" />
-              {showHint[q.id] ? "Hide hint" : "Show hint"}
-            </button>
-          )}
-          {showHint[q.id] && !locked[q.id] && !submitted[q.id] && (
-            <p className="text-xs text-yellow-500/70 pl-4 border-l-2 border-yellow-500/30">{q.hint}</p>
-          )}
-
-          {submitted[q.id] && (
-            <div className="space-y-2">
-              {isCorrect(q) ? (
-                <div className="flex items-center gap-2 text-sm font-medium text-emerald-400">
-                  <CheckCircle className="w-4 h-4" /> Great answer!
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium text-orange-400">
-                    <Eye className="w-4 h-4" /> Incorrect {(attempts[q.id] || 0) >= 4 ? "— All attempts used." : ""}
-                  </div>
-                  {(attempts[q.id] || 0) < 4 && (
-                    <button
-                      onClick={() => handleRetry(q.id)}
-                      className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
-                    >
-                      Try again
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {locked[q.id] && (attempts[q.id] || 0) >= 4 && !isCorrect(q) && (
-                <>
-                  <button
-                    onClick={() => setShowAnswer(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
-                    className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
-                  >
-                    {showAnswer[q.id] ? <><EyeOff className="w-3 h-3" /> Hide answer</> : <><Eye className="w-3 h-3" /> Show answer</>}
-                  </button>
-                  {showAnswer[q.id] && (
-                    <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20">
-                      <p className="text-sm text-emerald-300"><span className="font-semibold">Answer:</span> {q.answer}</p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {isCorrect(q) && (
-                <>
-                  <button
-                    onClick={() => setShowAnswer(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
-                    className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
-                  >
-                    {showAnswer[q.id] ? <><EyeOff className="w-3 h-3" /> Hide answer</> : <><Eye className="w-3 h-3" /> View reference answer</>}
-                  </button>
-                  {showAnswer[q.id] && (
-                    <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20">
-                      <p className="text-sm text-emerald-300"><span className="font-semibold">Answer:</span> {q.answer}</p>
-                    </div>
-                  )}
-                </>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Type your answer..."
+                value={userAnswers[q.id] || ""}
+                onChange={e => setUserAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && userAnswers[q.id]?.trim() && !locked && !isSubmitted)
+                    handleSubmit(q.id);
+                }}
+                disabled={locked}
+                className="flex-1 px-3 py-2 text-sm rounded-md bg-background/60 border border-white/[0.1] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-cyan-500/50 disabled:opacity-60"
+              />
+              {!locked && !isSubmitted && (
+                <button
+                  onClick={() => handleSubmit(q.id)}
+                  disabled={!userAnswers[q.id]?.trim() || isSubmitting}
+                  className="px-3 py-2 rounded-md bg-cyan-600/80 text-white text-sm font-medium hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {isSubmitting ? "..." : "Submit"}
+                </button>
               )}
             </div>
-          )}
-        </div>
-      ))}
+
+            {q.hint && !locked && !isSubmitted && (
+              <button
+                onClick={() => setShowHint(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                className="text-xs text-yellow-500/80 hover:text-yellow-400 flex items-center gap-1 transition-colors"
+              >
+                <Lightbulb className="w-3 h-3" />
+                {showHint[q.id] ? "Hide hint" : "Show hint"}
+              </button>
+            )}
+            {showHint[q.id] && !locked && !isSubmitted && (
+              <p className="text-xs text-yellow-500/70 pl-4 border-l-2 border-yellow-500/30">{q.hint}</p>
+            )}
+
+            {isSubmitted && (
+              <div className="space-y-2">
+                {correct ? (
+                  <div className="flex items-center gap-2 text-sm font-medium text-emerald-400">
+                    <CheckCircle className="w-4 h-4" /> Great answer!
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-orange-400">
+                      <Eye className="w-4 h-4" /> Incorrect {attemptsExhausted ? "— All attempts used." : ""}
+                    </div>
+                    {!attemptsExhausted && (
+                      <button
+                        onClick={() => handleRetry(q.id)}
+                        className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                      >
+                        Try again
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {locked && attemptsExhausted && !correct && result?.reference_answer && (
+                  <>
+                    <button
+                      onClick={() => setShowAnswer(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                      className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                    >
+                      {showAnswer[q.id] ? <><EyeOff className="w-3 h-3" /> Hide answer</> : <><Eye className="w-3 h-3" /> Show answer</>}
+                    </button>
+                    {showAnswer[q.id] && (
+                      <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                        <p className="text-sm text-emerald-300"><span className="font-semibold">Answer:</span> {result.reference_answer}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {correct && result?.reference_answer && (
+                  <>
+                    <button
+                      onClick={() => setShowAnswer(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                      className="text-xs text-cyan-400/80 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                    >
+                      {showAnswer[q.id] ? <><EyeOff className="w-3 h-3" /> Hide answer</> : <><Eye className="w-3 h-3" /> View reference answer</>}
+                    </button>
+                    {showAnswer[q.id] && (
+                      <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                        <p className="text-sm text-emerald-300"><span className="font-semibold">Answer:</span> {result.reference_answer}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -1209,6 +1247,8 @@ const LessonViewer = () => {
                         <LabQuestionsSection
                           scenario={lessonContent.practicalExercise.labScenario}
                           questions={lessonContent.practicalExercise.labQuestions}
+                          slug={slug!}
+                          lessonId={lessonId!}
                         />
                       )}
                     </div>

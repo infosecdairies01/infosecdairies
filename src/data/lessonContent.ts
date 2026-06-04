@@ -17,7 +17,8 @@
 export interface LabQuestion {
   id: string;
   question: string;
-  answer: string;
+  /** Not present in GET response — returned by the submit endpoint only when correct or attempts exhausted. */
+  answer?: string;
   hint?: string;
 }
 
