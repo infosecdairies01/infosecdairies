@@ -42,6 +42,7 @@ const courseBackgrounds: Record<string, string> = {
 interface LabSubmitResult {
   correct: boolean;
   attempts: number;
+  hint: string | null;
   reference_answer: string | null;
 }
 
@@ -158,19 +159,6 @@ const LabQuestionsSection = ({
               )}
             </div>
 
-            {q.hint && !locked && !isSubmitted && (
-              <button
-                onClick={() => setShowHint(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
-                className="text-xs text-yellow-500/80 hover:text-yellow-400 flex items-center gap-1 transition-colors"
-              >
-                <Lightbulb className="w-3 h-3" />
-                {showHint[q.id] ? "Hide hint" : "Show hint"}
-              </button>
-            )}
-            {showHint[q.id] && !locked && !isSubmitted && (
-              <p className="text-xs text-yellow-500/70 pl-4 border-l-2 border-yellow-500/30">{q.hint}</p>
-            )}
-
             {isSubmitted && (
               <div className="space-y-2">
                 {correct ? (
@@ -182,6 +170,18 @@ const LabQuestionsSection = ({
                     <div className="flex items-center gap-2 text-sm font-medium text-orange-400">
                       <Eye className="w-4 h-4" /> Incorrect {attemptsExhausted ? "— All attempts used." : ""}
                     </div>
+                    {result?.hint && (
+                      <button
+                        onClick={() => setShowHint(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                        className="text-xs text-yellow-500/80 hover:text-yellow-400 flex items-center gap-1 transition-colors"
+                      >
+                        <Lightbulb className="w-3 h-3" />
+                        {showHint[q.id] ? "Hide hint" : "Show hint"}
+                      </button>
+                    )}
+                    {showHint[q.id] && result?.hint && (
+                      <p className="text-xs text-yellow-500/70 pl-4 border-l-2 border-yellow-500/30">{result.hint}</p>
+                    )}
                     {!attemptsExhausted && (
                       <button
                         onClick={() => handleRetry(q.id)}

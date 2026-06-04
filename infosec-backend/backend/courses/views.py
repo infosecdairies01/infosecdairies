@@ -389,12 +389,13 @@ _LESSON_ID_CONTENT_RE = _re.compile(r"^[a-zA-Z0-9_.:-]{1,80}$")
 _QUESTION_ID_RE = _re.compile(r"^[a-zA-Z0-9_.:-]{1,80}$")
 
 
-def _strip_lab_answers(content: dict) -> dict:
-    """Return a copy of content_json with 'answer' removed from every labQuestion."""
+def _strip_lab_secrets(content: dict) -> dict:
+    """Return a copy of content_json with 'answer' and 'hint' removed from every labQuestion."""
     result = _copy.deepcopy(content)
     pe = result.get("practicalExercise") or {}
     for q in pe.get("labQuestions") or []:
         q.pop("answer", None)
+        q.pop("hint", None)
     return result
 
 
@@ -446,8 +447,8 @@ def lesson_content(request, slug, lesson_id):
 
     content_obj = get_object_or_404(LessonContent, course_slug=slug, lesson_id=lesson_id)
 
-    # Strip lab question answers — they are checked server-side via the submit endpoint.
-    safe_content = _strip_lab_answers(content_obj.content_json)
+    # Strip answers and hints — both are delivered server-side via the submit endpoint.
+    safe_content = _strip_lab_secrets(content_obj.content_json)
     response = Response(safe_content)
     # private: CDN must not cache this — it is user-specific.
     # max-age=3600: browser may cache for 1 hour to avoid repeat fetches per session.
@@ -516,12 +517,15 @@ def submit_lab_answer(request, slug, lesson_id, question_id):
         (correct_answer[:20] and user_answer.startswith(correct_answer[:20]))
     ) if keywords else (user_answer == correct_answer)
 
-    # Reveal the reference answer only when earned (correct) or all attempts used
-    reveal = is_correct or attempt_count >= 4
+    # Reveal the reference answer only when earned (correct) or all attempts used.
+    # Reveal the hint after the first wrong attempt so the user gets help on retry.
+    reveal_answer = is_correct or attempt_count >= 4
+    reveal_hint = not is_correct and attempt_count >= 1
 
     return Response({
         "correct": is_correct,
         "attempts": attempt_count,
-        "reference_answer": question["answer"] if reveal else None,
+        "hint": question.get("hint") if reveal_hint else None,
+        "reference_answer": question["answer"] if reveal_answer else None,
     })
 
