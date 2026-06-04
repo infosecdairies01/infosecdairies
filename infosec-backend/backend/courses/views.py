@@ -1,4 +1,5 @@
 import re as _re
+import copy as _copy
 import logging as _logging
 from datetime import timedelta
 
@@ -385,6 +386,16 @@ def my_quiz_scores(request, slug):
 # ──────────────────────────────────────────────────────────────────────────────
 
 _LESSON_ID_CONTENT_RE = _re.compile(r"^[a-zA-Z0-9_.:-]{1,80}$")
+_QUESTION_ID_RE = _re.compile(r"^[a-zA-Z0-9_.:-]{1,80}$")
+
+
+def _strip_lab_answers(content: dict) -> dict:
+    """Return a copy of content_json with 'answer' removed from every labQuestion."""
+    result = _copy.deepcopy(content)
+    pe = result.get("practicalExercise") or {}
+    for q in pe.get("labQuestions") or []:
+        q.pop("answer", None)
+    return result
 
 
 @api_view(["GET"])
@@ -435,9 +446,82 @@ def lesson_content(request, slug, lesson_id):
 
     content_obj = get_object_or_404(LessonContent, course_slug=slug, lesson_id=lesson_id)
 
-    response = Response(content_obj.content_json)
+    # Strip lab question answers — they are checked server-side via the submit endpoint.
+    safe_content = _strip_lab_answers(content_obj.content_json)
+    response = Response(safe_content)
     # private: CDN must not cache this — it is user-specific.
     # max-age=3600: browser may cache for 1 hour to avoid repeat fetches per session.
     response["Cache-Control"] = f"private, max-age={_LESSON_CONTENT_CACHE_SECONDS}"
     return response
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def submit_lab_answer(request, slug, lesson_id, question_id):
+    """
+    Server-side lab question answer checking.
+
+    Body:     {"answer": "user's text"}
+    Response: {"correct": bool, "attempts": int, "reference_answer": str|null}
+
+    reference_answer is only included when correct=True or the user has exhausted
+    all 4 attempts, so it is never exposed to anyone who hasn't genuinely engaged
+    with the question.
+    """
+    if not lesson_id or not _LESSON_ID_CONTENT_RE.match(lesson_id):
+        return Response({"detail": "Invalid lesson_id format."}, status=400)
+    if not question_id or not _QUESTION_ID_RE.match(question_id):
+        return Response({"detail": "Invalid question_id format."}, status=400)
+
+    course = get_object_or_404(Course, slug=slug, is_published=True)
+
+    is_staff = request.user.is_staff or request.user.is_superuser
+    if not is_staff:
+        if slug == FREE_COURSE_SLUG:
+            Enrollment.objects.get_or_create(
+                user=request.user,
+                course=course,
+                defaults={"is_paid": False},
+            )
+        _, denied = _ensure_enrolled_and_paid(request.user, course)
+        if denied:
+            return denied
+
+    # Broad rate limit: 60 submissions per user per lesson per hour
+    rl_key = f"lab_submit:{request.user.id}:{slug}:{lesson_id}"
+    if _rate_limit_key(rl_key, 60, 3600):
+        return Response({"detail": "Too many attempts. Please wait before retrying."}, status=429)
+
+    content_obj = get_object_or_404(LessonContent, course_slug=slug, lesson_id=lesson_id)
+
+    # Locate the question in the stored content
+    pe = (content_obj.content_json or {}).get("practicalExercise") or {}
+    lab_questions = pe.get("labQuestions") or []
+    question = next((q for q in lab_questions if q.get("id") == question_id), None)
+    if question is None:
+        return Response({"detail": "Question not found."}, status=404)
+
+    # Per-question attempt counter (24-hour window — resets each day)
+    attempt_key = f"lab_attempts:{request.user.id}:{slug}:{lesson_id}:{question_id}"
+    attempt_count = (_cache.get(attempt_key) or 0) + 1
+    _cache.set(attempt_key, attempt_count, 86400)
+
+    # Keyword-matching identical to the old frontend logic
+    user_answer = (request.data.get("answer") or "").strip().lower()
+    correct_answer = (question.get("answer") or "").strip().lower()
+    keywords = [w for w in _re.split(r"[\s,—\-]+", correct_answer) if len(w) > 3]
+    match_count = sum(1 for kw in keywords if kw in user_answer)
+    is_correct = bool(
+        (match_count >= min(2, len(keywords))) or
+        (correct_answer[:20] and user_answer.startswith(correct_answer[:20]))
+    ) if keywords else (user_answer == correct_answer)
+
+    # Reveal the reference answer only when earned (correct) or all attempts used
+    reveal = is_correct or attempt_count >= 4
+
+    return Response({
+        "correct": is_correct,
+        "attempts": attempt_count,
+        "reference_answer": question["answer"] if reveal else None,
+    })
 

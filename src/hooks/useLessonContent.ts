@@ -36,7 +36,7 @@ import { apiUrl } from "@/services/api";
 import type { LessonContent } from "@/data/lessonContent";
 
 const CACHE_KEY = (slug: string, lessonId: string) =>
-  `lc_v1_${slug}_${lessonId}`;
+  `lc_v2_${slug}_${lessonId}`;
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 

@@ -11,6 +11,7 @@ from .views import (
     submit_quiz,
     course_completion,
     my_quiz_scores,
+    submit_lab_answer,
 )
 
 urlpatterns = [
@@ -33,5 +34,10 @@ urlpatterns = [
         "<slug:slug>/lessons/<str:lesson_id>/complete/",
         mark_lesson_complete,
         name="course-lesson-complete",
+    ),
+    path(
+        "<slug:slug>/lessons/<str:lesson_id>/lab-questions/<str:question_id>/submit/",
+        submit_lab_answer,
+        name="lab-question-submit",
     ),
 ]
