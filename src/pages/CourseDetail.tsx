@@ -177,6 +177,7 @@ const CourseDetail = () => {
     courseName?: string;
   }
   const [certMeta, setCertMeta] = useState<CertMeta | null>(null);
+  const [isCertDownloading, setIsCertDownloading] = useState(false);
 
   const displayPriceInr = useMemo(() => {
     if (!slug) return null;
@@ -909,11 +910,13 @@ const CourseDetail = () => {
   };
 
   const handleDownloadCertificate = async () => {
+    if (isCertDownloading) return;
     if (serverCompleted === false) {
       setEnrollError("Please pass at least one quiz before downloading your certificate.");
       return;
     }
 
+    setIsCertDownloading(true);
     // Use frozen server values — falls back gracefully if certMeta not loaded yet
     const name = certMeta?.studentName || (user?.fullName || "Student");
     const date = certMeta?.issueDate || new Date().toISOString().slice(0, 10);
@@ -945,6 +948,8 @@ const CourseDetail = () => {
       a.remove();
     } catch {
       setEnrollError("Could not generate certificate. Please try again.");
+    } finally {
+      setIsCertDownloading(false);
     }
   };
 
@@ -1586,9 +1591,10 @@ const CourseDetail = () => {
                       <div className="mt-3 space-y-2">
                         <button
                           onClick={handleDownloadCertificate}
-                          className="w-full px-6 py-3 rounded-lg text-sm font-semibold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/20 transition-colors"
+                          disabled={isCertDownloading}
+                          className="w-full px-6 py-3 rounded-lg text-sm font-semibold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          Download Certificate
+                          {isCertDownloading ? "Generating..." : "Download Certificate"}
                         </button>
                         <button
                           onClick={handleShareOnLinkedIn}
