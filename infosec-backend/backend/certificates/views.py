@@ -113,9 +113,6 @@ def upload_certificate(request):
     """
     from courses.models import Course, Enrollment, QuizScore
 
-    if _rate_limit(f"cert_upload:{request.user.id}", 5, 3600):
-        return JsonResponse({"error": "Too many certificate requests. Try again later."}, status=429)
-
     image_data = request.data.get('image')
     course_slug = (request.data.get('course_slug') or '').strip()
     user_email = request.user.email
@@ -127,7 +124,7 @@ def upload_certificate(request):
 
     FREE_SLUG = "network-fundamentals"
 
-    # If cert already exists for this user+course, return it — no re-upload
+    # If cert already exists, return it immediately — no rate limit consumed for re-downloads
     existing = Certificate.objects.filter(user=request.user, course_slug=course_slug).first()
     if existing:
         return JsonResponse({
@@ -137,6 +134,9 @@ def upload_certificate(request):
             'student_name': existing.student_name,
             'already_exists': True,
         })
+
+    if _rate_limit(f"cert_upload:{request.user.id}", 5, 3600):
+        return JsonResponse({"error": "Too many certificate requests. Try again later."}, status=429)
 
     try:
         course = Course.objects.get(slug=course_slug, is_published=True)
