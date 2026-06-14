@@ -1356,27 +1356,28 @@ const LessonViewer = () => {
                       onClick={() => {
                         if (nextLessonInModule?.id) {
                           const didNavigate = navigateToLesson(nextLessonInModule.id);
-                          if (didNavigate) {
+                          if (didNavigate && !isQuizLesson) {
                             void markLessonComplete();
                           }
                           return;
                         }
 
                         if (moduleQuizId && !hasPassedModuleQuiz) {
-                          void markLessonComplete();
+                          // Never mark a quiz lesson complete via Next — only QuizPage does that on pass
+                          if (!isQuizLesson) void markLessonComplete();
                           navigate(`/courses/${slug}/quiz/${moduleQuizId}`);
                           return;
                         }
 
                         if (nextModuleFirstLesson?.id) {
                           const didNavigate = navigateToLesson(nextModuleFirstLesson.id);
-                          if (didNavigate) {
+                          if (didNavigate && !isQuizLesson) {
                             void markLessonComplete();
                           }
                           return;
                         }
 
-                        void markLessonComplete();
+                        if (!isQuizLesson) void markLessonComplete();
                         navigate(`/courses/${slug}`);
                       }}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
@@ -1390,7 +1391,7 @@ const LessonViewer = () => {
                   ) : (
                     <button
                       onClick={() => {
-                        void markLessonComplete();
+                        if (!isQuizLesson) void markLessonComplete();
                         navigate(`/courses/${slug}`);
                       }}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg text-primary hover:bg-primary/10 transition-colors"
