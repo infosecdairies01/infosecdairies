@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { apiUrl } from "@/services/api";
-import { verifyJwtLocally } from "@/lib/jwtVerify";
+import { verifyJwtLocally, decodeJwtWithoutVerification } from "@/lib/jwtVerify";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -151,8 +151,14 @@ const Auth = () => {
         }
       }
 
-      // When RS256 local verify succeeded, confirm the email claim matches.
-      if (localVerifyOk && verifiedPayload) {
+      // If local verification failed because of HS256, decode the payload without verification
+      // so we can still validate that the email claim matches the input email.
+      if (!localVerifyOk) {
+        verifiedPayload = decodeJwtWithoutVerification(tokens.access);
+      }
+
+      // Confirm the email claim matches the login email.
+      if (verifiedPayload) {
         if (
           !verifiedPayload.email ||
           verifiedPayload.email.toLowerCase() !== email.toLowerCase().trim()

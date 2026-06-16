@@ -95,3 +95,18 @@ export async function verifyJwtLocally(token: string): Promise<VerifiedJwtPayloa
 
   return payload;
 }
+
+/**
+ * Decode a JWT payload without verifying its signature (safe for frontend UI/state purposes only).
+ */
+export function decodeJwtWithoutVerification(token: string): VerifiedJwtPayload | null {
+  try {
+    const payloadB64 = token.split(".")[1];
+    const b64 = payloadB64.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    return JSON.parse(atob(padded)) as VerifiedJwtPayload;
+  } catch {
+    return null;
+  }
+}
+
