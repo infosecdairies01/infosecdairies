@@ -6,6 +6,11 @@ import { useAuth } from "@/context/AuthContext";
 export type CourseAccessState = "loading" | "granted" | "denied" | "unauthenticated";
 
 const SESSION_KEY = (slug: string) => `course_access_token_${slug}`;
+const FREE_COURSE_SLUG = "network-fundamentals";
+
+function isUnsupportedAlgError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("Unsupported token algorithm");
+}
 
 /**
  * Checks paid enrollment for a course using an RS256-signed access token.
@@ -140,11 +145,87 @@ export function useCourseAccess(slug: string | undefined): {
       //      rejected because we don't accept HS256 at all.
       //   b) Stolen RS256 token: passes signature check but then fails the
       //      user_id binding check below.
+      // If Web Crypto is not supported by the browser or environment, fall back directly.
+      const isCryptoSupported = typeof window !== "undefined" && !!window.crypto && !!window.crypto.subtle;
+
       let payload: Awaited<ReturnType<typeof verifyJwtLocally>>;
+      if (!isCryptoSupported) {
+        try {
+          const enrollmentRes = await fetch(
+            apiUrl(`/api/courses/${slug}/enrollment/`),
+            {
+              headers: { Authorization: `Bearer ${authToken}` },
+            }
+          );
+
+          if (!enrollmentRes.ok) {
+            setAccessState("denied");
+            return;
+          }
+          const enrollmentData = await enrollmentRes.json();
+          const enrolled = enrollmentData?.status === "enrolled";
+          const paidOk =
+            slug === FREE_COURSE_SLUG ||
+            enrollmentData?.is_paid === true ||
+            enrollmentData?.is_staff === true;
+
+          if (enrolled && paidOk) {
+            setIsPaid(slug === FREE_COURSE_SLUG ? true : enrollmentData?.is_paid === true);
+            setIsStaff(enrollmentData?.is_staff === true);
+            setAccessState("granted");
+            return;
+          }
+
+          setAccessState("denied");
+          return;
+        } catch {
+          setAccessState("denied");
+          return;
+        }
+      }
+
       try {
         payload = await verifyJwtLocally(data.access_token);
-      } catch {
-        // Signature invalid, expired, wrong algorithm — deny unconditionally.
+      } catch (error) {
+        // Fall back only if the token uses an unsupported algorithm (e.g. HS256 local dev fallback).
+        // Signature invalid, expired, or malformed tokens must fail loudly (denied) in production
+        // so that misconfigurations, tampering, and key issues are visible.
+        if (isUnsupportedAlgError(error)) {
+          try {
+            const enrollmentRes = await fetch(
+              apiUrl(`/api/courses/${slug}/enrollment/`),
+              {
+                headers: { Authorization: `Bearer ${authToken}` },
+              }
+            );
+
+            if (!enrollmentRes.ok) {
+              setAccessState("denied");
+              return;
+            }
+            const enrollmentData = await enrollmentRes.json();
+            const enrolled = enrollmentData?.status === "enrolled";
+            const paidOk =
+              slug === FREE_COURSE_SLUG ||
+              enrollmentData?.is_paid === true ||
+              enrollmentData?.is_staff === true;
+
+            if (enrolled && paidOk) {
+              setIsPaid(slug === FREE_COURSE_SLUG ? true : enrollmentData?.is_paid === true);
+              setIsStaff(enrollmentData?.is_staff === true);
+              setAccessState("granted");
+              return;
+            }
+
+            setAccessState("denied");
+            return;
+          } catch {
+            setAccessState("denied");
+            return;
+          }
+        }
+
+        // Invalid signature, expired token, or malformed token — deny unconditionally.
         setAccessState("denied");
         return;
       }

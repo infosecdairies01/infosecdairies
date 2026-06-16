@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/services/api";
-import { verifyJwtLocally } from "@/lib/jwtVerify";
+import { verifyJwtLocally, decodeJwtWithoutVerification, VerifiedJwtPayload } from "@/lib/jwtVerify";
 
 interface AuthUser {
   email: string;
@@ -32,6 +32,16 @@ function decodeJwtUserId(token: string): number | null {
     return null;
   }
 }
+
+function isUnsupportedAlgError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.message.includes("Unsupported token algorithm") ||
+      error.message.toLowerCase().includes("algorithm") ||
+      error.message.toLowerCase().includes("unsupported"))
+  );
+}
+
 
 /**
  * Wipe all quiz scores and lesson-progress entries from localStorage.
@@ -118,22 +128,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     (async () => {
       if (storedEmail && accessToken) {
+        let payload: VerifiedJwtPayload | null = null;
         try {
-          const payload = await verifyJwtLocally(accessToken);
-          if (payload.email?.toLowerCase() === storedEmail.toLowerCase()) {
-            // Check if user_id matches what we stored — mismatch means the account
-            // was deleted and a new one was created with the same email.
-            const storedUserId = localStorage.getItem("userId");
-            const tokenUserId = payload.user_id;
-            if (storedUserId && tokenUserId && String(tokenUserId) !== storedUserId) {
-              clearUserLocalCache();
-            }
-            if (tokenUserId) localStorage.setItem("userId", String(tokenUserId));
-            setUser({ email: storedEmail, fullName: storedFullName || undefined });
-            return;
+          payload = await verifyJwtLocally(accessToken);
+        } catch (error) {
+          // In local development or misconfigured production (using HS256 fallback),
+          // signature verification fails. Decode the payload directly for local session restore.
+          if (isUnsupportedAlgError(error)) {
+            payload = decodeJwtWithoutVerification(accessToken);
           }
-        } catch {
-          // token invalid/expired — fall through to refresh
+        }
+        
+        const storedUserId = localStorage.getItem("userId");
+        const tokenUserId = payload?.user_id;
+        const emailMatches = payload?.email
+          ? payload.email.toLowerCase() === storedEmail.toLowerCase()
+          : (storedUserId && tokenUserId && String(tokenUserId) === storedUserId);
+
+        if (payload && emailMatches) {
+          // Check if user_id matches what we stored — mismatch means the account
+          // was deleted and a new one was created with the same email.
+          if (storedUserId && tokenUserId && String(tokenUserId) !== storedUserId) {
+            clearUserLocalCache();
+          }
+          if (tokenUserId) localStorage.setItem("userId", String(tokenUserId));
+          setUser({ email: storedEmail, fullName: storedFullName || undefined });
+          return;
         }
       }
 
@@ -142,20 +162,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (result === "ok") {
           const newToken = localStorage.getItem("accessToken");
           if (newToken) {
+            let payload: VerifiedJwtPayload | null = null;
             try {
-              const payload = await verifyJwtLocally(newToken);
-              if (payload.email?.toLowerCase() === storedEmail.toLowerCase()) {
-                const storedUserId = localStorage.getItem("userId");
-                const tokenUserId = payload.user_id;
-                if (storedUserId && tokenUserId && String(tokenUserId) !== storedUserId) {
-                  clearUserLocalCache();
-                }
-                if (tokenUserId) localStorage.setItem("userId", String(tokenUserId));
-                setUser({ email: storedEmail, fullName: storedFullName || undefined });
-                return;
+              payload = await verifyJwtLocally(newToken);
+            } catch (error) {
+              if (isUnsupportedAlgError(error)) {
+                payload = decodeJwtWithoutVerification(newToken);
               }
-            } catch {
-              // refreshed token also invalid
+            }
+
+            const storedUserId = localStorage.getItem("userId");
+            const tokenUserId = payload?.user_id;
+            const emailMatches = payload?.email
+              ? payload.email.toLowerCase() === storedEmail.toLowerCase()
+              : (storedUserId && tokenUserId && String(tokenUserId) === storedUserId);
+
+            if (payload && emailMatches) {
+              if (storedUserId && tokenUserId && String(tokenUserId) !== storedUserId) {
+                clearUserLocalCache();
+              }
+              if (tokenUserId) localStorage.setItem("userId", String(tokenUserId));
+              setUser({ email: storedEmail, fullName: storedFullName || undefined });
+              return;
             }
           }
         }
@@ -180,9 +208,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = localStorage.getItem("accessToken");
       if (token) {
         try {
-          const payload = await verifyJwtLocally(token);
-          if (payload.exp && payload.exp > Math.floor(Date.now() / 1000) + 600) return;
-        } catch { /* expired — fall through to refresh */ }
+          let payload: VerifiedJwtPayload | null = null;
+          try {
+            payload = await verifyJwtLocally(token);
+          } catch (error) {
+            if (isUnsupportedAlgError(error)) {
+              payload = decodeJwtWithoutVerification(token);
+            } else {
+              throw error;
+            }
+          }
+          if (payload && payload.exp && payload.exp > Math.floor(Date.now() / 1000) + 600) return;
+        } catch { /* expired or invalid — fall through to refresh */ }
       }
 
       const result = await refreshAccessToken();
@@ -199,8 +236,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let needsRefresh = true;
       if (token) {
         try {
-          await verifyJwtLocally(token);
-          needsRefresh = false;
+          let payload: VerifiedJwtPayload | null = null;
+          try {
+            payload = await verifyJwtLocally(token);
+          } catch (error) {
+            if (isUnsupportedAlgError(error)) {
+              payload = decodeJwtWithoutVerification(token);
+            } else {
+              throw error;
+            }
+          }
+          if (payload && payload.exp && payload.exp > Math.floor(Date.now() / 1000)) {
+            needsRefresh = false;
+          }
         } catch { /* expired */ }
       }
       if (needsRefresh) {
