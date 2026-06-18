@@ -38,11 +38,13 @@ def get_rates() -> dict:
         resp.raise_for_status()
         data = resp.json()
         if data.get("result") == "success":
-            rates = data["rates"]
+            rates = data.get("rates") or {}
+            if not rates:
+                return FALLBACK_RATES
             cache.set(CACHE_KEY, rates, CACHE_TTL)
             return rates
     except Exception:
-        logger.warning("Failed to fetch exchange rates, using fallback")
+        logger.warning("Failed to fetch exchange rates, using fallback", exc_info=True)
 
     return FALLBACK_RATES
 
@@ -53,14 +55,16 @@ def inr_to_currency(amount_inr: int, currency_code: str) -> float:
         return float(amount_inr)
     rates = get_rates()
     rate = rates.get(currency_code)
-    if not rate:
+    if rate is None:
         return float(amount_inr)
     converted = amount_inr * rate
     return round_to_99(converted)
 
 
 def round_to_99(amount: float) -> float:
-    """Round 9.73 → 9.99, 12.45 → 12.99, 44.20 → 44.99."""
+    """Round 9.73 → 9.99, 12.45 → 12.99, 44.20 → 44.99.
+    # 12.0 → 11.99 by design — all prices land at X.99
+    """
     if amount <= 0:
         return 0.0
     return float(math.ceil(amount)) - 0.01
