@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/context/AuthContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { useCourseAccess } from "@/hooks/useCourseAccess";
 import {
   Collapsible,
@@ -131,6 +132,7 @@ const CourseDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { symbol } = useCurrency();
 
   const [courseMeta, setCourseMeta] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
@@ -1581,7 +1583,7 @@ const CourseDetail = () => {
                           : slug === "network-fundamentals"
                           ? "Enroll"
                           : typeof displayPriceInr === "number"
-                          ? `Buy Now (₹${displayPriceInr})`
+                          ? `Buy Now (${symbol}${displayPriceInr})`
                           : "Buy Now"}
                       </span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
