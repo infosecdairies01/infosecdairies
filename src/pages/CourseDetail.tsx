@@ -132,7 +132,7 @@ const CourseDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { symbol } = useCurrency();
+  const { symbol, prices } = useCurrency();
 
   const [courseMeta, setCourseMeta] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
@@ -195,6 +195,18 @@ const CourseDetail = () => {
       displayPriceInr > 0
     );
   }, [displayPriceInr, isCourseProgressEnabled]);
+
+  // Display price in user's local currency (from CurrencyContext) keyed by difficulty
+  const displayPrice = useMemo(() => {
+    if (typeof displayPriceInr !== "number" || displayPriceInr === 0) return displayPriceInr;
+    const difficulty = staticCourses.find(
+      (c) => c.id === slug || c.id === getCourseIdFromSlug(slug ?? "")
+    )?.difficulty;
+    if (difficulty === "easy") return prices.easy;
+    if (difficulty === "medium") return prices.medium;
+    if (difficulty === "hard") return prices.hard;
+    return displayPriceInr;
+  }, [displayPriceInr, prices, slug]);
 
   const isLockedForPayment = isPaidCourse && !isEnrolled;
 
@@ -1582,8 +1594,8 @@ const CourseDetail = () => {
                           ? "Continue Course"
                           : slug === "network-fundamentals"
                           ? "Enroll"
-                          : typeof displayPriceInr === "number"
-                          ? `Buy Now (${symbol}${displayPriceInr})`
+                          : typeof displayPrice === "number"
+                          ? `Buy Now (${symbol}${displayPrice})`
                           : "Buy Now"}
                       </span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
