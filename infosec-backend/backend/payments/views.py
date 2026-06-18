@@ -3,6 +3,7 @@ import hmac
 from datetime import datetime
 import logging
 
+import requests as _http
 import razorpay
 from razorpay.errors import BadRequestError
 from django.conf import settings
@@ -32,6 +33,33 @@ def _payment_rate_limit(key: str, limit: int, period: int) -> bool:
         return True
     _django_cache.set(key, count + 1, period)
     return False
+
+
+def _get_client_ip(request) -> str:
+    """Return the real client IP, handling Railway's reverse-proxy X-Forwarded-For."""
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "")
+
+
+def _get_country_from_ip(ip: str) -> str:
+    """Resolve a 2-letter ISO country code from an IP address. Cached 24 hrs. Falls back to IN."""
+    if not ip or ip in ("127.0.0.1", "::1"):
+        return "IN"
+    cache_key = f"ip_country:{ip}"
+    cached = _django_cache.get(cache_key)
+    if cached:
+        return cached
+    try:
+        resp = _http.get(f"https://ipapi.co/{ip}/country/", timeout=3, headers={"User-Agent": "infosecdairies/1.0"})
+        if resp.ok and len(resp.text.strip()) == 2:
+            country = resp.text.strip().upper()
+            _django_cache.set(cache_key, country, 86400)
+            return country
+    except Exception:
+        logger.warning("IP country lookup failed for %s", ip)
+    return "IN"
 
 
 FREE_COURSE_SLUG = "network-fundamentals"
@@ -132,7 +160,7 @@ def create_order(request):
     course_slug = request.data.get("course_slug")
     purchaser_name = request.data.get("full_name")
     promo_code = request.data.get("promo_code", "").strip().upper()
-    country_code = (request.data.get("country_code") or "IN").upper().strip()
+    country_code = _get_country_from_ip(_get_client_ip(request))
 
     if not course_slug:
         return Response({"detail": "course_slug is required"}, status=400)
