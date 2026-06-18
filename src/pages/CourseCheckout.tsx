@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import { ALL_COURSES_BUNDLE_SLUG, ALL_COURSES_BUNDLE_PRICE_INR, getCourseBySlug, getCoursePriceInr } from "@/data/courses";
+import { useCurrency } from "@/context/CurrencyContext";
+import { ALL_COURSES_BUNDLE_SLUG, getCourseBySlug } from "@/data/courses";
 import { apiUrl } from "@/services/api";
 
 declare global {
@@ -19,13 +20,14 @@ const CourseCheckout = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { countryCode, symbol, prices, loading: currencyLoading } = useCurrency();
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState(user?.fullName || user?.email?.split("@")[0] || "");
   const [error, setError] = useState<string | null>(null);
-  const [displayAmountInr, setDisplayAmountInr] = useState<number | null>(null);
-  const [originalPrice, setOriginalPrice] = useState<number | null>(null);
+  const [displayAmount, setDisplayAmount] = useState<number | null>(null);
+  const [originalAmount, setOriginalAmount] = useState<number | null>(null);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
@@ -34,25 +36,28 @@ const CourseCheckout = () => {
   const [applyingPromo, setApplyingPromo] = useState(false);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!slug || currencyLoading) return;
+
     if (slug === ALL_COURSES_BUNDLE_SLUG) {
-      setCourse({
-        title: "All Courses Bundle",
-        difficulty: "easy",
-      });
-      setDisplayAmountInr(ALL_COURSES_BUNDLE_PRICE_INR);
-      setOriginalPrice(ALL_COURSES_BUNDLE_PRICE_INR);
+      setCourse({ title: "All Courses Bundle", difficulty: "easy" });
+      setDisplayAmount(prices.bundle);
+      setOriginalAmount(prices.bundle);
       setLoading(false);
       return;
     }
 
     const staticCourse = getCourseBySlug(slug);
-    const price = staticCourse ? getCoursePriceInr(slug, staticCourse.difficulty) : null;
-    setCourse(staticCourse);
-    setDisplayAmountInr(price);
-    setOriginalPrice(price);
+    if (staticCourse) {
+      const price =
+        staticCourse.difficulty === "easy" ? prices.easy
+        : staticCourse.difficulty === "medium" ? prices.medium
+        : prices.hard;
+      setCourse(staticCourse);
+      setDisplayAmount(price);
+      setOriginalAmount(price);
+    }
     setLoading(false);
-  }, [slug]);
+  }, [slug, currencyLoading, prices]);
 
   const loadRazorpayScript = () => {
     return new Promise<boolean>((resolve) => {
@@ -97,6 +102,7 @@ const CourseCheckout = () => {
           course_slug: slug,
           full_name: name.trim(),
           promo_code: trimmedCode,
+          country_code: countryCode,
         }),
       });
 
@@ -125,7 +131,7 @@ const CourseCheckout = () => {
         setPromoApplied(false);
         setCachedOrder(null);
         setDiscountPercent(0);
-        setDisplayAmountInr(originalPrice);
+        setDisplayAmount(originalAmount);
         return;
       }
 
@@ -133,12 +139,13 @@ const CourseCheckout = () => {
       setPromoApplied(true);
       setDiscountPercent(typeof data.discount_percent === "number" ? data.discount_percent : (data.free ? 100 : 0));
       if (data.free) {
-        // Enrollment already created by backend; show ₹0 so user can click "Get Free Access".
-        setDisplayAmountInr(0);
+        // Enrollment already created by backend; show 0 so user can click "Get Free Access".
+        setDisplayAmount(0);
         setCachedOrder(null);
       } else {
-        if (typeof data.amount_inr === "number") {
-          setDisplayAmountInr(data.amount_inr);
+        const displayAmt = typeof data.amount_display === "number" ? data.amount_display : data.amount_inr;
+        if (typeof displayAmt === "number") {
+          setDisplayAmount(displayAmt);
         }
         setCachedOrder(data);
       }
@@ -147,7 +154,7 @@ const CourseCheckout = () => {
       setPromoApplied(false);
       setCachedOrder(null);
       setDiscountPercent(0);
-      setDisplayAmountInr(originalPrice);
+      setDisplayAmount(originalAmount);
     } finally {
       setApplyingPromo(false);
     }
@@ -160,7 +167,7 @@ const CourseCheckout = () => {
     setDiscountPercent(0);
     setCachedOrder(null);
     // Reset to original price
-    setDisplayAmountInr(originalPrice);
+    setDisplayAmount(originalAmount);
   };
 
   useEffect(() => {
@@ -211,7 +218,7 @@ const CourseCheckout = () => {
     }
 
     // Free promo already enrolled the user at apply-time — navigate directly.
-    if (promoApplied && displayAmountInr === 0) {
+    if (promoApplied && displayAmount === 0) {
       if (slug === ALL_COURSES_BUNDLE_SLUG) {
         navigate("/courses");
       } else {
@@ -243,6 +250,7 @@ const CourseCheckout = () => {
             course_slug: slug,
             full_name: name.trim(),
             promo_code: promoApplied ? promoCode.trim().toUpperCase() : undefined,
+            country_code: countryCode,
           }),
         });
 
@@ -282,7 +290,7 @@ const CourseCheckout = () => {
           setPromoError(detail);
           setPromoApplied(false);
           setDiscountPercent(0);
-          setDisplayAmountInr(originalPrice);
+          setDisplayAmount(originalAmount);
         } else {
           setError(detail);
         }
@@ -290,8 +298,9 @@ const CourseCheckout = () => {
         return;
       }
 
-      if (typeof data.amount_inr === "number") {
-        setDisplayAmountInr(data.amount_inr);
+      const displayAmt = typeof data.amount_display === "number" ? data.amount_display : data.amount_inr;
+      if (typeof displayAmt === "number") {
+        setDisplayAmount(displayAmt);
         if (data.discount_percent) {
           setDiscountPercent(data.discount_percent);
         }
@@ -546,10 +555,10 @@ const CourseCheckout = () => {
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing...
                   </>
-                ) : promoApplied && displayAmountInr === 0 ? (
+                ) : promoApplied && displayAmount === 0 ? (
                   "Get Free Access"
                 ) : (
-                  `Pay ${typeof displayAmountInr === "number" ? `₹${displayAmountInr}` : ""}`
+                  `Pay ${typeof displayAmount === "number" ? `${symbol}${displayAmount}` : ""}`
                 )}
               </Button>
             </CardContent>
@@ -567,25 +576,25 @@ const CourseCheckout = () => {
               <div className="flex justify-between">
                 <span>Price</span>
                 <span className="font-medium line-through text-muted-foreground">
-                  ₹{originalPrice || 0}
+                  {symbol}{originalAmount || 0}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Discounted Price</span>
                 <span className="font-medium text-green-600">
-                  {typeof displayAmountInr === "number" ? `₹${displayAmountInr}` : "-"}
+                  {typeof displayAmount === "number" ? `${symbol}${displayAmount}` : "-"}
                 </span>
               </div>
-              {promoApplied && originalPrice && displayAmountInr !== originalPrice && (
+              {promoApplied && originalAmount && displayAmount !== originalAmount && (
                 <div className="flex justify-between text-green-600 text-sm">
                   <span>You save ({discountPercent || 50}% off)</span>
-                  <span className="font-medium">-₹{originalPrice - displayAmountInr}</span>
+                  <span className="font-medium">-{symbol}{((originalAmount ?? 0) - (displayAmount ?? 0)).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t pt-2 mt-2">
                 <span className="font-bold">Total</span>
                 <span className="font-bold text-lg">
-                  {typeof displayAmountInr === "number" ? `₹${displayAmountInr}` : "-"}
+                  {typeof displayAmount === "number" ? `${symbol}${displayAmount}` : "-"}
                 </span>
               </div>
             </CardContent>
