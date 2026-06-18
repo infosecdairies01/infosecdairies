@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CoursePurchase, PromoCode, PromoCodeUsage
+from .models import CoursePurchase, PromoCode, PromoCodeUsage, CountryPricing
 
 
 @admin.register(CoursePurchase)
@@ -10,6 +10,8 @@ class CoursePurchaseAdmin(admin.ModelAdmin):
         "user",
         "course_slug",
         "amount_inr",
+        "amount_charged",
+        "currency",
         "status",
         "razorpay_order_id",
         "razorpay_payment_id",
@@ -17,7 +19,16 @@ class CoursePurchaseAdmin(admin.ModelAdmin):
         "paid_at",
     )
     search_fields = ("course_slug", "razorpay_order_id", "razorpay_payment_id", "user__email")
-    list_filter = ("status", "course_slug")
+    list_filter = ("status", "course_slug", "currency")
+
+
+@admin.register(CountryPricing)
+class CountryPricingAdmin(admin.ModelAdmin):
+    list_display = ("country_code", "currency_code", "currency_symbol", "price_easy", "price_medium", "price_hard", "price_bundle", "is_active")
+    list_editable = ("price_easy", "price_medium", "price_hard", "price_bundle", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("country_code", "currency_code")
+    ordering = ("country_code",)
 
 
 @admin.register(PromoCode)
