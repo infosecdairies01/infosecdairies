@@ -19,7 +19,8 @@ interface CourseCardProps {
   slug?: string;
   thumbnail?: string;
   isLiveCourse?: boolean;
-  priceInr?: number;
+  price?: number;
+  symbol?: string;
 }
 
 const difficultyStyles = {
@@ -57,7 +58,7 @@ const thumbnailBySlug: Record<string, string> = {
   "network-fundamentals": networkFundamentalsBg,
 };
 
-const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, isLiveCourse, priceInr }: CourseCardProps) => {
+const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, isLiveCourse, price, symbol = "₹" }: CourseCardProps) => {
   const linkTo = slug
     ? (isLiveCourse ? `/live-courses/${slug}` : `/courses/${slug}`)
     : "/courses";
@@ -122,10 +123,10 @@ const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, is
             {title}
           </h3>
 
-          {typeof priceInr === "number" && !isLiveCourse && (
+          {typeof price === "number" && !isLiveCourse && (
             <div className="mb-2">
               <span className="text-sm font-semibold text-primary">
-                {priceInr === 0 ? "Free" : `₹${priceInr}`}
+                {price === 0 ? "Free" : `${symbol}${price}`}
               </span>
             </div>
           )}

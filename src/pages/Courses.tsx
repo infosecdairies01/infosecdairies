@@ -2,15 +2,17 @@ import { useMemo, useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CourseCard from "@/components/CourseCard";
-import { ALL_COURSES_BUNDLE_PRICE_INR, ALL_COURSES_BUNDLE_SLUG, getCoursePriceInr, getCourseCardData } from "@/data/courses";
+import { ALL_COURSES_BUNDLE_SLUG, getCourseCardData } from "@/data/courses";
 import { getLiveCourseCardData } from "@/data/liveCourses";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from "@/services/api";
+import { useCurrency } from "@/context/CurrencyContext";
 
 const Courses = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { prices, symbol } = useCurrency();
   const [activeTab, setActiveTab] = useState<"self-paced" | "live">("self-paced");
   const [hasBundle, setHasBundle] = useState(false);
   
@@ -136,7 +138,8 @@ const Courses = () => {
                       difficulty={course.difficulty}
                       slug={(course as any).slug ?? course.courseId}
                       thumbnail={course.thumbnail}
-                      priceInr={(course as any).priceInr ?? getCoursePriceInr((course as any).slug ?? course.courseId, course.difficulty)}
+                      price={course.difficulty === "easy" ? prices.easy : course.difficulty === "medium" ? prices.medium : prices.hard}
+                      symbol={symbol}
                     />
                   ))
                 : liveCourses.map((course, index) => (
@@ -161,7 +164,7 @@ const Courses = () => {
                       <div className="text-xs text-muted-foreground/80">Get access to all self-paced courses at one price</div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="text-lg font-semibold text-primary">₹{ALL_COURSES_BUNDLE_PRICE_INR}</div>
+                      <div className="text-lg font-semibold text-primary">{symbol}{prices.bundle}</div>
                       <button
                         type="button"
                         onClick={() => {
