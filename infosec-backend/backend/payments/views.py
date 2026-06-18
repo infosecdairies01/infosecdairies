@@ -18,7 +18,8 @@ from rest_framework.response import Response
 from courses.models import Course, Enrollment
 from accounts.email_templates import _send_html_email, get_payment_receipt_template
 
-from .models import CoursePurchase, PromoCode, PromoCodeUsage
+from .models import CoursePurchase, PromoCode, PromoCodeUsage, CountryPricing
+from .exchange_rates import inr_to_currency, COUNTRY_CURRENCY_MAP
 
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,31 @@ def _bundle_price_inr() -> int:
     if _is_test_mode():
         return ALL_COURSES_BUNDLE_PRICE_INR
     return ALL_COURSES_BUNDLE_PRICE_INR
+
+
+def _get_local_price(country_code: str, tier: str, inr_amount: int) -> dict:
+    """
+    Returns {amount, currency, symbol} for a given country and INR base price.
+    Checks CountryPricing for manual override first; falls back to live rate conversion.
+    tier must be one of: easy, medium, hard, bundle
+    """
+    code = (country_code or "").upper().strip()
+
+    pricing = CountryPricing.objects.filter(country_code=code, is_active=True).first()
+
+    if pricing:
+        manual = getattr(pricing, f"price_{tier}", None)
+        if manual is not None:
+            return {"amount": float(manual), "currency": pricing.currency_code, "symbol": pricing.currency_symbol}
+        currency_code = pricing.currency_code
+        symbol = pricing.currency_symbol
+    elif code in COUNTRY_CURRENCY_MAP:
+        currency_code, symbol = COUNTRY_CURRENCY_MAP[code]
+    else:
+        return {"amount": float(inr_amount), "currency": "INR", "symbol": "₹"}
+
+    converted = inr_to_currency(inr_amount, currency_code)
+    return {"amount": converted, "currency": currency_code, "symbol": symbol}
 
 
 def _clean_razorpay_cred(value: str) -> str:
@@ -484,3 +510,37 @@ def my_purchases(request):
         for p in purchases
     ]
     return Response(data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_pricing(request):
+    """
+    GET /api/payments/pricing/?country=US
+    Returns prices for all tiers in the visitor's local currency.
+    Falls back to INR for unsupported countries.
+    """
+    country_code = (request.GET.get("country") or "IN").upper().strip()
+
+    tiers = {
+        "easy": 499,
+        "medium": 799,
+        "hard": 1199,
+        "bundle": 3999,
+    }
+
+    sample = _get_local_price(country_code, "easy", 499)
+    currency = sample["currency"]
+    symbol = sample["symbol"]
+
+    prices = {}
+    for tier, inr_amount in tiers.items():
+        result = _get_local_price(country_code, tier, inr_amount)
+        prices[tier] = result["amount"]
+
+    return Response({
+        "country_code": country_code,
+        "currency": currency,
+        "symbol": symbol,
+        "prices": prices,
+    })
