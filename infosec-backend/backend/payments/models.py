@@ -2,6 +2,26 @@ from django.conf import settings
 from django.db import models
 
 
+class CountryPricing(models.Model):
+    """Manual price overrides per country. Null fields fall back to auto-conversion from INR."""
+    country_code = models.CharField(max_length=2, unique=True, help_text="ISO alpha-2 (US, GB, PK…)")
+    currency_code = models.CharField(max_length=3, help_text="USD, GBP, PKR…")
+    currency_symbol = models.CharField(max_length=10, help_text="$, £, ₨…")
+    price_easy = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Override for easy courses (₹499 base). Leave blank for auto-convert.")
+    price_medium = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Override for medium courses (₹799 base). Leave blank for auto-convert.")
+    price_hard = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Override for hard courses (₹1199 base). Leave blank for auto-convert.")
+    price_bundle = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Override for all-courses bundle (₹3999 base). Leave blank for auto-convert.")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Country Pricing"
+        verbose_name_plural = "Country Pricing"
+        ordering = ["country_code"]
+
+    def __str__(self) -> str:
+        return f"{self.country_code} ({self.currency_code})"
+
+
 class PromoCode(models.Model):
     """Promo codes with usage limits and discount percentage per course."""
     code = models.CharField(max_length=50, db_index=True)
@@ -109,6 +129,10 @@ class CoursePurchase(models.Model):
 
     amount_inr = models.PositiveIntegerField()
     currency = models.CharField(max_length=10, default="INR")
+    amount_charged = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Actual amount charged in the payment currency (e.g. 9.99 USD)"
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_CREATED)
 
     razorpay_order_id = models.CharField(max_length=100, unique=True)
