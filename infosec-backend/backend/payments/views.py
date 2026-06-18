@@ -132,15 +132,13 @@ def create_order(request):
     course_slug = request.data.get("course_slug")
     purchaser_name = request.data.get("full_name")
     promo_code = request.data.get("promo_code", "").strip().upper()
+    country_code = (request.data.get("country_code") or "IN").upper().strip()
 
     if not course_slug:
         return Response({"detail": "course_slug is required"}, status=400)
 
-    # Normalize URL slug to the canonical slug stored in PromoCode rows.
     promo_slug = _promo_course_slug(course_slug)
 
-    # Check promo code validity using PromoCode model with usage limits.
-    # Supports a global promo code row with course_slug == "all".
     is_promo_valid = False
     promo_code_obj = None
     if promo_code:
@@ -157,17 +155,13 @@ def create_order(request):
             if promo_code_obj.current_uses >= promo_code_obj.max_uses and promo_code_obj.max_uses > 0:
                 return Response({"detail": "This promo code has reached its usage limit"}, status=400)
             if PromoCodeUsage.objects.filter(code=promo_code, user=request.user, course_slug=promo_slug).exists():
-                # Usage already recorded. Check enrollment status.
                 _is_bundle = course_slug == ALL_COURSES_BUNDLE_SLUG
                 _c = None if _is_bundle else Course.objects.filter(slug=course_slug, is_published=True).first()
                 _enrolled = _is_bundle or (
                     _c is not None and Enrollment.objects.filter(user=request.user, course=_c, is_paid=True).exists()
                 )
                 if _enrolled:
-                    # Already enrolled — idempotent success.
                     return Response({"free": True, "course_slug": course_slug, "amount_inr": 0})
-                # Not yet enrolled (e.g. user retried after dismissing payment modal).
-                # Cap retries to prevent abuse of limited-use promo codes.
                 retry_key = f"promo_retry:{request.user.id}:{promo_code}:{promo_slug}"
                 retry_count = _django_cache.get(retry_key, 0)
                 if retry_count >= 3:
@@ -186,15 +180,24 @@ def create_order(request):
     if not is_bundle:
         course = get_object_or_404(Course, slug=course_slug, is_published=True)
         amount_inr = _course_price_inr(course)
+        lvl = (course.level or "easy").strip().lower()
+        if lvl in ("beginner",):
+            tier = "easy"
+        elif lvl in ("intermediate",):
+            tier = "medium"
+        elif lvl in ("advanced",):
+            tier = "hard"
+        elif lvl in ("easy", "medium", "hard"):
+            tier = lvl
+        else:
+            tier = "easy"
     else:
         amount_inr = _bundle_price_inr()
+        tier = "bundle"
 
-    # If promo code is valid, apply discount
     if is_promo_valid and promo_code_obj:
         amount_inr = promo_code_obj.calculate_discounted_price(amount_inr)
-
         if not getattr(promo_code_obj, "_skip_record_usage", False):
-            # Atomic check + record to prevent race condition on max_uses
             with transaction.atomic():
                 locked = PromoCode.objects.select_for_update().get(pk=promo_code_obj.pk)
                 if locked.max_uses > 0 and locked.current_uses >= locked.max_uses:
@@ -202,53 +205,46 @@ def create_order(request):
                 locked.record_usage(request.user, promo_slug)
 
     if amount_inr == 0:
-        # Free access (promo code or free course): create enrollment directly
         if not is_bundle:
             course = get_object_or_404(Course, slug=course_slug, is_published=True)
             enrollment, _ = Enrollment.objects.get_or_create(
-                user=request.user,
-                course=course,
-                defaults={"is_paid": True},
+                user=request.user, course=course, defaults={"is_paid": True},
             )
             if not enrollment.is_paid:
                 enrollment.is_paid = True
                 enrollment.save(update_fields=["is_paid"])
         else:
-            # Bundle - enroll in all courses
             courses = Course.objects.filter(is_published=True)
             for c in courses:
                 enrollment, _ = Enrollment.objects.get_or_create(
-                    user=request.user,
-                    course=c,
-                    defaults={"is_paid": True},
+                    user=request.user, course=c, defaults={"is_paid": True},
                 )
                 if not enrollment.is_paid:
                     enrollment.is_paid = True
                     enrollment.save(update_fields=["is_paid"])
-        
-        return Response(
-            {
-                "free": True,
-                "course_slug": course_slug,
-                "amount_inr": 0,
-                "discount_percent": promo_code_obj.discount_percent if promo_code_obj else None,
-            }
-        )
+        return Response({
+            "free": True, "course_slug": course_slug, "amount_inr": 0,
+            "discount_percent": promo_code_obj.discount_percent if promo_code_obj else None,
+        })
 
     existing_paid = CoursePurchase.objects.filter(
-        user=request.user,
-        course_slug=course_slug,
-        status=CoursePurchase.STATUS_PAID,
+        user=request.user, course_slug=course_slug, status=CoursePurchase.STATUS_PAID,
     ).exists()
     if existing_paid:
         return Response({"already_paid": True, "course_slug": course_slug, "amount_inr": amount_inr})
 
+    # Resolve local currency amount
+    local = _get_local_price(country_code, tier, amount_inr)
+    local_amount = local["amount"]
+    local_currency = local["currency"]
+    local_symbol = local["symbol"]
+
+    # Razorpay requires amount in smallest denomination (×100 for all supported currencies)
+    razorpay_amount = int(round(local_amount * 100))
+
     key_id = _clean_razorpay_cred(getattr(settings, "RAZORPAY_KEY_ID", ""))
     key_secret = _clean_razorpay_cred(getattr(settings, "RAZORPAY_KEY_SECRET", ""))
-    
-    amount_paise = int(amount_inr) * 100
-    
-    # Test mode: simulate order without real Razorpay
+
     if _is_test_mode() and (not key_id or not key_secret):
         import uuid
         mock_order_id = f"mock_order_{uuid.uuid4().hex[:16]}"
@@ -256,74 +252,71 @@ def create_order(request):
             user=request.user,
             course_slug=course_slug,
             amount_inr=amount_inr,
-            currency="INR",
+            amount_charged=local_amount,
+            currency=local_currency,
             status=CoursePurchase.STATUS_CREATED,
             razorpay_order_id=mock_order_id,
             purchaser_name=purchaser_name,
         )
-        return Response(
-            {
-                "free": False,
-                "key_id": "test_key_placeholder",
-                "order_id": mock_order_id,
-                "amount": amount_paise,
-                "currency": "INR",
-                "course_slug": course_slug,
-                "amount_inr": amount_inr,
-                "test_mode": True,
-            }
-        )
-    
+        return Response({
+            "free": False,
+            "key_id": "test_key_placeholder",
+            "order_id": mock_order_id,
+            "amount": razorpay_amount,
+            "currency": local_currency,
+            "amount_display": local_amount,
+            "symbol": local_symbol,
+            "course_slug": course_slug,
+            "amount_inr": amount_inr,
+            "test_mode": True,
+        })
+
     if not key_id or not key_secret:
         return Response({"detail": "Razorpay is not configured"}, status=500)
-
     if not key_id.startswith("rzp_"):
         return Response({"detail": "Invalid Razorpay Key ID"}, status=500)
 
     client = razorpay.Client(auth=(key_id, key_secret))
-
     receipt = f"course_{course_slug}_{request.user.id}_{int(datetime.utcnow().timestamp())}"
-    receipt = receipt[:40]  # Razorpay requires receipt <= 40 chars
+    receipt = receipt[:40]
 
     try:
-        order = client.order.create(
-            {
-                "amount": amount_paise,
-                "currency": "INR",
-                "receipt": receipt,
-                "payment_capture": 1,
-                "notes": {
-                    "course_slug": course_slug,
-                    "user_id": str(request.user.id),
-                },
-            }
-        )
+        order = client.order.create({
+            "amount": razorpay_amount,
+            "currency": local_currency,
+            "receipt": receipt,
+            "payment_capture": 1,
+            "notes": {
+                "course_slug": course_slug,
+                "user_id": str(request.user.id),
+            },
+        })
     except BadRequestError as exc:
-        # Common case: invalid key/secret => "Authentication failed"
         return Response({"detail": str(exc)}, status=502)
 
     CoursePurchase.objects.create(
         user=request.user,
         course_slug=course_slug,
         amount_inr=amount_inr,
-        currency="INR",
+        amount_charged=local_amount,
+        currency=local_currency,
         status=CoursePurchase.STATUS_CREATED,
         razorpay_order_id=order["id"],
         purchaser_name=purchaser_name,
     )
 
-    return Response(
-        {
-            "free": False,
-            "key_id": key_id,
-            "order_id": order["id"],
-            "amount": amount_paise,
-            "currency": "INR",
-            "course_slug": course_slug,
-            "amount_inr": amount_inr,
-            "discount_percent": promo_code_obj.discount_percent if promo_code_obj else None,
-        }
-    )
+    return Response({
+        "free": False,
+        "key_id": key_id,
+        "order_id": order["id"],
+        "amount": razorpay_amount,
+        "currency": local_currency,
+        "amount_display": local_amount,
+        "symbol": local_symbol,
+        "course_slug": course_slug,
+        "amount_inr": amount_inr,
+        "discount_percent": promo_code_obj.discount_percent if promo_code_obj else None,
+    })
 
 
 @api_view(["POST"])
