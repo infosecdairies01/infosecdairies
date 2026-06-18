@@ -26,7 +26,8 @@ const DEFAULT_STATE: CurrencyState = {
 
 const CurrencyContext = createContext<CurrencyState>(DEFAULT_STATE);
 
-const SESSION_KEY = "geo_currency";
+const SESSION_KEY = "geo_currency_v2";
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 async function detectCountry(): Promise<string> {
   try {
@@ -46,9 +47,12 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     const cached = sessionStorage.getItem(SESSION_KEY);
     if (cached) {
       try {
-        const parsed = JSON.parse(cached) as CurrencyState;
-        setState({ ...parsed, loading: false });
-        return;
+        const parsed = JSON.parse(cached) as CurrencyState & { cachedAt?: number };
+        const age = Date.now() - (parsed.cachedAt ?? 0);
+        if (age < CACHE_TTL_MS) {
+          setState({ ...parsed, loading: false });
+          return;
+        }
       } catch {
         // fall through to fetch
       }
@@ -68,7 +72,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
           loading: false,
         };
         setState(next);
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(next));
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...next, cachedAt: Date.now() }));
       } catch {
         setState({ ...DEFAULT_STATE, countryCode, loading: false });
       }
