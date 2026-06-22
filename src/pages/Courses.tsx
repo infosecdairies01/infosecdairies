@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CourseCard from "@/components/CourseCard";
-import { ALL_COURSES_BUNDLE_SLUG, getCourseCardData } from "@/data/courses";
+import { ALL_COURSES_BUNDLE_SLUG, FREE_COURSE_SLUG, getCourseCardData } from "@/data/courses";
 import { getLiveCourseCardData } from "@/data/liveCourses";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -138,7 +138,7 @@ const Courses = () => {
                       difficulty={course.difficulty}
                       slug={(course as any).slug ?? course.courseId}
                       thumbnail={course.thumbnail}
-                      price={course.difficulty === "easy" ? prices.easy : course.difficulty === "medium" ? prices.medium : prices.hard}
+                      price={course.courseId === FREE_COURSE_SLUG ? 0 : course.difficulty === "easy" ? prices.easy : course.difficulty === "medium" ? prices.medium : prices.hard}
                       symbol={symbol}
                     />
                   ))
