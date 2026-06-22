@@ -1,25 +1,33 @@
 import { useEffect, useState } from "react";
-import { X, Copy, Check, ShieldCheck } from "lucide-react";
+import { X, Copy, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const STORAGE_KEY = "promo_popup_seen";
 const PROMO_CODE = "INFOSEC10";
-const DELAY_MS = 2000;
+const DELAY_MS = 1500;
 
 const PromoPopup = () => {
   const [visible, setVisible] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (localStorage.getItem(STORAGE_KEY)) return;
-    const t = setTimeout(() => setVisible(true), DELAY_MS);
+    const t = setTimeout(() => {
+      setVisible(true);
+      // Trigger enter animation on next paint
+      requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
+    }, DELAY_MS);
     return () => clearTimeout(t);
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "1");
-    setVisible(false);
+    setLeaving(true);
+    setEntered(false);
+    setTimeout(() => {
+      setVisible(false);
+      setLeaving(false);
+    }, 350);
   };
 
   const copy = async () => {
@@ -30,14 +38,30 @@ const PromoPopup = () => {
 
   const claim = () => {
     dismiss();
-    navigate("/courses");
+    setTimeout(() => navigate("/courses"), 350);
   };
 
   if (!visible) return null;
 
+  const overlayStyle: React.CSSProperties = {
+    opacity: entered && !leaving ? 1 : 0,
+    transition: "opacity 350ms ease",
+  };
+
+  const cardStyle: React.CSSProperties = {
+    opacity: entered && !leaving ? 1 : 0,
+    transform: entered && !leaving ? "scale(1) translateY(0)" : "scale(0.88) translateY(24px)",
+    transition: "opacity 350ms cubic-bezier(0.34,1.56,0.64,1), transform 350ms cubic-bezier(0.34,1.56,0.64,1)",
+    background: "hsl(220 40% 6%)",
+    border: "1px solid hsl(186 100% 42% / 0.5)",
+    boxShadow:
+      "0 0 40px hsl(186 100% 42% / 0.2), 0 0 80px hsl(186 100% 42% / 0.08), 0 25px 60px rgba(0,0,0,0.6)",
+  };
+
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      style={overlayStyle}
       onClick={dismiss}
     >
       {/* Overlay */}
@@ -46,12 +70,7 @@ const PromoPopup = () => {
       {/* Card */}
       <div
         className="relative z-10 w-full max-w-md rounded-2xl overflow-hidden"
-        style={{
-          background: "hsl(220 40% 6%)",
-          border: "1px solid hsl(186 100% 42% / 0.5)",
-          boxShadow:
-            "0 0 40px hsl(186 100% 42% / 0.2), 0 0 80px hsl(186 100% 42% / 0.08), 0 25px 60px rgba(0,0,0,0.6)",
-        }}
+        style={cardStyle}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Hex bg pattern */}
@@ -64,17 +83,16 @@ const PromoPopup = () => {
           }}
         />
 
-        {/* Animated scanline */}
+        {/* Scanline */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              "linear-gradient(transparent 50%, rgba(0,255,200,0.025) 50%)",
+            background: "linear-gradient(transparent 50%, rgba(0,255,200,0.025) 50%)",
             backgroundSize: "100% 4px",
           }}
         />
 
-        {/* Top glow bar */}
+        {/* Top gradient bar */}
         <div
           className="h-1 w-full"
           style={{
@@ -85,7 +103,7 @@ const PromoPopup = () => {
           }}
         />
 
-        {/* Close button */}
+        {/* Close */}
         <button
           onClick={dismiss}
           className="absolute top-4 right-4 z-20 p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors"
@@ -95,22 +113,8 @@ const PromoPopup = () => {
         </button>
 
         <div className="relative p-8 text-center space-y-6">
-          {/* Icon + badge */}
-          <div className="flex flex-col items-center gap-3">
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center"
-              style={{
-                background: "hsl(186 100% 42% / 0.15)",
-                border: "1px solid hsl(186 100% 42% / 0.4)",
-                boxShadow: "0 0 20px hsl(186 100% 42% / 0.2)",
-              }}
-            >
-              <ShieldCheck
-                className="w-7 h-7"
-                style={{ color: "hsl(186 100% 42%)" }}
-              />
-            </div>
-
+          {/* Badge only — no shield icon */}
+          <div className="flex justify-center">
             <span
               className="text-xs font-bold tracking-widest uppercase px-3 py-1 rounded-full"
               style={{
@@ -130,15 +134,13 @@ const PromoPopup = () => {
             </p>
             <h2
               className="text-5xl font-extrabold gradient-text"
-              style={{
-                backgroundSize: "200% auto",
-                animation: "gradient-shift 3s linear infinite",
-              }}
+              style={{ backgroundSize: "200% auto", animation: "gradient-shift 3s linear infinite" }}
             >
               50% OFF
             </h2>
             <p className="text-base text-foreground/80 leading-relaxed">
-              Get 50% off on <span className="text-white font-semibold">any course</span> or the{" "}
+              Get 50% off on{" "}
+              <span className="text-white font-semibold">any course</span> or the{" "}
               <span className="text-white font-semibold">All Courses Bundle</span>
             </p>
           </div>
@@ -148,7 +150,7 @@ const PromoPopup = () => {
             <p className="text-xs text-muted-foreground">Use code at checkout</p>
             <button
               onClick={copy}
-              className="group w-full flex items-center justify-between px-5 py-3 rounded-xl transition-all duration-200"
+              className="w-full flex items-center justify-between px-5 py-3 rounded-xl transition-all duration-200 hover:brightness-110"
               style={{
                 background: "hsl(220 35% 10%)",
                 border: "1px dashed hsl(186 100% 42% / 0.6)",
@@ -162,18 +164,12 @@ const PromoPopup = () => {
               </span>
               <span
                 className="flex items-center gap-1.5 text-xs font-medium transition-colors"
-                style={{
-                  color: copied ? "hsl(84 81% 44%)" : "hsl(186 100% 42%)",
-                }}
+                style={{ color: copied ? "hsl(84 81% 44%)" : "hsl(186 100% 42%)" }}
               >
                 {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" /> Copied!
-                  </>
+                  <><Check className="w-3.5 h-3.5" /> Copied!</>
                 ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" /> Copy
-                  </>
+                  <><Copy className="w-3.5 h-3.5" /> Copy</>
                 )}
               </span>
             </button>
@@ -184,8 +180,7 @@ const PromoPopup = () => {
             onClick={claim}
             className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              background:
-                "linear-gradient(135deg, hsl(186 100% 42%), hsl(84 81% 44%))",
+              background: "linear-gradient(135deg, hsl(186 100% 42%), hsl(84 81% 44%))",
               color: "hsl(220 40% 6%)",
               boxShadow: "0 4px 20px hsl(186 100% 42% / 0.35)",
             }}
