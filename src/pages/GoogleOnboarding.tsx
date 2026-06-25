@@ -96,9 +96,13 @@ const GoogleOnboarding = () => {
 
       if (data.requires_verification) {
         sessionStorage.removeItem("googleOnboardingToken");
+        const rawRedirect = sessionStorage.getItem("authRedirect") || "";
+        sessionStorage.removeItem("authRedirect");
+        const redirectParam = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") && !rawRedirect.startsWith("/\\") ? rawRedirect : "";
         setSuccess("Verification code sent! Redirecting...");
         setTimeout(() => {
-          navigate(`/verify-email?email=${encodeURIComponent(data.email || email)}`, { replace: true });
+          const verifyUrl = `/verify-email?email=${encodeURIComponent(data.email || email)}${redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : ""}`;
+          navigate(verifyUrl, { replace: true });
         }, 800);
         return;
       }
