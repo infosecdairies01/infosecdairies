@@ -38,6 +38,24 @@ const CourseCheckout = () => {
   useEffect(() => {
     if (!slug || currencyLoading) return;
 
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/checkout`)}`);
+      return;
+    }
+
+    // Check if already enrolled — if so, send them straight to the course
+    if (slug !== ALL_COURSES_BUNDLE_SLUG) {
+      fetch(apiUrl(`/api/courses/${slug}/enrollment-status/`), {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === "enrolled") navigate(`/courses/${slug}`, { replace: true });
+        })
+        .catch(() => {});
+    }
+
     if (slug === ALL_COURSES_BUNDLE_SLUG) {
       setCourse({ title: "All Courses Bundle", difficulty: "easy" });
       setDisplayAmount(prices.bundle);
