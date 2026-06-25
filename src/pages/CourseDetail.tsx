@@ -978,9 +978,10 @@ const CourseDetail = () => {
 
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
-      // Not logged in - show auth prompt but don't auto-redirect
-      // Let user click button to go to auth
-      setEnrollError("Please log in to enroll in this course.");
+      const returnUrl = slug === "network-fundamentals"
+        ? `/courses/${slug}`
+        : `/courses/${slug}/checkout`;
+      navigate(`/auth?redirect=${encodeURIComponent(returnUrl)}`);
       return;
     }
 
