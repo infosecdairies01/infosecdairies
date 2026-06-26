@@ -3,7 +3,8 @@ import { ChevronLeft, Printer, FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { getCourseById } from "@/data/courses";
 import { getResourceContent } from "@/data/resourceContent";
-import logo from "@/assets/infosecdairies-logo.png";
+import logo from "@/assets/logo.png";
+
 
 const ResourceViewer = () => {
   const { courseId, resourceId } = useParams<{ courseId: string; resourceId: string }>();
