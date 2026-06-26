@@ -86,15 +86,25 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 sociallogin.user = existing_user
                 sociallogin.account.user = existing_user
                 
-            # Always ensure user is verified and active when using social auth
+            # Only auto-verify via social auth if the user is already verified,
+            # or if their account was originally created via a social provider.
+            # Never bypass email OTP for unverified email-registered accounts —
+            # doing so would let anyone use Google OAuth to activate an account
+            # they don't own (the OTP was sent to the real owner's inbox).
+            from accounts.models import AuthProvider
+            email_unverified = (
+                getattr(existing_user, "auth_provider", None) == AuthProvider.EMAIL
+                and not existing_user.is_verified
+            )
             updated = False
-            if not existing_user.is_verified:
-                existing_user.is_verified = True
-                updated = True
-            if not existing_user.is_active:
-                existing_user.is_active = True
-                updated = True
-            if getattr(sociallogin.account, "provider", None) == "google" and getattr(existing_user, "auth_provider", None) != "google":
+            if not email_unverified:
+                if not existing_user.is_verified:
+                    existing_user.is_verified = True
+                    updated = True
+                if not existing_user.is_active:
+                    existing_user.is_active = True
+                    updated = True
+            if getattr(sociallogin.account, "provider", None) == "google" and getattr(existing_user, "auth_provider", None) != "google" and not email_unverified:
                 existing_user.auth_provider = "google"
                 updated = True
             if updated:
