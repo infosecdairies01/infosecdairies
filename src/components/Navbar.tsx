@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UserCircle2, Menu, X } from "lucide-react";
-import logo from "@/assets/infosecdairies-logo.png";
+import logo from "@/assets/logo.png";
 import { useAuth } from "@/context/AuthContext";
+
 
 const NAV_LINKS = [
   { to: "/", label: "Home" },
