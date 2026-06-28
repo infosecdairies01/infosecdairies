@@ -12,3 +12,5 @@ imp/
 infosec-backend/backend/db.sqlite3
 infosec-backend/backend/staticfiles/
 infosec-backend/backend/media/
+.vercel
+.env*

@@ -125,7 +125,10 @@ def _get_local_price(country_code: str, tier: str, inr_amount: int) -> dict:
     """
     code = (country_code or "").upper().strip()
 
-    pricing = CountryPricing.objects.filter(country_code=code, is_active=True).first()
+    try:
+        pricing = CountryPricing.objects.filter(country_code=code, is_active=True).first()
+    except Exception:
+        return {"amount": float(inr_amount), "currency": "INR", "symbol": "₹"}
 
     if pricing:
         manual = getattr(pricing, f"price_{tier}", None)

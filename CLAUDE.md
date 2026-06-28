@@ -18,6 +18,7 @@ No test runner is configured — there are no test files in this project.
 
 ```sh
 cd infosec-backend/backend
+bash setup_dev.sh                 # First-time setup: migrate + seed courses
 python manage.py runserver        # Start Django on port 8000
 python manage.py migrate          # Apply migrations
 python manage.py makemigrations   # Create new migrations
