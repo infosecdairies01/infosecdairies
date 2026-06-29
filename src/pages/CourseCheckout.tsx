@@ -106,9 +106,12 @@ const CourseCheckout = () => {
     const trimmedCode = promoCode.trim().toUpperCase();
     if (!trimmedCode) return;
 
-    if (!slug || !course) return;
+    if (!slug || !course) {
+      setPromoError("Course not loaded yet, please wait.");
+      return;
+    }
     if (!name.trim()) {
-      setPromoError("Please enter your name first");
+      setPromoError("Please enter your full name first.");
       return;
     }
 

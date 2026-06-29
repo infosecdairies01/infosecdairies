@@ -253,6 +253,21 @@ def create_order(request):
                 if not enrollment.is_paid:
                     enrollment.is_paid = True
                     enrollment.save(update_fields=["is_paid"])
+        # Record a zero-amount purchase so my-purchases reflects free promo access
+        import uuid as _uuid
+        CoursePurchase.objects.get_or_create(
+            user=request.user,
+            course_slug=course_slug,
+            status=CoursePurchase.STATUS_PAID,
+            defaults={
+                "amount_inr": 0,
+                "amount_charged": 0,
+                "currency": "INR",
+                "razorpay_order_id": f"free_{_uuid.uuid4().hex[:20]}",
+                "purchaser_name": purchaser_name or "",
+                "paid_at": timezone.now(),
+            },
+        )
         return Response({
             "free": True, "course_slug": course_slug, "amount_inr": 0,
             "discount_percent": promo_code_obj.discount_percent if promo_code_obj else None,
