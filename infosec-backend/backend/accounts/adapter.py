@@ -46,21 +46,31 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         """
         # Skip if user is already connected
         if sociallogin.user.pk:
-            # User already exists - ensure they're marked as verified for social login
+            # User already exists. Only mark them verified if they're not an
+            # unverified email-registered account — those must still complete
+            # OTP verification before we grant full JWT access. Blindly setting
+            # is_verified=True here would let anyone bypass email OTP by using
+            # Google OAuth with the same email address.
             user = sociallogin.user
-            updated = False
-            if getattr(sociallogin.account, "provider", None) == "google":
-                if getattr(user, "auth_provider", None) != "google":
-                    user.auth_provider = "google"
+            from accounts.models import AuthProvider
+            email_unverified = (
+                getattr(user, "auth_provider", None) == AuthProvider.EMAIL
+                and not user.is_verified
+            )
+            if not email_unverified:
+                updated = False
+                if getattr(sociallogin.account, "provider", None) == "google":
+                    if getattr(user, "auth_provider", None) != "google":
+                        user.auth_provider = "google"
+                        updated = True
+                if not user.is_verified:
+                    user.is_verified = True
                     updated = True
-            if not user.is_verified:
-                user.is_verified = True
-                updated = True
-            if not user.is_active:
-                user.is_active = True
-                updated = True
-            if updated:
-                user.save()
+                if not user.is_active:
+                    user.is_active = True
+                    updated = True
+                if updated:
+                    user.save()
             return
 
         email = sociallogin.user.email

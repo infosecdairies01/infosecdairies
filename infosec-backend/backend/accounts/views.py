@@ -718,21 +718,7 @@ def google_token_redirect(request):
         if getattr(user, "is_verified", False) and user.is_active:
             return _issue_tokens_redirect()
 
-        # Legacy: active users with existing purchases skip re-onboarding
-        if user.is_active:
-            try:
-                from courses.models import Enrollment
-                from payments.models import CoursePurchase
-                if (
-                    Enrollment.objects.filter(user=user).exists()
-                    or CoursePurchase.objects.filter(user=user, status=CoursePurchase.STATUS_PAID).exists()
-                ):
-                    logger.info("google_token_redirect: legacy user with enrollment, issuing tokens")
-                    return _issue_tokens_redirect()
-            except Exception:
-                logger.exception("google_token_redirect: error checking enrollment/purchase for %s", user.email)
-
-        # New Google user: redirect to onboarding on the originating frontend
+        # Unverified user: redirect to onboarding on the originating frontend
         logger.info("google_token_redirect: new user, redirecting to onboarding at %s", frontend_origin)
         try:
             onboarding_token = _onboarding_token_for_user(user)
