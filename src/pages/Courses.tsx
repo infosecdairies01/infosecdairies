@@ -15,6 +15,7 @@ const Courses = () => {
   const { prices, symbol } = useCurrency();
   const [activeTab, setActiveTab] = useState<"self-paced" | "live">("self-paced");
   const [hasBundle, setHasBundle] = useState(false);
+  const [bundlePromo, setBundlePromo] = useState("");
   
   useEffect(() => {
     const checkBundlePurchase = async () => {
@@ -158,27 +159,39 @@ const Courses = () => {
               <div className="mt-10">
                 <div className="relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] shadow-lg shadow-black/20">
                   <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-br from-primary/20 via-transparent to-secondary/10 blur-sm pointer-events-none" />
-                  <div className="relative px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground">All Courses Bundle</div>
-                      <div className="text-xs text-muted-foreground/80">Get access to all self-paced courses at one price</div>
+                  <div className="relative px-6 py-5 flex flex-col gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div>
+                        <div className="text-sm text-muted-foreground">All Courses Bundle</div>
+                        <div className="text-xs text-muted-foreground/80">Get access to all self-paced courses at one price</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-lg font-semibold text-primary">{symbol}{prices.bundle}</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const accessToken = localStorage.getItem("accessToken");
+                            const checkoutUrl = `/courses/${ALL_COURSES_BUNDLE_SLUG}/checkout${bundlePromo.trim() ? `?promo=${encodeURIComponent(bundlePromo.trim().toUpperCase())}` : ""}`;
+                            if (!accessToken || !user) {
+                              navigate(`/auth?redirect=${encodeURIComponent(checkoutUrl)}`);
+                              return;
+                            }
+                            navigate(checkoutUrl);
+                          }}
+                          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                        >
+                          Get Bundle
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-lg font-semibold text-primary">{symbol}{prices.bundle}</div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const accessToken = localStorage.getItem("accessToken");
-                          if (!accessToken || !user) {
-                            navigate(`/auth?redirect=/courses/${ALL_COURSES_BUNDLE_SLUG}/checkout`);
-                            return;
-                          }
-                          navigate(`/courses/${ALL_COURSES_BUNDLE_SLUG}/checkout`);
-                        }}
-                        className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-                      >
-                        Get Bundle
-                      </button>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Promo code"
+                        value={bundlePromo}
+                        onChange={(e) => setBundlePromo(e.target.value)}
+                        className="flex-1 max-w-[200px] px-3 py-1.5 text-sm rounded-md bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/60 transition-colors"
+                      />
                     </div>
                   </div>
                 </div>

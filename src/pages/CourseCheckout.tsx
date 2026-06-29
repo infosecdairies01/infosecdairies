@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Loader2, ArrowLeft, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ declare global {
 const CourseCheckout = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const { countryCode, symbol, prices, loading: currencyLoading } = useCurrency();
   const [course, setCourse] = useState<any>(null);
@@ -36,11 +37,19 @@ const CourseCheckout = () => {
   const [applyingPromo, setApplyingPromo] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const promoParam = params.get("promo");
+    if (promoParam) {
+      setPromoCode(promoParam.toUpperCase());
+    }
+  }, [location.search]);
+
+  useEffect(() => {
     if (!slug || currencyLoading) return;
 
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
-      navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/checkout`)}`);
+      navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/checkout${location.search}`)}`);
       return;
     }
 
