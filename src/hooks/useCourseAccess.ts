@@ -168,12 +168,35 @@ export function useCourseAccess(slug: string | undefined): {
         payload.user_id !== undefined &&
         String(payload.user_id) !== currentUserId
       ) {
-        // Log for visibility; do NOT expose details to the caller.
-        console.warn(
-          "[useCourseAccess] token user_id mismatch — possible stolen token replay"
-        );
-        setAccessState("denied");
-        return;
+        // This fresh token came directly from the server (authenticated via the
+        // user's own auth JWT). Cross-check: if the auth JWT also has the same
+        // user_id as the course access token, then localStorage.userId is just
+        // stale from a previous session — fix it silently and grant access.
+        // Only deny if the auth JWT disagrees too (genuine mismatch / attack).
+        let fixed = false;
+        try {
+          const rawAuth = localStorage.getItem("accessToken") || "";
+          const authPayloadRaw = rawAuth.split(".")[1] || "";
+          const b64 = authPayloadRaw.replace(/-/g, "+").replace(/_/g, "/");
+          const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+          const authJwt = JSON.parse(atob(padded));
+          if (
+            authJwt.user_id !== undefined &&
+            String(authJwt.user_id) === String(payload.user_id)
+          ) {
+            // Auth JWT agrees with the course token — stale cached userId.
+            localStorage.setItem("userId", String(payload.user_id));
+            fixed = true;
+          }
+        } catch { /* ignore decode errors */ }
+
+        if (!fixed) {
+          console.warn(
+            "[useCourseAccess] token user_id mismatch — possible stolen token replay"
+          );
+          setAccessState("denied");
+          return;
+        }
       }
 
       // ── All checks passed — cache and grant ───────────────────────────────

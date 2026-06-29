@@ -55,7 +55,7 @@ const CourseCheckout = () => {
 
     // Check if already enrolled — if so, send them straight to the course
     if (slug !== ALL_COURSES_BUNDLE_SLUG) {
-      fetch(apiUrl(`/api/courses/${slug}/enrollment-status/`), {
+      fetch(apiUrl(`/api/courses/${slug}/enrollment/`), {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
         .then((r) => r.json())
