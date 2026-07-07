@@ -212,7 +212,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-fundamentals",
     title: "Threat Landscape Assessment",
     description: "Evaluate your knowledge of threat actors, attack vectors, and MITRE ATT&CK.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 25,
     questions: [
       {
@@ -782,7 +782,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-fundamentals",
     title: "Threat Intelligence Quiz",
     description: "Evaluate your understanding of threat intelligence, IOCs, and OSINT techniques.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 20,
     questions: [
       {
@@ -936,7 +936,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-fundamentals",
     title: "Incident Response Quiz",
     description: "Test your knowledge of the incident response lifecycle, containment, and documentation.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 25,
     questions: [
       {
@@ -1090,7 +1090,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-fundamentals",
     title: "EDR & Endpoint Security Quiz",
     description: "Test your understanding of EDR technology, alerts, and process analysis.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 20,
     questions: [
       {
@@ -1718,7 +1718,7 @@ export const quizzes: QuizData[] = [
     courseId: "log-analysis",
     title: "Windows Log Analysis",
     description: "Master Windows Event Log analysis including Security, System, and Application logs.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 25,
     questions: [
       {
@@ -2026,7 +2026,7 @@ export const quizzes: QuizData[] = [
     courseId: "log-analysis",
     title: "Attack Pattern Recognition",
     description: "Identify and analyze common attack patterns in log data.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 30,
     questions: [
       {
@@ -4624,7 +4624,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-analyst-path",
     title: "Network Traffic Analysis Quiz",
     description: "Evaluate your TCP/IP analysis, DNS threats, and packet inspection skills.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 20,
     questions: [
       { id: "sap-q2-1", question: "What indicates a SYN scan?", options: ["SYN→SYN-ACK→RST (no final ACK)", "ACK only", "FIN+PSH+URG", "SYN→ACK→RST"], correctAnswer: 0, explanation: "SYN scan sends SYN, receives SYN-ACK, sends RST without completing handshake." },
@@ -4649,7 +4649,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-analyst-path",
     title: "SIEM Mastery Assessment",
     description: "Test SIEM queries, correlation rules, and dashboard skills.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 25,
     questions: [
       { id: "sap-q3-1", question: "What function counts unique values in SIEM?", options: ["dc() / distinct_count()", "count()", "sum()", "avg()"], correctAnswer: 0, explanation: "dc() counts unique values, useful for finding hosts accessed by a single IP." },
@@ -4699,7 +4699,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-analyst-path",
     title: "Phishing & Email Analysis Quiz",
     description: "Validate email header analysis and phishing response skills.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 20,
     questions: [
       { id: "sap-q5-1", question: "Email headers should be read in which order?", options: ["By type", "Alphabetically", "Bottom to top", "Top to bottom"], correctAnswer: 2, explanation: "Bottom-to-top — oldest entries are at the bottom." },
@@ -4754,7 +4754,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-analyst-path",
     title: "Cloud Security Monitoring Quiz",
     description: "Test your cloud security knowledge across AWS, Azure, and container environments.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 20,
     questions: [
       { id: "sap-q7-1", question: "In the shared responsibility model, who is ALWAYS responsible for data security?", options: ["Depends on SLA", "Customer", "Cloud provider", "Both equally"], correctAnswer: 1, explanation: "Customers always own their data security regardless of cloud model (IaaS/PaaS/SaaS)." },
@@ -4779,7 +4779,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-analyst-path",
     title: "Threat Intelligence & Hunting Quiz",
     description: "Assess threat intel lifecycle, IOC management, and hunting methodology skills.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 20,
     questions: [
       { id: "sap-q8-1", question: "How many phases are in the threat intelligence lifecycle?", options: ["5", "7", "4", "6"], correctAnswer: 3, explanation: "The 6 phases: Planning & Direction, Collection, Processing, Analysis, Dissemination, Feedback." },
@@ -4804,7 +4804,7 @@ export const quizzes: QuizData[] = [
     courseId: "soc-analyst-path",
     title: "Digital Forensics Assessment",
     description: "Evaluate disk forensics, timeline analysis, and anti-forensics detection skills.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 25,
     questions: [
       { id: "sap-q9-1", question: "Correct order of the forensic process?", options: ["Identification, Preservation, Collection, Analysis, Presentation", "Analysis, Preservation, Presentation", "Presentation, Collection, Analysis", "Collection, Analysis, Identification"], correctAnswer: 0, explanation: "The forensic process follows: Identification → Preservation → Collection → Analysis → Presentation." },
@@ -5137,7 +5137,7 @@ export const quizzes: QuizData[] = [
     courseId: "network-fundamentals",
     title: "TCP/IP Protocol Suite Quiz",
     description: "Test your knowledge of TCP, UDP, ICMP, ARP, and port numbers.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 20,
     questions: [
       { id: "nf-q3-1", question: "How many layers does the TCP/IP model have?", options: ["7", "3", "4", "5"], correctAnswer: 2, explanation: "The TCP/IP model has 4 layers: Network Access, Internet, Transport, and Application." },
@@ -5162,7 +5162,7 @@ export const quizzes: QuizData[] = [
     courseId: "network-fundamentals",
     title: "IP Addressing & Subnetting Quiz",
     description: "Validate your subnetting skills and IPv4/IPv6 knowledge.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 25,
     questions: [
       { id: "nf-q4-1", question: "How many bits are in an IPv4 address?", options: ["64", "16", "32", "128"], correctAnswer: 2, explanation: "An IPv4 address is 32 bits long, divided into 4 octets of 8 bits each (e.g., 192.168.1.1)." },
@@ -5287,7 +5287,7 @@ export const quizzes: QuizData[] = [
     courseId: "network-fundamentals",
     title: "Network Troubleshooting Quiz",
     description: "Assess your ability to use network diagnostic tools and methodologies.",
-    passingScore: 75,
+    passingScore: 70,
     timeLimit: 20,
     questions: [
       { id: "nf-q9-1", question: "What is the first step in a structured troubleshooting methodology?", options: ["Implement a solution", "Identify the problem and gather information", "Document findings", "Test a theory"], correctAnswer: 1, explanation: "The first step is always identifying the problem — gathering symptoms, affected users, recent changes, and scope before forming theories." },

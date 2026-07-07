@@ -334,6 +334,122 @@ def submit_quiz(request, slug, quiz_id):
 
     _upsert_quiz_score(request.user, slug, quiz_id, score, passed)
 
+    if passed:
+        # Mark the quiz itself as completed in lesson progress
+        LessonProgress.objects.get_or_create(
+            user=request.user,
+            course=course,
+            lesson_id=quiz_id,
+        )
+        
+        # Also map course-specific quiz IDs to lesson IDs
+        mapped_lesson_id = None
+        if slug == "blue-team-soc-fundamentals":
+            soc_map = {
+                "q1": "1.5",
+                "q2": "2.5",
+                "q3": "3.6",
+                "q4": "4.6", # or "5.6"
+                "q5": "6.6",
+                "q6": "7.6",
+                "q7": "8.5",
+                "q8": "9.5",
+                "q9": "10.4",
+            }
+            mapped_lesson_id = soc_map.get(quiz_id)
+            if quiz_id == "q4":
+                # For q4, mark both 4.6 and 5.6 as completed
+                LessonProgress.objects.get_or_create(user=request.user, course=course, lesson_id="4.6")
+                LessonProgress.objects.get_or_create(user=request.user, course=course, lesson_id="5.6")
+        elif slug == "threat-hunting-fundamentals":
+            th_map = {
+                "th-q1": "1.5",
+                "th-q2": "2.5",
+                "th-q3": "3.5",
+                "th-q4": "4.5",
+                "th-q5": "5.5",
+                "th-q6": "6.5",
+            }
+            mapped_lesson_id = th_map.get(quiz_id)
+        elif slug == "network-security-monitoring":
+            nsm_map = {
+                "nsm-q1": "1.5",
+                "nsm-q2": "2.6",
+                "nsm-q3": "3.5",
+                "nsm-q4": "4.5",
+                "nsm-q5": "5.5",
+                "nsm-q6": "6.5",
+            }
+            mapped_lesson_id = nsm_map.get(quiz_id)
+        elif slug == "log-analysis-for-beginners":
+            la_map = {
+                "la-q1": "1.5",
+                "la-q2": "2.7",
+                "la-q3": "3.6",
+                "la-q4": "4.5",
+                "la-q5": "5.5", # or 6.5
+            }
+            mapped_lesson_id = la_map.get(quiz_id)
+            if quiz_id == "la-q5":
+                LessonProgress.objects.get_or_create(user=request.user, course=course, lesson_id="6.5")
+        elif slug == "soc-analyst-path":
+            sap_map = {
+                "sap-q1": "1.5",
+                "sap-q2": "2.5",
+                "sap-q3": "3.5",
+                "sap-q4": "4.5",
+                "sap-q5": "5.5",
+                "sap-q6": "6.5",
+            }
+            mapped_lesson_id = sap_map.get(quiz_id)
+        elif slug == "detection-engineering-basics":
+            de_map = {
+                "de-q1": "1.5",
+                "de-q2": "2.5",
+                "de-q3": "3.5",
+                "de-q4": "4.5",
+                "de-q5": "5.5",
+                "de-q6": "6.5",
+            }
+            mapped_lesson_id = de_map.get(quiz_id)
+        elif slug == "siem-fundamentals":
+            siem_map = {
+                "siem-q1": "1.5",
+                "siem-q2": "2.5",
+                "siem-q3": "3.5",
+                "siem-q4": "4.5",
+                "siem-q5": "5.5",
+                "siem-q6": "6.5",
+            }
+            mapped_lesson_id = siem_map.get(quiz_id)
+        elif slug == "incident-response-fundamentals":
+            ir_map = {
+                "ir-q1": "1.5",
+                "ir-q2": "2.5",
+                "ir-q3": "3.5",
+                "ir-q4": "4.5",
+                "ir-q5": "5.5",
+                "ir-q6": "6.5",
+            }
+            mapped_lesson_id = ir_map.get(quiz_id)
+        elif slug == "malware-analysis-fundamentals":
+            ma_map = {
+                "ma-q1": "1.5",
+                "ma-q2": "2.5",
+                "ma-q3": "3.5",
+                "ma-q4": "4.5",
+                "ma-q5": "5.5",
+                "ma-q6": "6.5",
+            }
+            mapped_lesson_id = ma_map.get(quiz_id)
+
+        if mapped_lesson_id:
+            LessonProgress.objects.get_or_create(
+                user=request.user,
+                course=course,
+                lesson_id=mapped_lesson_id,
+            )
+
     return Response({
         "score": score,
         "passed": passed,
