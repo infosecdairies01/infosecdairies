@@ -3,13 +3,13 @@
 // Verification here is 100% local: no HTTP call, no response to intercept.
 // An attacker CANNOT forge a token that passes this check without the private key.
 const JWT_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoAuJkL6RL4MuFMIsnpvL
-yijh49oaZEX9oGK72oAD2xsiZWkaLVi22bw7roY+46WNaN7sGNzSwvPVVXODPT78
-jwKnCpJL4a3Dst3tw7QnCTttLMEktWw0Sj1zuo9ILUxa0fQ7IzdEglNcsmgewXpv
-q8VotQOUZ8ILB5WR0/yzknp4Hge7pHoibtI/HMcOopyaypOh9PCytGjRbE5ltyfe
-FbA3/33udPRLTwnfXEEK/EHKj/mMAqZcuC9+rBMapPLSeLja4KNrwBSgLYGtqmiD
-d4ccY/FI+447cPPb30zM4k2+/8TBcIhG6GjXko1B3k99swyZXxQFZYhv/NCc1bHq
-mQIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAufPZVEfPwsVlc8tk9d9Z
+7jfKBGt7f57reXMani8rWTnunSwk3zv75JhoVQJjMgvhtlNkRSvIBz37EDq1cUBz
+AhJvZPEnEOaOXTcepSlT7DemRSAUwx6xGPzgS5ZFrqZrjWtvzK8x8Vq1YQm2oErb
+WN7es3hOzNRwqsNzSXEGWVtN8bl7lEpbv756Js9D0/sExrImDe60N0ENdHbejC+j
+A7DCHpnE9dedoZn5dkU+yWwQyvYOmbVuz5bqx24Tr2rQE37nIDQuLUIVKSU4GjXF
+taX/BmfvI8ja/A9mxv8BzMPIcP6Xeo5CVjEYrr5GnfzSTfgk9JPIc2aFguFX9zcw
+xQIDAQAB
 -----END PUBLIC KEY-----`;
 
 let _cachedKey: CryptoKey | null = null;
