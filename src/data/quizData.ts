@@ -2021,7 +2021,7 @@ export const quizzes: QuizData[] = [
       }
     ]
   },
-  {
+    {
     quizId: "la-q4",
     courseId: "log-analysis",
     title: "Attack Pattern Recognition",
@@ -2029,7 +2029,7 @@ export const quizzes: QuizData[] = [
     passingScore: 70,
     timeLimit: 30,
     questions: [
-      {
+{
         id: "la-q4-1",
         question: "What log pattern indicates a potential brute force attack?",
         options: [
@@ -2041,7 +2041,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Brute force attacks show multiple rapid failed login attempts from the same source, often targeting the same or multiple accounts."
       },
-      {
+{
         id: "la-q4-2",
         question: "Which web log pattern might indicate SQL injection attempts?",
         options: [
@@ -2053,7 +2053,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "SQL injection attempts often contain SQL keywords like SELECT, UNION, OR 1=1, and encoded variations in URL parameters."
       },
-      {
+{
         id: "la-q4-3",
         question: "What does 'password spraying' look like in logs?",
         options: [
@@ -2065,7 +2065,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Password spraying shows few attempts per account but across many accounts, often avoiding lockout thresholds."
       },
-      {
+{
         id: "la-q4-4",
         question: "Which pattern suggests directory traversal attack attempts?",
         options: [
@@ -2077,7 +2077,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Directory traversal attempts contain '../' or '..\\' sequences trying to access files outside the web root."
       },
-      {
+{
         id: "la-q4-5",
         question: "What might multiple 'net user' commands in Windows logs indicate?",
         options: [
@@ -2089,7 +2089,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Multiple 'net user' commands might indicate an attacker enumerating users for privilege escalation or lateral movement."
       },
-      {
+{
         id: "la-q4-6",
         question: "Which log entry pattern suggests potential data exfiltration?",
         options: [
@@ -2101,7 +2101,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Data exfiltration often shows as large outbound transfers to unusual IPs, cloud storage, or during off-hours."
       },
-      {
+{
         id: "la-q4-7",
         question: "What does a 'golden ticket' attack look like in Kerberos logs?",
         options: [
@@ -2113,7 +2113,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Golden ticket attacks may show TGS requests without AS-REQ, unusual ticket lifetimes, or tickets for non-existent users."
       },
-      {
+{
         id: "la-q4-8",
         question: "Which pattern indicates potential web shell activity?",
         options: [
@@ -2125,7 +2125,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Web shells often show as POST requests to unusual file paths (like .php files in unexpected locations) with command parameters."
       },
-      {
+{
         id: "la-q4-9",
         question: "What might 'scheduled task created' events combined with persistence mechanisms indicate?",
         options: [
@@ -2137,7 +2137,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Attackers often create scheduled tasks for persistence. Combined with suspicious executables, this indicates compromise."
       },
-      {
+{
         id: "la-q4-10",
         question: "Which log pattern suggests Pass-the-Hash attacks?",
         options: [
@@ -2149,7 +2149,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Pass-the-Hash attacks show NTLM authentications using stolen hashes, often appearing as Type 3 network logons without interactive login."
       },
-      {
+{
         id: "la-q4-11",
         question: "What does PowerShell downloading and executing code in logs suggest?",
         options: [
@@ -2161,7 +2161,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "PowerShell downloading and executing code (DownloadString, IEX) is a common 'living off the land' technique used by attackers."
       },
-      {
+{
         id: "la-q4-12",
         question: "Which indicator in proxy logs might reveal C2 communication?",
         options: [
@@ -2172,8 +2172,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 1,
         explanation: "C2 beaconing shows regular, timed connections (e.g., every 60 seconds) to specific domains, often with similar payload sizes."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "la-q5",
+    courseId: "log-analysis",
+    title: "Final Certification Exam",
+    description: "Comprehensive exam covering all log analysis modules. Required for certification.",
+    passingScore: 80,
+    timeLimit: 45,
+    questions: [
+{
         id: "la-q5-1",
         question: "Which Linux command is best for searching text patterns in log files?",
         options: [
@@ -2185,7 +2195,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The 'grep' command is essential for searching text patterns in files. It supports regex for complex pattern matching."
       },
-      {
+{
         id: "la-q5-2",
         question: "What does the command 'grep -i \"failed\" /var/log/auth.log' do?",
         options: [
@@ -2197,7 +2207,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "grep -i performs a case-insensitive search for the pattern 'failed' in the auth.log file."
       },
-      {
+{
         id: "la-q5-3",
         question: "Which command would count the number of failed SSH attempts?",
         options: [
@@ -2209,7 +2219,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "grep -c counts the number of lines matching the pattern. This counts how many failed password entries exist."
       },
-      {
+{
         id: "la-q5-4",
         question: "What is the purpose of log normalization?",
         options: [
@@ -2221,7 +2231,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Log normalization converts diverse log formats into a consistent structure, enabling correlation and unified analysis."
       },
-      {
+{
         id: "la-q5-5",
         question: "Why is establishing a baseline important in log analysis?",
         options: [
@@ -2233,7 +2243,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Baselines define normal behavior patterns. Deviations from baselines help identify anomalies and potential security incidents."
       },
-      {
+{
         id: "la-q5-6",
         question: "What command combines 'sort' and 'uniq -c' for log analysis?",
         options: [
@@ -2245,7 +2255,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Piping through 'sort | uniq -c' sorts lines and counts unique occurrences - useful for finding top talkers or common events."
       },
-      {
+{
         id: "la-q5-7",
         question: "What is log correlation?",
         options: [
@@ -2257,7 +2267,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Log correlation connects events from multiple sources to identify relationships, patterns, and reconstruct attack timelines."
       },
-      {
+{
         id: "la-q5-8",
         question: "Which regex pattern would match an IPv4 address?",
         options: [
@@ -2269,7 +2279,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "The pattern [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3} matches IPv4 addresses (groups of 1-3 digits separated by dots)."
       },
-      {
+{
         id: "la-q5-9",
         question: "What should be included in a log analysis report?",
         options: [
@@ -2281,7 +2291,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "A complete log analysis report includes executive summary, timeline of events, detailed findings, evidence, and actionable recommendations."
       },
-      {
+{
         id: "la-q5-10",
         question: "What is the 'awk' command commonly used for in log analysis?",
         options: [
@@ -2293,7 +2303,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "awk is powerful for text processing, particularly extracting and manipulating specific fields from structured log data."
       },
-      {
+{
         id: "la-q5-11",
         question: "Why should log analysis findings be documented with timestamps?",
         options: [
@@ -2305,7 +2315,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Timestamps establish timeline accuracy, enable event recreation, and provide audit trails for incident response and legal proceedings."
       },
-      {
+{
         id: "la-q5-12",
         question: "What is the benefit of using a SIEM for log analysis?",
         options: [
@@ -2316,8 +2326,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 2,
         explanation: "SIEMs provide centralized log collection, real-time correlation, alerting, dashboards, and long-term storage for efficient analysis."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "siem-q1",
+    courseId: "siem-fundamentals",
+    title: "SIEM Fundamentals Quiz",
+    description: "Test your understanding of SIEM architecture, components, and basic concepts.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "siem-q1-1",
         question: "What does SIEM stand for?",
         options: [
@@ -2329,7 +2349,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "SIEM stands for Security Information and Event Management — a platform that combines log aggregation, real-time monitoring, correlation, and alerting."
       },
-      {
+{
         id: "siem-q1-2",
         question: "Which component of a SIEM is responsible for collecting and forwarding log data?",
         options: [
@@ -2341,7 +2361,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Forwarders (or data collectors/agents) are deployed on endpoints and network devices to collect and send log data to the SIEM for processing."
       },
-      {
+{
         id: "siem-q1-3",
         question: "What is the primary purpose of a SIEM in a SOC?",
         options: [
@@ -2353,7 +2373,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "A SIEM centralizes log data from across the environment, correlates events, and generates alerts to help SOC analysts detect and respond to threats."
       },
-      {
+{
         id: "siem-q1-4",
         question: "Which SIEM platform uses SPL (Search Processing Language)?",
         options: [
@@ -2365,7 +2385,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Splunk uses SPL (Search Processing Language) as its query language for searching, filtering, and analyzing data."
       },
-      {
+{
         id: "siem-q1-5",
         question: "What query language does Microsoft Sentinel use?",
         options: [
@@ -2377,7 +2397,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Microsoft Sentinel uses KQL (Kusto Query Language) for querying data stored in Azure Log Analytics workspaces."
       },
-      {
+{
         id: "siem-q1-6",
         question: "What is the role of an indexer in a SIEM?",
         options: [
@@ -2389,7 +2409,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The indexer receives data from forwarders, parses it, creates indexes for efficient searching, and stores it according to retention policies."
       },
-      {
+{
         id: "siem-q1-7",
         question: "Which of the following is NOT a common SIEM use case?",
         options: [
@@ -2401,7 +2421,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Application development is not a SIEM use case. SIEMs are used for threat detection, compliance, incident response, and forensic investigations."
       },
-      {
+{
         id: "siem-q1-8",
         question: "What does 'correlation' mean in SIEM context?",
         options: [
@@ -2413,7 +2433,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Correlation links related events from multiple data sources to identify attack patterns, suspicious behaviors, or security incidents."
       },
-      {
+{
         id: "siem-q1-9",
         question: "Which SIEM platform is cloud-native and built on Azure?",
         options: [
@@ -2425,7 +2445,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Microsoft Sentinel is a cloud-native SIEM built on Azure, offering scalable log analytics, threat intelligence, and SOAR capabilities."
       },
-      {
+{
         id: "siem-q1-10",
         question: "What is EPS in SIEM licensing?",
         options: [
@@ -2437,7 +2457,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "EPS (Events Per Second) measures the rate of data ingestion and is commonly used in SIEM licensing models to determine capacity and cost."
       },
-      {
+{
         id: "siem-q1-11",
         question: "What is the search head responsible for in Splunk's architecture?",
         options: [
@@ -2449,7 +2469,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The search head handles search requests from users, distributes them to indexers, merges results, and presents them through the UI."
       },
-      {
+{
         id: "siem-q1-12",
         question: "Which query language does IBM QRadar use?",
         options: [
@@ -2461,7 +2481,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "IBM QRadar uses AQL (Ariel Query Language), a SQL-like language for querying its Ariel database of security events and flows."
       },
-      {
+{
         id: "siem-q1-13",
         question: "What advantage does a cloud-native SIEM offer over on-premises?",
         options: [
@@ -2473,7 +2493,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Cloud-native SIEMs offer elastic scalability, reduced infrastructure overhead, automatic updates, and pay-as-you-go pricing models."
       },
-      {
+{
         id: "siem-q1-14",
         question: "What is 'log normalization'?",
         options: [
@@ -2485,7 +2505,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Log normalization converts logs from various formats and sources into a standardized schema so they can be consistently searched and correlated."
       },
-      {
+{
         id: "siem-q1-15",
         question: "Which open-source search engine powers Elastic SIEM?",
         options: [
@@ -2496,8 +2516,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 1,
         explanation: "Elastic SIEM is built on Elasticsearch, an open-source distributed search and analytics engine optimized for log and event data."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "siem-q2",
+    courseId: "siem-fundamentals",
+    title: "Data Ingestion Assessment",
+    description: "Evaluate your knowledge of log collection, normalization, and data management.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "siem-q2-1",
         question: "What is the difference between agent-based and agentless log collection?",
         options: [
@@ -2509,7 +2539,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Agent-based collection installs a lightweight forwarder on the source system, while agentless collection uses protocols like Syslog, WMI, or APIs to pull data remotely."
       },
-      {
+{
         id: "siem-q2-2",
         question: "What port does Syslog traditionally use?",
         options: [
@@ -2521,7 +2551,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Syslog traditionally uses UDP port 514 for sending log messages. Modern implementations often use TCP 514 or TCP 6514 (with TLS) for reliability."
       },
-      {
+{
         id: "siem-q2-3",
         question: "What is field extraction in SIEM data processing?",
         options: [
@@ -2533,7 +2563,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Field extraction parses raw log data to identify and label key data elements like IP addresses, usernames, timestamps, and actions for structured searching."
       },
-      {
+{
         id: "siem-q2-4",
         question: "What is a 'source type' in Splunk?",
         options: [
@@ -2545,7 +2575,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "A source type in Splunk categorizes data by format, telling Splunk how to parse and extract fields from that specific log type."
       },
-      {
+{
         id: "siem-q2-5",
         question: "What is 'hot/warm/cold' storage in SIEM data management?",
         options: [
@@ -2557,7 +2587,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Hot/warm/cold storage tiers balance performance and cost: hot for recent, frequently accessed data; warm for less frequent; cold for archival and compliance."
       },
-      {
+{
         id: "siem-q2-6",
         question: "Why is timestamp normalization important in SIEM?",
         options: [
@@ -2569,7 +2599,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Timestamp normalization ensures events from systems in different time zones are aligned to a common reference (usually UTC) for accurate correlation."
       },
-      {
+{
         id: "siem-q2-7",
         question: "What is a Universal Forwarder in Splunk?",
         options: [
@@ -2581,7 +2611,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "A Universal Forwarder is a lightweight Splunk agent designed to collect and forward data to indexers while consuming minimal CPU and memory."
       },
-      {
+{
         id: "siem-q2-8",
         question: "What does CEF stand for in log formatting?",
         options: [
@@ -2593,7 +2623,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "CEF (Common Event Format) is a standardized log format developed by ArcSight that provides a common structure for security event data across vendors."
       },
-      {
+{
         id: "siem-q2-9",
         question: "Which data collection method is best for cloud services like AWS or Azure?",
         options: [
@@ -2605,7 +2635,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "API-based integration is ideal for cloud services, using REST APIs to pull logs from platforms like AWS CloudTrail, Azure Activity Logs, or Office 365."
       },
-      {
+{
         id: "siem-q2-10",
         question: "What is data enrichment in SIEM?",
         options: [
@@ -2617,7 +2647,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Data enrichment adds contextual information to raw events — like geolocation for IPs, threat intel scores, or asset criticality — improving analysis."
       },
-      {
+{
         id: "siem-q2-11",
         question: "What is the purpose of data retention policies in SIEM?",
         options: [
@@ -2629,7 +2659,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Retention policies define storage durations for different data types, balancing compliance requirements, operational needs, and storage costs."
       },
-      {
+{
         id: "siem-q2-12",
         question: "What protocol provides reliable, encrypted syslog delivery?",
         options: [
@@ -2641,7 +2671,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Syslog over TLS (typically on TCP port 6514) provides both reliable delivery (TCP) and encryption (TLS) for secure log transmission."
       },
-      {
+{
         id: "siem-q2-13",
         question: "What is an index in SIEM data storage?",
         options: [
@@ -2653,7 +2683,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "An index is a structured data store within the SIEM where processed events are organized and optimized for fast searching and retrieval."
       },
-      {
+{
         id: "siem-q2-14",
         question: "What happens if logs arrive at the SIEM with incorrect timestamps?",
         options: [
@@ -2665,7 +2695,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Incorrect timestamps cause events to appear in the wrong order, breaking correlation rules and making incident timelines unreliable."
       },
-      {
+{
         id: "siem-q2-15",
         question: "What is 'parsing' in the context of SIEM data ingestion?",
         options: [
@@ -2676,8 +2706,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 1,
         explanation: "Parsing breaks raw, unstructured log data into structured, labeled fields (timestamp, source IP, action, etc.) for efficient querying."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "siem-q3",
+    courseId: "siem-fundamentals",
+    title: "Search & Query Mastery",
+    description: "Practical quiz on writing SIEM queries and search techniques.",
+    passingScore: 75,
+    timeLimit: 25,
+    questions: [
+{
         id: "siem-q3-1",
         question: "In SPL, what does the 'stats count by src_ip' command do?",
         options: [
@@ -2689,7 +2729,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The 'stats count by src_ip' command aggregates events, counting how many occurrences exist for each unique source IP address."
       },
-      {
+{
         id: "siem-q3-2",
         question: "What does the wildcard character '*' do in a SIEM search?",
         options: [
@@ -2701,7 +2741,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "The wildcard '*' matches zero or more characters, enabling partial matching. For example, 'fail*' matches 'failed', 'failure', 'failing', etc."
       },
-      {
+{
         id: "siem-q3-3",
         question: "In KQL, what does '| where TimeGenerated > ago(1h)' do?",
         options: [
@@ -2713,7 +2753,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The 'where TimeGenerated > ago(1h)' filter returns only events generated within the last hour."
       },
-      {
+{
         id: "siem-q3-4",
         question: "What is the purpose of the 'table' command in SPL?",
         options: [
@@ -2725,7 +2765,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The 'table' command in SPL displays results showing only the specified fields in a clean tabular format."
       },
-      {
+{
         id: "siem-q3-5",
         question: "How do you search for an exact phrase in most SIEM platforms?",
         options: [
@@ -2737,7 +2777,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Double quotes are used across most SIEM platforms to search for exact phrases, ensuring the words appear together in that order."
       },
-      {
+{
         id: "siem-q3-6",
         question: "What does the SPL command 'dedup src_ip' do?",
         options: [
@@ -2749,7 +2789,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The 'dedup' command removes duplicate events based on the specified field, keeping only the first occurrence of each unique value."
       },
-      {
+{
         id: "siem-q3-7",
         question: "In KQL, what does the 'summarize' operator do?",
         options: [
@@ -2761,7 +2801,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "The 'summarize' operator in KQL performs aggregation, similar to SQL's GROUP BY."
       },
-      {
+{
         id: "siem-q3-8",
         question: "What is the Boolean operator to exclude results in SIEM searches?",
         options: [
@@ -2773,7 +2813,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The NOT operator excludes matching results from the search."
       },
-      {
+{
         id: "siem-q3-9",
         question: "What does 'earliest=-24h latest=now' specify in a Splunk search?",
         options: [
@@ -2785,7 +2825,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "These time modifiers set the search window from 24 hours ago to the present moment."
       },
-      {
+{
         id: "siem-q3-10",
         question: "What is the pipe character '|' used for in SIEM queries?",
         options: [
@@ -2797,7 +2837,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The pipe '|' chains commands together in a pipeline, where each command processes the output of the previous one."
       },
-      {
+{
         id: "siem-q3-11",
         question: "How would you search for failed login attempts from a specific subnet in SPL?",
         options: [
@@ -2809,7 +2849,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Both wildcard matching (192.168.1.*) and CIDR notation (192.168.1.0/24) are valid approaches in SPL to search within a subnet."
       },
-      {
+{
         id: "siem-q3-12",
         question: "What does 'head 10' do in a SIEM query?",
         options: [
@@ -2821,7 +2861,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "The 'head' command limits output to the first N results, useful for quickly viewing the most relevant events."
       },
-      {
+{
         id: "siem-q3-13",
         question: "In KQL, what does 'project' do?",
         options: [
@@ -2833,7 +2873,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The 'project' operator in KQL selects which columns to include in the output, similar to SELECT in SQL."
       },
-      {
+{
         id: "siem-q3-14",
         question: "What is a subsearch (or subquery) in SIEM?",
         options: [
@@ -2845,7 +2885,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "A subsearch is a nested query that executes first, and its results are used as input for the outer search."
       },
-      {
+{
         id: "siem-q3-15",
         question: "What does the 'sort' command do in SPL?",
         options: [
@@ -2857,7 +2897,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "The 'sort' command orders results by one or more fields. Use '-' prefix for descending order."
       },
-      {
+{
         id: "siem-q3-16",
         question: "How do you use a lookup table in Splunk?",
         options: [
@@ -2869,7 +2909,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The 'lookup' command enriches search results by matching field values against an external lookup table."
       },
-      {
+{
         id: "siem-q3-17",
         question: "What is the 'transaction' command used for in SPL?",
         options: [
@@ -2881,7 +2921,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "The 'transaction' command groups related events into single transactions based on shared fields and time windows."
       },
-      {
+{
         id: "siem-q3-18",
         question: "What is the advantage of using 'tstats' over regular 'stats' in Splunk?",
         options: [
@@ -2893,7 +2933,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "tstats queries indexed metadata (tsidx files) rather than raw events, making it significantly faster for large datasets."
       },
-      {
+{
         id: "siem-q3-19",
         question: "In KQL, what does 'extend' do?",
         options: [
@@ -2905,7 +2945,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The 'extend' operator in KQL creates new calculated columns based on expressions."
       },
-      {
+{
         id: "siem-q3-20",
         question: "What is the best practice for optimizing SIEM search performance?",
         options: [
@@ -2916,8 +2956,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 1,
         explanation: "Optimize by specifying the narrowest time range, targeting specific indexes, and filtering early to reduce data processed by subsequent commands."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "siem-q4",
+    courseId: "siem-fundamentals",
+    title: "Dashboards & Alerts Quiz",
+    description: "Test your skills on visualization, dashboards, and alert configuration.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "siem-q4-1",
         question: "What is the primary purpose of a SOC dashboard?",
         options: [
@@ -2929,7 +2979,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "SOC dashboards provide at-a-glance visibility into security posture, showing real-time event trends, alert status, and key metrics."
       },
-      {
+{
         id: "siem-q4-2",
         question: "Which visualization type is best for showing trends over time?",
         options: [
@@ -2941,7 +2991,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Line charts and area charts are ideal for showing how values change over time."
       },
-      {
+{
         id: "siem-q4-3",
         question: "What is a 'drilldown' in a SIEM dashboard?",
         options: [
@@ -2953,7 +3003,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Drilldowns allow users to click on dashboard elements to navigate to detailed views or run more specific searches."
       },
-      {
+{
         id: "siem-q4-4",
         question: "What is alert fatigue?",
         options: [
@@ -2965,7 +3015,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Alert fatigue occurs when analysts are overwhelmed by too many alerts (especially false positives), causing them to miss genuine threats."
       },
-      {
+{
         id: "siem-q4-5",
         question: "What is a correlation rule in SIEM alerting?",
         options: [
@@ -2977,7 +3027,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Correlation rules define conditions across multiple events that, when met together, trigger an alert."
       },
-      {
+{
         id: "siem-q4-6",
         question: "Which visualization is best for showing the proportion of alert types?",
         options: [
@@ -2989,7 +3039,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Pie and donut charts effectively show proportional distribution of alert categories or severity levels."
       },
-      {
+{
         id: "siem-q4-7",
         question: "What is a 'token' in Splunk dashboard context?",
         options: [
@@ -3001,7 +3051,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Dashboard tokens are dynamic variables populated by user inputs that filter data across multiple panels."
       },
-      {
+{
         id: "siem-q4-8",
         question: "What is the recommended approach to reduce false positives in SIEM alerts?",
         options: [
@@ -3013,7 +3063,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Reducing false positives requires ongoing tuning: adding whitelists, adjusting thresholds, enriching with context, and reviewing performance metrics."
       },
-      {
+{
         id: "siem-q4-9",
         question: "What is a 'heatmap' useful for in security dashboards?",
         options: [
@@ -3025,7 +3075,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Heatmaps visualize data density across two dimensions using color intensity, ideal for spotting anomalous activity patterns."
       },
-      {
+{
         id: "siem-q4-10",
         question: "What should a well-designed alert include?",
         options: [
@@ -3037,7 +3087,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Effective alerts include severity level, clear description, affected assets, recommended investigation steps, and contextual information."
       },
-      {
+{
         id: "siem-q4-11",
         question: "What is a 'scheduled search' in SIEM alerting?",
         options: [
@@ -3049,7 +3099,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Scheduled searches run automatically at configured intervals, evaluating results against conditions to generate alerts."
       },
-      {
+{
         id: "siem-q4-12",
         question: "What is alert throttling?",
         options: [
@@ -3061,7 +3111,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Alert throttling prevents alert flooding by suppressing duplicate alerts within a defined time window."
       },
-      {
+{
         id: "siem-q4-13",
         question: "When should you use a geographic map visualization?",
         options: [
@@ -3073,7 +3123,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Geographic maps are ideal for displaying location-based data such as attack origins or VPN login locations."
       },
-      {
+{
         id: "siem-q4-14",
         question: "What is a 'notable event' in Splunk Enterprise Security?",
         options: [
@@ -3085,7 +3135,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Notable events are security-significant events generated by correlation searches in Splunk ES, appearing in the incident review queue."
       },
-      {
+{
         id: "siem-q4-15",
         question: "What is the best practice for dashboard refresh intervals?",
         options: [
@@ -3096,8 +3146,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 0,
         explanation: "Dashboard refresh intervals should balance timeliness with performance. Operational SOC dashboards typically refresh every 1-5 minutes."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "siem-q5",
+    courseId: "siem-fundamentals",
+    title: "Final Certification Exam",
+    description: "Comprehensive exam covering all SIEM fundamentals modules. Required for certification.",
+    passingScore: 80,
+    timeLimit: 45,
+    questions: [
+{
         id: "siem-q5-1",
         question: "A SOC analyst notices 500 failed login attempts from a single IP within 10 minutes. What SIEM feature detected this?",
         options: [
@@ -3109,7 +3169,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Threshold-based correlation rules detect when event counts exceed defined limits within a time window."
       },
-      {
+{
         id: "siem-q5-2",
         question: "Which SPL query would find the top 10 source IPs generating failed authentication events?",
         options: [
@@ -3121,7 +3181,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "This query searches security events for failures, counts per source IP, sorts descending, and limits to the top 10."
       },
-      {
+{
         id: "siem-q5-3",
         question: "What is the MITRE ATT&CK tactic that SIEM is most directly aligned to detect?",
         options: [
@@ -3133,7 +3193,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "SIEM can detect activities across multiple ATT&CK tactics by correlating logs from various sources."
       },
-      {
+{
         id: "siem-q5-4",
         question: "An analyst sees an 'Impossible Travel' alert — login from New York, then London 30 minutes later. What should they do first?",
         options: [
@@ -3145,7 +3205,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "The analyst should investigate before acting: check for VPN/proxy usage, contact the user, and review session details."
       },
-      {
+{
         id: "siem-q5-5",
         question: "What is the difference between real-time and historical SIEM searches?",
         options: [
@@ -3157,7 +3217,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Real-time searches monitor events as they arrive; historical searches query already-indexed data for investigation."
       },
-      {
+{
         id: "siem-q5-6",
         question: "Which KQL query finds sign-in events from outside the United States in the last 24 hours?",
         options: [
@@ -3169,7 +3229,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "This KQL query filters SigninLogs to the last 24 hours and excludes US-based sign-ins."
       },
-      {
+{
         id: "siem-q5-7",
         question: "What is 'lateral movement' and how can SIEM detect it?",
         options: [
@@ -3181,7 +3241,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Lateral movement is when attackers move between internal systems. SIEM detects it by correlating authentication events across hosts."
       },
-      {
+{
         id: "siem-q5-8",
         question: "You need a dashboard showing daily login trends, top failed IPs, and geographic distribution. Which visualizations?",
         options: [
@@ -3193,7 +3253,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Use each visualization for its strength: line charts for trends, bar charts for rankings, and maps for geographic data."
       },
-      {
+{
         id: "siem-q5-9",
         question: "What is the purpose of a SIEM use case library?",
         options: [
@@ -3205,7 +3265,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "A use case library catalogs all detection rules with their purpose, associated threats, queries, and response procedures."
       },
-      {
+{
         id: "siem-q5-10",
         question: "What does 'data onboarding' involve in a SIEM project?",
         options: [
@@ -3217,7 +3277,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Data onboarding integrates new log sources: identifying data, configuring collection, defining parsing, and validating quality."
       },
-      {
+{
         id: "siem-q5-11",
         question: "An alert fires for 'PowerShell Download Cradle Detected'. What SPL query likely generated this?",
         options: [
@@ -3229,7 +3289,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "This query searches endpoint logs for PowerShell processes with download-related command-line arguments."
       },
-      {
+{
         id: "siem-q5-12",
         question: "What is the 'kill chain' approach to SIEM detection?",
         options: [
@@ -3241,7 +3301,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "The kill chain approach creates layered detection rules at each attack stage, increasing the chance of catching attackers."
       },
-      {
+{
         id: "siem-q5-13",
         question: "How should you handle a detection rule with a 90% false positive rate?",
         options: [
@@ -3253,7 +3313,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Identify common FP patterns, refine query logic, add contextual conditions or exceptions, then retest to improve fidelity."
       },
-      {
+{
         id: "siem-q5-14",
         question: "What is 'pivoting' in SIEM investigation?",
         options: [
@@ -3265,7 +3325,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Pivoting uses discovered artifacts as new search terms to find related events and uncover the full attack scope."
       },
-      {
+{
         id: "siem-q5-15",
         question: "What is the recommended approach for building a new detection rule?",
         options: [
@@ -3277,7 +3337,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Best practice: develop, test against historical data, tune thresholds/exceptions, then deploy with ongoing monitoring."
       },
-      {
+{
         id: "siem-q5-16",
         question: "What is the difference between a 'saved search' and an 'alert' in SIEM?",
         options: [
@@ -3289,7 +3349,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "A saved search is a stored query. An alert builds on a saved search by adding trigger conditions and notification actions."
       },
-      {
+{
         id: "siem-q5-17",
         question: "During an incident, what is the best SIEM approach to build a timeline?",
         options: [
@@ -3301,7 +3361,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Building timelines requires time-sorted, correlated searches across multiple data sources to reconstruct the complete event sequence."
       },
-      {
+{
         id: "siem-q5-18",
         question: "What metric measures the percentage of alerts that are actual security incidents?",
         options: [
@@ -3313,7 +3373,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "True Positive Rate measures the percentage of alerts that represent real security incidents."
       },
-      {
+{
         id: "siem-q5-19",
         question: "What is the role of threat intelligence feeds in SIEM?",
         options: [
@@ -3325,7 +3385,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Threat intelligence feeds supply external IOCs that the SIEM matches against incoming events to detect known threats."
       },
-      {
+{
         id: "siem-q5-20",
         question: "You're investigating potential data exfiltration. Which SIEM data sources are most relevant?",
         options: [
@@ -3337,7 +3397,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Data exfiltration investigation requires correlating outbound traffic, DLP alerts, endpoint activity, and DNS queries."
       },
-      {
+{
         id: "siem-q5-21",
         question: "What is a 'detection gap' in SIEM operations?",
         options: [
@@ -3349,7 +3409,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "A detection gap is a threat without detection coverage. Gap analysis against MITRE ATT&CK helps identify and prioritize new rules."
       },
-      {
+{
         id: "siem-q5-22",
         question: "What is the benefit of SIEM integration with SOAR?",
         options: [
@@ -3361,7 +3421,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "SOAR automates repetitive response actions triggered by SIEM alerts, reducing MTTR and freeing analysts for complex investigations."
       },
-      {
+{
         id: "siem-q5-23",
         question: "What is 'log source health monitoring' in SIEM?",
         options: [
@@ -3373,7 +3433,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Log source health monitoring tracks active ingestion and alerts when data stops flowing — missing logs create detection blind spots."
       },
-      {
+{
         id: "siem-q5-24",
         question: "Which represents the most mature SIEM deployment?",
         options: [
@@ -3385,7 +3445,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "A mature SIEM features comprehensive data coverage, customized detections, SOAR integration, and continuous improvement."
       },
-      {
+{
         id: "siem-q5-25",
         question: "What is the most critical factor for SIEM success in a SOC?",
         options: [
@@ -3396,8 +3456,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 0,
         explanation: "The most critical factor is skilled analysts who understand the environment, tune detection rules, and drive continuous improvement — technology alone is insufficient."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "nsm-q1",
+    courseId: "network-security-monitoring",
+    title: "NSM Foundations Quiz",
+    description: "Test your knowledge of NSM philosophy, network protocols, OSI model, and sensor placement.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "nsm-q1-1",
         question: "What distinguishes Network Security Monitoring from traditional intrusion detection?",
         options: [
@@ -3409,7 +3479,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "NSM goes beyond simple alerting by combining data collection, detection, and human-driven analysis to build comprehensive situational awareness of network activity."
       },
-      {
+{
         id: "nsm-q1-2",
         question: "During a TCP three-way handshake, what is the correct sequence of flags?",
         options: [
@@ -3421,7 +3491,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The TCP three-way handshake proceeds: client sends SYN, server responds with SYN-ACK, client completes with ACK — establishing a reliable connection."
       },
-      {
+{
         id: "nsm-q1-3",
         question: "Why is UDP significant from a security monitoring perspective?",
         options: [
@@ -3433,7 +3503,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "UDP is connectionless with no handshake, making it difficult to track sessions and easy for attackers to spoof source addresses — commonly abused in DNS amplification attacks and covert channels."
       },
-      {
+{
         id: "nsm-q1-4",
         question: "At which OSI layer does a network TAP operate to capture traffic?",
         options: [
@@ -3445,7 +3515,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Network TAPs operate at the Physical layer (Layer 1), creating an exact electrical or optical copy of all traffic passing through a link without introducing latency."
       },
-      {
+{
         id: "nsm-q1-5",
         question: "What is the primary disadvantage of using a SPAN/mirror port compared to a network TAP?",
         options: [
@@ -3457,7 +3527,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "SPAN ports mirror traffic via the switch CPU, which can drop packets under load. They may also not capture Layer 1 errors, malformed frames, or full-duplex conversations accurately."
       },
-      {
+{
         id: "nsm-q1-6",
         question: "Which DNS record type maps a domain name to an IPv4 address?",
         options: [
@@ -3469,7 +3539,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "The A (Address) record maps a domain name to an IPv4 address. AAAA records serve the same purpose for IPv6 addresses."
       },
-      {
+{
         id: "nsm-q1-7",
         question: "What is the purpose of the TTL field in an IP packet header from a defender's perspective?",
         options: [
@@ -3481,7 +3551,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "TTL (Time to Live) limits how many hops a packet can traverse. Different operating systems set different initial TTL values, enabling passive OS fingerprinting. Unusual TTL values can also indicate tunneling or spoofing."
       },
-      {
+{
         id: "nsm-q1-8",
         question: "Which sensor placement strategy provides the broadest visibility of external threats?",
         options: [
@@ -3493,7 +3563,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Placing sensors at the network perimeter captures all inbound and outbound traffic before internal filtering, providing maximum visibility of external threat actor activity."
       },
-      {
+{
         id: "nsm-q1-9",
         question: "What does the term 'full content data' mean in NSM?",
         options: [
@@ -3505,7 +3575,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Full content data refers to complete packet captures (PCAPs) that include all headers and payloads — the most detailed form of network evidence, essential for forensic analysis."
       },
-      {
+{
         id: "nsm-q1-10",
         question: "Which protocol typically uses port 443 and obscures payload content from network monitors?",
         options: [
@@ -3516,8 +3586,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 0,
         explanation: "HTTPS uses TLS encryption on port 443, making payload inspection impossible without TLS interception. Attackers frequently use HTTPS for C2 to blend with legitimate traffic."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "nsm-q2",
+    courseId: "network-security-monitoring",
+    title: "Packet Capture & Analysis Quiz",
+    description: "Assess your Wireshark skills, TCP stream analysis, DNS and HTTP traffic inspection.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "nsm-q2-1",
         question: "What is the difference between a Wireshark capture filter and a display filter?",
         options: [
@@ -3529,7 +3609,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Capture filters (BPF syntax, e.g., 'host 10.0.0.1') determine what packets are saved to disk. Display filters (Wireshark syntax, e.g., 'ip.addr == 10.0.0.1') filter the view of already-captured data."
       },
-      {
+{
         id: "nsm-q2-2",
         question: "Which Wireshark display filter shows only HTTP GET requests?",
         options: [
@@ -3541,7 +3621,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The display filter 'http.request.method == \"GET\"' precisely targets HTTP GET requests by filtering on the parsed HTTP request method field."
       },
-      {
+{
         id: "nsm-q2-3",
         question: "When reconstructing a TCP stream in Wireshark, what feature do you use?",
         options: [
@@ -3553,7 +3633,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Right-clicking a TCP packet and selecting Follow → TCP Stream reassembles the entire conversation between client and server, showing the data exchanged in order."
       },
-      {
+{
         id: "nsm-q2-4",
         question: "What does a high number of TCP RST packets from a single source IP likely indicate?",
         options: [
@@ -3565,7 +3645,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Large volumes of RST packets from one source typically indicate port scanning — the source is probing closed ports or services that reject the connection attempt."
       },
-      {
+{
         id: "nsm-q2-5",
         question: "Which indicator in DNS traffic suggests possible DNS tunneling?",
         options: [
@@ -3577,7 +3657,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "DNS tunneling encodes data in subdomain labels (creating abnormally long queries), generates high query volumes, and often uses TXT records to carry larger response payloads."
       },
-      {
+{
         id: "nsm-q2-6",
         question: "What is the Wireshark display filter to show all packets from or to subnet 192.168.1.0/24?",
         options: [
@@ -3589,7 +3669,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The display filter 'ip.addr == 192.168.1.0/24' matches any packet where either the source or destination IP falls within the specified CIDR range."
       },
-      {
+{
         id: "nsm-q2-7",
         question: "How can you extract files transferred over HTTP from a PCAP in Wireshark?",
         options: [
@@ -3601,7 +3681,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "File → Export Objects → HTTP lists all files transferred over HTTP in the capture, allowing you to save them individually — critical for extracting malware samples or exfiltrated documents."
       },
-      {
+{
         id: "nsm-q2-8",
         question: "What does TCP retransmission indicate in a packet capture?",
         options: [
@@ -3613,7 +3693,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "TCP retransmissions occur when the sender doesn't receive an ACK within the timeout period, indicating packet loss due to network congestion, faulty hardware, or potential interference."
       },
-      {
+{
         id: "nsm-q2-9",
         question: "Which BPF capture filter captures only traffic on port 53?",
         options: [
@@ -3625,7 +3705,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "The BPF capture filter 'port 53' captures both TCP and UDP traffic on port 53 (DNS). BPF syntax differs from Wireshark display filter syntax."
       },
-      {
+{
         id: "nsm-q2-10",
         question: "What suspicious pattern would you look for in HTTP traffic to detect a webshell?",
         options: [
@@ -3636,8 +3716,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 3,
         explanation: "Webshells often manifest as POST requests to odd file paths (e.g., /uploads/shell.php) with command parameters (cmd=whoami), returning small text responses — distinct from normal web traffic patterns."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "nsm-q3",
+    courseId: "network-security-monitoring",
+    title: "Intrusion Detection with Suricata Quiz",
+    description: "Evaluate your understanding of Suricata architecture, rule writing, and alert tuning.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "nsm-q3-1",
         question: "What is the basic structure of a Suricata rule?",
         options: [
@@ -3649,7 +3739,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Suricata rules follow: ACTION PROTOCOL SRC_IP SRC_PORT -> DST_IP DST_PORT (options;). For example: alert http $HOME_NET any -> $EXTERNAL_NET any (msg:\"Suspicious UA\"; content:\"evil\"; sid:100001;)."
       },
-      {
+{
         id: "nsm-q3-2",
         question: "What does the 'content' keyword do in a Suricata rule?",
         options: [
@@ -3661,7 +3751,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "The 'content' keyword performs pattern matching against packet data. It can match ASCII strings or hex byte sequences (e.g., content:|de ad be ef|;) and supports modifiers like nocase, depth, and offset."
       },
-      {
+{
         id: "nsm-q3-3",
         question: "What is the purpose of the 'flow' keyword in Suricata rules?",
         options: [
@@ -3673,7 +3763,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The 'flow' keyword matches on TCP session state and direction. 'flow:established,to_server;' targets data sent from client to server on established connections, reducing false positives on handshake traffic."
       },
-      {
+{
         id: "nsm-q3-4",
         question: "How does the 'threshold' keyword help reduce alert fatigue?",
         options: [
@@ -3685,7 +3775,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Thresholds control alert rate — 'threshold:type limit,track by_src,count 1,seconds 300;' fires only once per source IP every 5 minutes, preventing alert floods from repetitive activity."
       },
-      {
+{
         id: "nsm-q3-5",
         question: "What is the difference between Suricata running in IDS mode versus IPS mode?",
         options: [
@@ -3697,7 +3787,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "In IDS mode, Suricata passively copies and analyzes traffic. In IPS (inline) mode, traffic flows through Suricata, enabling 'drop' and 'reject' actions to block malicious packets in real time."
       },
-      {
+{
         id: "nsm-q3-6",
         question: "Which Suricata rule action would you use to silently discard a malicious packet in IPS mode?",
         options: [
@@ -3709,7 +3799,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "The 'drop' action silently discards the matching packet and generates an alert. 'reject' also sends a reset/ICMP unreachable to the sender. 'pass' whitelists the traffic."
       },
-      {
+{
         id: "nsm-q3-7",
         question: "What does the 'pcre' keyword allow you to do in Suricata rules?",
         options: [
@@ -3721,7 +3811,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "The 'pcre' keyword enables regex-based matching for complex patterns that simple content matches can't express, like variable-length strings or pattern alternatives."
       },
-      {
+{
         id: "nsm-q3-8",
         question: "What is a 'suppress' rule in Suricata used for?",
         options: [
@@ -3733,7 +3823,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Suppress rules silence alerts for specific track conditions (e.g., suppress gen_id 1, sig_id 2001, track by_src, ip 10.0.0.5) — useful for whitelisting known-good sources without disabling the detection globally."
       },
-      {
+{
         id: "nsm-q3-9",
         question: "What does the 'sid' keyword represent in a Suricata rule?",
         options: [
@@ -3745,7 +3835,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "SID (Signature ID) is a unique numeric identifier for each Suricata rule. Custom rules typically use SID values starting at 1000000 to avoid conflicts with community rulesets."
       },
-      {
+{
         id: "nsm-q3-10",
         question: "Which Suricata feature enables extraction and logging of TLS certificate metadata without decryption?",
         options: [
@@ -3756,8 +3846,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 3,
         explanation: "Suricata's TLS parser extracts certificate metadata (subject, issuer, serial, JA3/JA3S fingerprints) from the handshake without requiring decryption — powerful for detecting suspicious certificates and known-bad TLS fingerprints."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "nsm-q4",
+    courseId: "network-security-monitoring",
+    title: "Network Metadata with Zeek Quiz",
+    description: "Test your knowledge of Zeek logs, threat hunting with metadata, and Zeek scripting.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "nsm-q4-1",
         question: "What makes Zeek fundamentally different from Suricata in its approach to network analysis?",
         options: [
@@ -3769,7 +3869,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Zeek generates structured metadata logs (conn.log, dns.log, http.log, etc.) about all network activity. While it supports scripting-based detection, its primary strength is comprehensive network visibility through logs."
       },
-      {
+{
         id: "nsm-q4-2",
         question: "What is the 'uid' field in Zeek's conn.log used for?",
         options: [
@@ -3781,7 +3881,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "The UID is a unique string assigned to each connection. The same UID appears in conn.log, dns.log, http.log, files.log, etc., allowing analysts to trace all activity belonging to a single session."
       },
-      {
+{
         id: "nsm-q4-3",
         question: "In Zeek's conn.log, what does a connection with 'conn_state: S0' indicate?",
         options: [
@@ -3793,7 +3893,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "S0 means a SYN was sent with no reply, indicating the target port is filtered, the host is unreachable, or a stealthy scan is in progress. Large volumes of S0 connections from one source strongly suggest port scanning."
       },
-      {
+{
         id: "nsm-q4-4",
         question: "Which Zeek log would you analyze to detect DNS tunneling?",
         options: [
@@ -3805,7 +3905,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "dns.log records all DNS queries and responses. DNS tunneling indicators in this log include abnormally long query strings, high query frequency to a single parent domain, and TXT record abuse."
       },
-      {
+{
         id: "nsm-q4-5",
         question: "What information does Zeek's ssl.log provide that is valuable for threat detection?",
         options: [
@@ -3817,7 +3917,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "ssl.log records TLS handshake metadata: certificate subject/issuer, JA3/JA3S hashes, SNI values, and validation status — enabling detection of self-signed certs, expired certs, and known malicious TLS fingerprints."
       },
-      {
+{
         id: "nsm-q4-6",
         question: "How would you use Zeek logs to identify potential C2 beaconing?",
         options: [
@@ -3829,7 +3929,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "C2 beacons produce regular connection patterns visible in conn.log: consistent intervals between connections, similar request/response sizes, long session durations, and persistence to the same external IP."
       },
-      {
+{
         id: "nsm-q4-7",
         question: "What is the purpose of Zeek's files.log?",
         options: [
@@ -3841,7 +3941,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "files.log records metadata for every file transferred over monitored protocols: SHA256/MD5 hashes, MIME types, file sizes, source/destination, and extraction status — enabling malware detection via hash matching."
       },
-      {
+{
         id: "nsm-q4-8",
         question: "What does a Zeek 'notice' represent?",
         options: [
@@ -3853,7 +3953,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Notices are Zeek's built-in detection mechanism — generated when the analysis framework identifies policy-relevant activity like SSL certificate issues, scan detection, or protocol violations."
       },
-      {
+{
         id: "nsm-q4-9",
         question: "Which Zeek command-line option reads a PCAP file for offline analysis?",
         options: [
@@ -3865,7 +3965,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "The '-r' flag reads a PCAP file for offline analysis: 'zeek -r capture.pcap' processes the file and generates all applicable log files — the same analysis as live monitoring."
       },
-      {
+{
         id: "nsm-q4-10",
         question: "What is a practical use case for Zeek scripting?",
         options: [
@@ -3876,8 +3976,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 1,
         explanation: "Zeek scripts extend analysis capabilities: adding custom fields to logs, creating detection logic (e.g., alerting on connections to threat intel IPs), computing statistics, or extracting files matching specific criteria."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "nsm-q5",
+    courseId: "network-security-monitoring",
+    title: "Network Attack Detection Quiz",
+    description: "Assess your ability to detect reconnaissance, C2, lateral movement, and exfiltration.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "nsm-q5-1",
         question: "Which network behavior most strongly indicates a TCP SYN scan (half-open scan)?",
         options: [
@@ -3889,7 +3999,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "A SYN scan sends SYN packets to target ports. Open ports reply SYN-ACK (scanner sends RST), closed ports reply RST. No handshakes complete — visible as many S0/REJ states in Zeek conn.log."
       },
-      {
+{
         id: "nsm-q5-2",
         question: "What is JA3 fingerprinting and why is it useful for detecting C2?",
         options: [
@@ -3901,7 +4011,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "JA3 hashes the TLS version, cipher suites, extensions, and elliptic curves from the Client Hello. Malware families produce consistent JA3 fingerprints, enabling detection even when attackers rotate domains and IPs."
       },
-      {
+{
         id: "nsm-q5-3",
         question: "How does C2 beaconing typically appear in network traffic?",
         options: [
@@ -3913,7 +4023,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Beaconing produces a rhythmic pattern: connections at fixed intervals (with possible jitter), similar request/response sizes, to the same destination — distinguishable from human-driven traffic's irregular patterns."
       },
-      {
+{
         id: "nsm-q5-4",
         question: "Which network protocol is commonly abused for lateral movement using PsExec?",
         options: [
@@ -3925,7 +4035,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "PsExec uses SMB (port 445) to copy an executable to the target's ADMIN$ share and create a remote service. Detecting SMB writes to ADMIN$ followed by service creation is a key lateral movement indicator."
       },
-      {
+{
         id: "nsm-q5-5",
         question: "What network-level indicator suggests RDP-based lateral movement?",
         options: [
@@ -3937,7 +4047,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "RDP lateral movement appears as port 3389 connections between internal hosts. Baselines of normal RDP usage help identify anomalous sessions — especially from workstations to servers or unusual source hosts."
       },
-      {
+{
         id: "nsm-q5-6",
         question: "Which technique uses DNS queries to secretly extract data from a network?",
         options: [
@@ -3949,7 +4059,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "DNS exfiltration encodes data in subdomain queries (e.g., base64data.evil.com). Since DNS is rarely blocked, attackers can slowly extract data — detectable by monitoring query length, volume, and entropy."
       },
-      {
+{
         id: "nsm-q5-7",
         question: "What is a 'low and slow' exfiltration technique designed to evade?",
         options: [
@@ -3961,7 +4071,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Low-and-slow exfiltration sends small amounts of data over long periods to stay under volume thresholds and rate-based alerts. Detection requires baselining normal traffic patterns and looking for cumulative anomalies."
       },
-      {
+{
         id: "nsm-q5-8",
         question: "How can you detect pass-the-hash attacks on the network?",
         options: [
@@ -3973,7 +4083,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Pass-the-hash uses stolen NTLM hashes for authentication. Network indicators include NTLM (not Kerberos) authentication, the same account authenticating to many systems rapidly, and type-3 NTLM messages without prior type-1/type-2."
       },
-      {
+{
         id: "nsm-q5-9",
         question: "Which of the following would indicate potential data staging before exfiltration?",
         options: [
@@ -3985,7 +4095,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Attackers often stage data by copying files from multiple internal sources to a single collection point, then exfiltrating from there — visible as unusual inbound SMB activity followed by anomalous outbound connections."
       },
-      {
+{
         id: "nsm-q5-10",
         question: "What makes ICMP tunneling difficult to detect without proper monitoring?",
         options: [
@@ -3996,8 +4106,18 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 3,
         explanation: "ICMP echo (ping) is universally allowed. Attackers embed data in the payload field. Detection requires inspecting ICMP payload sizes (abnormally large), content (non-standard patterns), and session frequency."
-      },
-      {
+      }
+    ]
+  },
+  {
+    quizId: "nsm-q6",
+    courseId: "network-security-monitoring",
+    title: "Practical NSM Operations Quiz",
+    description: "Evaluate your understanding of NSM workflows, network forensics, and best practices.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{
         id: "nsm-q6-1",
         question: "What is the recommended architecture for integrating Zeek and Suricata into a SIEM?",
         options: [
@@ -4009,7 +4129,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Best practice is sensor-based deployment with centralized analysis: Zeek and Suricata run on network sensors, Filebeat ships logs to a SIEM (e.g., Elastic/Splunk), enabling cross-source correlation and unified alerting."
       },
-      {
+{
         id: "nsm-q6-2",
         question: "When preserving network evidence for forensic investigation, which principle is most critical?",
         options: [
@@ -4021,7 +4141,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Forensic integrity requires chain of custody: hash original PCAPs immediately (SHA256), record collection timestamps, work on copies only, document every access, and store originals on write-protected media."
       },
-      {
+{
         id: "nsm-q6-3",
         question: "How do you construct a network forensics timeline from Zeek logs?",
         options: [
@@ -4033,7 +4153,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 0,
         explanation: "Timeline construction uses Zeek's UID to link conn.log → dns.log → http.log → files.log entries for the same session, then orders all correlated events chronologically to reconstruct the attacker's progression."
       },
-      {
+{
         id: "nsm-q6-4",
         question: "What is the primary risk of running Suricata with outdated rule sets?",
         options: [
@@ -4045,7 +4165,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Outdated rules miss new CVE exploits, recent malware C2 patterns, and evolving TTPs. Best practice is automated daily rule updates (e.g., suricata-update) combined with custom rules for environment-specific threats."
       },
-      {
+{
         id: "nsm-q6-5",
         question: "Which metric best indicates the health and coverage of an NSM deployment?",
         options: [
@@ -4057,7 +4177,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 2,
         explanation: "Effective NSM metrics combine coverage (what percentage of network traffic is monitored) with detection effectiveness (how quickly simulated or red team attacks are identified) — not just raw alert volume."
       },
-      {
+{
         id: "nsm-q6-6",
         question: "What is the purpose of traffic baselining in NSM operations?",
         options: [
@@ -4069,7 +4189,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Baselining documents normal traffic patterns (volume, protocols, endpoints, time-of-day patterns). Deviations from baseline — such as new protocols, unusual hours, or unexpected destinations — signal potential threats.",
       },
-      {
+{
         id: "nsm-q6-7",
         question: "During a multi-stage intrusion investigation, what should be your first step after receiving an alert?",
         options: [
@@ -4081,7 +4201,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "Effective triage starts with context gathering: trace the alert's connection through Zeek logs, identify related sessions, check for lateral movement, and determine blast radius before containment actions."
       },
-      {
+{
         id: "nsm-q6-8",
         question: "What challenge does TLS encryption present for NSM, and how is it addressed?",
         options: [
@@ -4093,7 +4213,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 1,
         explanation: "TLS encrypts payloads but metadata remains visible: JA3 fingerprints, SNI values, certificate details, connection timing/sizes. Combined with optional TLS interception proxies at the perimeter, effective monitoring is maintained."
       },
-      {
+{
         id: "nsm-q6-9",
         question: "What is the recommended PCAP retention strategy for a production NSM environment?",
         options: [
@@ -4105,7 +4225,7 @@ export const quizzes: QuizData[] = [
         correctAnswer: 3,
         explanation: "Tiered retention balances storage costs with investigative needs: short-term full PCAP on fast storage, medium-term Zeek metadata, and long-term archival of incident-related captures — aligned with regulatory requirements."
       },
-      {
+{
         id: "nsm-q6-10",
         question: "In a final capstone investigation, which approach demonstrates mature NSM analysis?",
         options: [
@@ -4116,19 +4236,29 @@ export const quizzes: QuizData[] = [
         ],
         correctAnswer: 1,
         explanation: "Mature NSM analysis correlates all data sources: Suricata alerts identify suspicious events, Zeek logs provide session context and connection history, and PCAP provides packet-level proof — together revealing the complete attack narrative."
-      },
-      { id: "ir-q1-1", question: "What distinguishes a security incident from a security event?", options: ["An incident is a violation or imminent threat of violation of security policies", "Incidents only involve data loss", "Incidents are always caused by external attackers", "Events are more severe than incidents"], correctAnswer: 0, explanation: "A security incident is defined as a violation or imminent threat of violation of security policies." },
-      { id: "ir-q1-2", question: "What are the four phases of the NIST SP 800-61 incident response lifecycle?", options: ["Prevention, Detection, Response, Recovery", "Identify, Protect, Detect, Respond", "Preparation, Detection & Analysis, Containment/Eradication/Recovery, Post-Incident Activity", "Assessment, Containment, Remediation, Reporting"], correctAnswer: 2, explanation: "NIST SP 800-61 defines four phases operating as a continuous improvement cycle." },
-      { id: "ir-q1-3", question: "How does SANS PICERL differ from NIST regarding containment, eradication, and recovery?", options: ["SANS only uses containment and recovery", "SANS separates them into three distinct phases", "SANS combines all three into one phase", "SANS skips eradication"], correctAnswer: 1, explanation: "SANS PICERL treats Containment, Eradication, and Recovery as three separate phases." },
-      { id: "ir-q1-4", question: "What does 'R' stand for in a RACI matrix?", options: ["Recovering", "Reviewing", "Reporting", "Responsible"], correctAnswer: 3, explanation: "R stands for Responsible — the person who does the work." },
-      { id: "ir-q1-5", question: "Which IR team model uses a core team augmented by on-call specialists?", options: ["Distributed IR Team", "Hybrid / Virtual Team", "Outsourced / Retainer", "Central IR Team"], correctAnswer: 1, explanation: "A Hybrid/Virtual Team maintains a core IR team augmented by on-call specialists from different departments." },
-      { id: "ir-q1-6", question: "What is the average dwell time reported by industry studies?", options: ["24 hours", "7 days", "30 days", "200+ days"], correctAnswer: 3, explanation: "Industry reports show average dwell times exceeding 200 days." },
-      { id: "ir-q1-7", question: "Which framework is NOT an IR framework but essential for understanding adversary TTPs?", options: ["MITRE ATT&CK", "NIST SP 800-61", "ISO 27035", "SANS PICERL"], correctAnswer: 0, explanation: "MITRE ATT&CK is a knowledge base of adversary TTPs, not an IR framework." },
-      { id: "ir-q1-8", question: "What is the primary purpose of the NIST Post-Incident Activity phase?", options: ["Feeding lessons back into Preparation for continuous improvement", "Restoring systems", "Notifying regulators", "Prosecuting the attacker"], correctAnswer: 0, explanation: "Post-Incident Activity closes the loop by feeding improvements back into Preparation." },
-      { id: "ir-q1-9", question: "Organizations without formal IR capability face approximately how much higher breach costs?", options: ["63%", "90%", "40%", "25%"], correctAnswer: 0, explanation: "Approximately 63% higher breach costs according to the IBM Cost of a Data Breach Report." },
-      { id: "ir-q1-10", question: "Which stakeholder handles breach notification and regulatory compliance?", options: ["Communications / PR", "HR", "IT Operations", "Legal / General Counsel"], correctAnswer: 3, explanation: "Legal/General Counsel handles breach notification, regulatory compliance, and privilege considerations." }, 
-      ]
-    },
+      }
+    ]
+  },
+  {
+    quizId: "ir-q1",
+    courseId: "incident-response",
+    title: "IR Foundations & Frameworks Quiz",
+    description: "Test your knowledge of IR lifecycle models, NIST and SANS frameworks, and team structure.",
+    passingScore: 70,
+    timeLimit: 15,
+    questions: [
+{ id: "ir-q1-1", question: "What distinguishes a security incident from a security event?", options: ["An incident is a violation or imminent threat of violation of security policies", "Incidents only involve data loss", "Incidents are always caused by external attackers", "Events are more severe than incidents"], correctAnswer: 0, explanation: "A security incident is defined as a violation or imminent threat of violation of security policies." },
+{ id: "ir-q1-2", question: "What are the four phases of the NIST SP 800-61 incident response lifecycle?", options: ["Prevention, Detection, Response, Recovery", "Identify, Protect, Detect, Respond", "Preparation, Detection & Analysis, Containment/Eradication/Recovery, Post-Incident Activity", "Assessment, Containment, Remediation, Reporting"], correctAnswer: 2, explanation: "NIST SP 800-61 defines four phases operating as a continuous improvement cycle." },
+{ id: "ir-q1-3", question: "How does SANS PICERL differ from NIST regarding containment, eradication, and recovery?", options: ["SANS only uses containment and recovery", "SANS separates them into three distinct phases", "SANS combines all three into one phase", "SANS skips eradication"], correctAnswer: 1, explanation: "SANS PICERL treats Containment, Eradication, and Recovery as three separate phases." },
+{ id: "ir-q1-4", question: "What does 'R' stand for in a RACI matrix?", options: ["Recovering", "Reviewing", "Reporting", "Responsible"], correctAnswer: 3, explanation: "R stands for Responsible — the person who does the work." },
+{ id: "ir-q1-5", question: "Which IR team model uses a core team augmented by on-call specialists?", options: ["Distributed IR Team", "Hybrid / Virtual Team", "Outsourced / Retainer", "Central IR Team"], correctAnswer: 1, explanation: "A Hybrid/Virtual Team maintains a core IR team augmented by on-call specialists from different departments." },
+{ id: "ir-q1-6", question: "What is the average dwell time reported by industry studies?", options: ["24 hours", "7 days", "30 days", "200+ days"], correctAnswer: 3, explanation: "Industry reports show average dwell times exceeding 200 days." },
+{ id: "ir-q1-7", question: "Which framework is NOT an IR framework but essential for understanding adversary TTPs?", options: ["MITRE ATT&CK", "NIST SP 800-61", "ISO 27035", "SANS PICERL"], correctAnswer: 0, explanation: "MITRE ATT&CK is a knowledge base of adversary TTPs, not an IR framework." },
+{ id: "ir-q1-8", question: "What is the primary purpose of the NIST Post-Incident Activity phase?", options: ["Feeding lessons back into Preparation for continuous improvement", "Restoring systems", "Notifying regulators", "Prosecuting the attacker"], correctAnswer: 0, explanation: "Post-Incident Activity closes the loop by feeding improvements back into Preparation." },
+{ id: "ir-q1-9", question: "Organizations without formal IR capability face approximately how much higher breach costs?", options: ["63%", "90%", "40%", "25%"], correctAnswer: 0, explanation: "Approximately 63% higher breach costs according to the IBM Cost of a Data Breach Report." },
+{ id: "ir-q1-10", question: "Which stakeholder handles breach notification and regulatory compliance?", options: ["Communications / PR", "HR", "IT Operations", "Legal / General Counsel"], correctAnswer: 3, explanation: "Legal/General Counsel handles breach notification, regulatory compliance, and privilege considerations." }
+    ]
+  },
   {
     quizId: "ir-q2",
     courseId: "incident-response",
@@ -4380,7 +4510,7 @@ export const quizzes: QuizData[] = [
     questions: [
       { id: "de-q2-1", question: "What format are SIGMA rules written in?", options: ["JSON", "XML", "YAML", "TOML"], correctAnswer: 2, explanation: "SIGMA rules use YAML format, making them human-readable and version-control friendly." },
       { id: "de-q2-2", question: "What is the purpose of the 'logsource' field in SIGMA?", options: ["Define the output format", "Specify what data to search (category + product)", "Set the rule severity", "Define the author"], correctAnswer: 1, explanation: "The logsource field abstracts the data source using category (process_creation) and product (windows), enabling vendor-neutral rules." },
-      { id: "de-q2-3", question: "What does the SIGMA modifier 'endswith' do?", options: ["Marks end of rule", "Terminates processing", "Matches values ending with the specified string", "Counts endings"], correctAnswer: 2, explanation: "The endswith modifier performs a suffix match — e.g., Image|endswith: '\powershell.exe' matches any path ending with that string." },
+      { id: "de-q2-3", question: "What does the SIGMA modifier 'endswith' do?", options: ["Marks end of rule", "Terminates processing", "Matches values ending with the specified string", "Counts endings"], correctAnswer: 2, explanation: "The endswith modifier performs a suffix match — e.g., Image|endswith: '\\powershell.exe' matches any path ending with that string." },
       { id: "de-q2-4", question: "How do you exclude false positives in a SIGMA rule?", options: ["Use a filter selection with 'not' in the condition", "Delete the rule", "Ignore them", "Email the SOC manager"], correctAnswer: 0, explanation: "Define a filter selection containing FP patterns, then use 'condition: selection and not filter' to exclude them." },
       { id: "de-q2-5", question: "What tool converts SIGMA rules to SIEM-specific queries?", options: ["pySigma / sigma-cli", "Wireshark", "Nmap", "Volatility"], correctAnswer: 0, explanation: "pySigma (sigma-cli) converts SIGMA rules to Splunk SPL, Elastic KQL, Sentinel KQL, and other SIEM query languages." },
       { id: "de-q2-6", question: "What does 'condition: 1 of selection*' mean?", options: ["Only the first selection", "Select one field", "Exactly one match required", "Any selection matching the wildcard pattern triggers the rule"], correctAnswer: 3, explanation: "'1 of selection*' means any selection whose name starts with 'selection' can trigger the rule — useful for multiple variants." },
