@@ -200,6 +200,78 @@ const QuizPage = () => {
 
   const passed = score.percentage >= (quiz?.passingScore || 70);
 
+  // ─── FIX: Save quiz score under BOTH the raw quizId AND resolvedQuizId ───
+  // This ensures LessonViewer's gate check (which looks up by resolvedQuizId
+  // like "q6") always finds the stored score, even when the URL used "6.5".
+  useEffect(() => {
+    const handleQuizCompletion = async () => {
+      if (quizState === "results") {
+        // Save under raw quizId (e.g., "6.5") — used by the quiz score display in LessonViewer
+        const rawKey = `quiz_${slug}_${quizId}`;
+        localStorage.setItem(rawKey, score.percentage.toString());
+
+        // ALSO save under resolvedQuizId (e.g., "q6") — used by the module gate check
+        if (resolvedQuizId && resolvedQuizId !== quizId) {
+          const resolvedKey = `quiz_${slug}_${resolvedQuizId}`;
+          localStorage.setItem(resolvedKey, score.percentage.toString());
+        }
+
+        // Mark lesson as completed ONLY if passed
+        if (passed) {
+          const completedKey = `completed_lessons_${slug}`;
+          const completedLessons = JSON.parse(localStorage.getItem(completedKey) || "[]");
+          // Mark both the raw quizId and resolvedQuizId as completed
+          const idsToMark = [quizId, resolvedQuizId].filter(Boolean) as string[];
+          let changed = false;
+          for (const id of idsToMark) {
+            if (!completedLessons.includes(id)) {
+              completedLessons.push(id);
+              changed = true;
+            }
+          }
+          if (changed) {
+            localStorage.setItem(completedKey, JSON.stringify(completedLessons));
+          }
+
+          // Also mark quiz as completed in backend database
+          const accessToken = localStorage.getItem("accessToken");
+          if (accessToken && slug) {
+            for (const id of idsToMark) {
+              try {
+                await fetch(apiUrl(`/api/courses/${slug}/lessons/${id}/complete/`), {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                });
+              } catch (err) {
+                // Continue even if backend call fails
+                console.warn("Failed to mark quiz complete in backend:", err);
+              }
+            }
+          }
+        }
+        
+        // Submit full answers to backend — server validates independently and records score.
+        // selectedAnswers snapshot is captured at results time.
+        submitQuizToBackend(selectedAnswers);
+        
+        // Log activity for dashboard when quiz is passed
+        if (passed && course && quiz) {
+          logActivity('quiz', quiz.title, course.title);
+        }
+        
+        // Trigger a custom event to notify course detail of progress update
+        window.dispatchEvent(new CustomEvent('quizCompleted', { 
+          detail: { quizId, score: score.percentage, courseId: slug, passed } 
+        }));
+      }
+    };
+
+    handleQuizCompletion();
+  }, [quizState, passed, score.percentage, slug, quizId, resolvedQuizId, course, quiz, selectedAnswers]);
+
   // Redirect if not found
   if (!course || !quiz) {
     return <Navigate to={`/courses/${slug || ""}`} replace />;
@@ -266,77 +338,7 @@ const QuizPage = () => {
     setShowExplanation(true);
   };
 
-  // ─── FIX: Save quiz score under BOTH the raw quizId AND resolvedQuizId ───
-  // This ensures LessonViewer's gate check (which looks up by resolvedQuizId
-  // like "q6") always finds the stored score, even when the URL used "6.5".
-  useEffect(() => {
-    const handleQuizCompletion = async () => {
-      if (quizState === "results") {
-        // Save under raw quizId (e.g., "6.5") — used by the quiz score display in LessonViewer
-        const rawKey = `quiz_${slug}_${quizId}`;
-        localStorage.setItem(rawKey, score.percentage.toString());
 
-        // ALSO save under resolvedQuizId (e.g., "q6") — used by the module gate check
-        if (resolvedQuizId && resolvedQuizId !== quizId) {
-          const resolvedKey = `quiz_${slug}_${resolvedQuizId}`;
-          localStorage.setItem(resolvedKey, score.percentage.toString());
-        }
-
-      // Mark lesson as completed ONLY if passed
-      if (passed) {
-        const completedKey = `completed_lessons_${slug}`;
-        const completedLessons = JSON.parse(localStorage.getItem(completedKey) || "[]");
-        // Mark both the raw quizId and resolvedQuizId as completed
-        const idsToMark = [quizId, resolvedQuizId].filter(Boolean) as string[];
-        let changed = false;
-        for (const id of idsToMark) {
-          if (!completedLessons.includes(id)) {
-            completedLessons.push(id);
-            changed = true;
-          }
-        }
-        if (changed) {
-          localStorage.setItem(completedKey, JSON.stringify(completedLessons));
-        }
-
-        // Also mark quiz as completed in backend database
-        const accessToken = localStorage.getItem("accessToken");
-        if (accessToken && slug) {
-          for (const id of idsToMark) {
-            try {
-              await fetch(apiUrl(`/api/courses/${slug}/lessons/${id}/complete/`), {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-                },
-              });
-            } catch (err) {
-              // Continue even if backend call fails
-              console.warn("Failed to mark quiz complete in backend:", err);
-            }
-          }
-        }
-      }
-      
-      // Submit full answers to backend — server validates independently and records score.
-      // selectedAnswers snapshot is captured at results time.
-      submitQuizToBackend(selectedAnswers);
-      
-      // Log activity for dashboard when quiz is passed
-      if (passed && course) {
-        logActivity('quiz', quiz.title, course.title);
-      }
-      
-      // Trigger a custom event to notify course detail of progress update
-      window.dispatchEvent(new CustomEvent('quizCompleted', { 
-        detail: { quizId, score: score.percentage, courseId: slug, passed } 
-      }));
-    }
-    };
-
-    handleQuizCompletion();
-  }, [quizState, passed, score.percentage, slug, quizId, resolvedQuizId]);
 
   // Submit quiz answers to backend for server-side validation and score recording.
   // Sends the full answer map so the server can validate independently.

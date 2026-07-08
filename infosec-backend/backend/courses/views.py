@@ -414,12 +414,11 @@ def submit_quiz(request, slug, quiz_id):
             mapped_lesson_id = de_map.get(quiz_id)
         elif slug == "siem-fundamentals":
             siem_map = {
-                "siem-q1": "1.5",
-                "siem-q2": "2.5",
-                "siem-q3": "3.5",
-                "siem-q4": "4.5",
-                "siem-q5": "5.5",
-                "siem-q6": "6.5",
+                "siem-q1": "siem-q1",
+                "siem-q2": "siem-q2",
+                "siem-q3": "siem-q3",
+                "siem-q4": "siem-q4",
+                "siem-q5": "siem-q5",
             }
             mapped_lesson_id = siem_map.get(quiz_id)
         elif slug == "incident-response-fundamentals":

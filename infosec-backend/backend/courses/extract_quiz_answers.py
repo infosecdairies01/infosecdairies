@@ -26,9 +26,30 @@ for block in quiz_blocks:
     course_id = cid_m.group(1)
     quiz_id   = qid_m.group(1)
     questions: dict[str, int] = {}
-    # Each question: id: "xxx", ..., correctAnswer: N
-    for q_m in re.finditer(r'id:\s*"([^"]+)"[^}]*?correctAnswer:\s*(\d+)', block, re.DOTALL):
-        questions[q_m.group(1)] = int(q_m.group(2))
+    # Robust braces-matching question extractor
+    pos = 0
+    while True:
+        q_start_m = re.search(r'\{\s*id:\s*"([^"]+)"', block[pos:])
+        if not q_start_m:
+            break
+        q_id = q_start_m.group(1)
+        start_q = pos + q_start_m.start()
+        brace_count = 0
+        end_q = start_q
+        for i in range(start_q, len(block)):
+            if block[i] == '{':
+                brace_count += 1
+            elif block[i] == '}':
+                brace_count -= 1
+                if brace_count == 0:
+                    end_q = i + 1
+                    break
+        q_text = block[start_q:end_q]
+        ans_m = re.search(r'correctAnswer:\s*(\d+)', q_text)
+        if ans_m:
+            questions[q_id] = int(ans_m.group(1))
+        pos = end_q
+
     if questions:
         results[(course_id, quiz_id)] = questions
 
