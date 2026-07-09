@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UserCircle2, Menu, X } from "lucide-react";
-import logo from "@/assets/logo.png";
 import { useAuth } from "@/context/AuthContext";
 
 
@@ -37,11 +36,6 @@ const Navbar = () => {
     <nav className="w-full z-50 relative">
       <div className="w-full px-4 md:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <Link to="/" className="group flex-shrink-0" onClick={closeMenu}>
-            <img src={logo} alt="BlueTeamers" className="h-14 md:h-20 w-auto" />
-          </Link>
-
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8 ml-auto">
             {NAV_LINKS.map(({ to, label }) => (
@@ -85,7 +79,7 @@ const Navbar = () => {
           {/* Mobile hamburger */}
           <button
             type="button"
-            className="md:hidden text-[#00ffc8] p-2"
+            className="md:hidden ml-auto text-[#00ffc8] p-2"
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Toggle menu"
           >
