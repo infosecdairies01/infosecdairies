@@ -365,7 +365,7 @@ const Alerts = () => {
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <div className="flex flex-1 pt-20 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         <SOCSidebar activeItem="Alerts" />
 
         <div className="flex-1 flex flex-col overflow-hidden">
