@@ -15,6 +15,7 @@ import { apiUrl } from "@/services/api";
 import { logActivity } from "./Dashboard";
 import { useCourseAccess } from "@/hooks/useCourseAccess";
 import { useLessonContent } from "@/hooks/useLessonContent";
+import { TESTING_MODE } from "@/lib/testingMode";
 
 // Import course backgrounds
 import socFundamentalsBg from "@/assets/soc-course-bg.jpg";
@@ -313,12 +314,18 @@ const LessonViewer = () => {
 
     if (slug === "soc-analyst-path") {
       const sapQuizMap: Record<string, string> = {
-        "1.5": "sap-q1",
-        "2.5": "sap-q2",
-        "3.5": "sap-q3",
-        "4.5": "sap-q4",
-        "5.5": "sap-q5",
-        "6.5": "sap-q6",
+        "1.7": "sap-q1",
+        "2.7": "sap-q2",
+        "3.7": "sap-q3",
+        "4.7": "sap-q4",
+        "5.7": "sap-q5",
+        "6.7": "sap-q6",
+        "7.7": "sap-q7",
+        "8.7": "sap-q8",
+        "9.7": "sap-q9",
+        "10.7": "sap-q10",
+        "11.7": "sap-q11",
+        "12.7": "sap-q12",
       };
       return sapQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
@@ -614,6 +621,20 @@ const LessonViewer = () => {
     if (!slug || !lessonId || markingComplete || isCompleted) return false;
 
     const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken && TESTING_MODE) {
+      // Local testing only — no real backend call, just mirror the same
+      // localStorage/UI state the real completion flow sets on success.
+      setIsCompleted(true);
+      setCompletedLessonIds((prev) =>
+        prev.includes(lessonId) ? prev : [...prev, lessonId]
+      );
+      const completedKey = `completed_lessons_${slug}`;
+      const stored = JSON.parse(localStorage.getItem(completedKey) || "[]") as string[];
+      if (!stored.includes(lessonId)) {
+        localStorage.setItem(completedKey, JSON.stringify([...stored, lessonId]));
+      }
+      return true;
+    }
     if (!accessToken) {
       navigate(`/auth?redirect=${encodeURIComponent(`/courses/${slug}/lesson/${lessonId}`)}`);
       return false;

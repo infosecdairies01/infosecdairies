@@ -70,12 +70,18 @@ const QuizPage = () => {
 
     if (slug === "soc-analyst-path") {
       const sapQuizMap: Record<string, string> = {
-        "1.5": "sap-q1",
-        "2.5": "sap-q2",
-        "3.5": "sap-q3",
-        "4.5": "sap-q4",
-        "5.5": "sap-q5",
-        "6.5": "sap-q6",
+        "1.7": "sap-q1",
+        "2.7": "sap-q2",
+        "3.7": "sap-q3",
+        "4.7": "sap-q4",
+        "5.7": "sap-q5",
+        "6.7": "sap-q6",
+        "7.7": "sap-q7",
+        "8.7": "sap-q8",
+        "9.7": "sap-q9",
+        "10.7": "sap-q10",
+        "11.7": "sap-q11",
+        "12.7": "sap-q12",
       };
 
       return sapQuizMap[quizId] ?? quizId;
@@ -157,7 +163,7 @@ const QuizPage = () => {
   const [quizState, setQuizState] = useState<QuizState>("intro");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set());
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
   // Timer effect
@@ -281,6 +287,13 @@ const QuizPage = () => {
   const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;
   const isFirstQuestion = currentQuestionIndex === 0;
   const hasAnswered = selectedAnswers[currentQuestion?.id] !== undefined;
+  const isCurrentChecked = quizState === "review" || checkedQuestions.has(currentQuestion?.id);
+
+  // Progress is only ever a contiguous prefix of checked questions — you can't
+  // check question N+2 without checking N+1 first, so the first unchecked
+  // question's index is the furthest question the navigator allows jumping to.
+  const firstUncheckedIndex = quiz.questions.findIndex(q => !checkedQuestions.has(q.id));
+  const maxReachableIndex = firstUncheckedIndex === -1 ? quiz.questions.length - 1 : firstUncheckedIndex;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -289,7 +302,7 @@ const QuizPage = () => {
   };
 
   const handleSelectAnswer = (answerIndex: number) => {
-    if (quizState !== "active" || showExplanation) return;
+    if (quizState !== "active" || checkedQuestions.has(currentQuestion.id)) return;
     setSelectedAnswers(prev => ({
       ...prev,
       [currentQuestion.id]: answerIndex
@@ -297,11 +310,10 @@ const QuizPage = () => {
   };
 
   const handleCheckAnswer = () => {
-    setShowExplanation(true);
+    setCheckedQuestions(prev => new Set(prev).add(currentQuestion.id));
   };
 
   const handleNextQuestion = () => {
-    setShowExplanation(false);
     if (isLastQuestion) {
       setQuizState("results");
     } else {
@@ -310,7 +322,6 @@ const QuizPage = () => {
   };
 
   const handlePrevQuestion = () => {
-    setShowExplanation(false);
     setCurrentQuestionIndex(prev => prev - 1);
   };
 
@@ -318,7 +329,7 @@ const QuizPage = () => {
     setQuizState("active");
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
-    setShowExplanation(false);
+    setCheckedQuestions(new Set());
     if (quiz.timeLimit) {
       setTimeRemaining(quiz.timeLimit * 60);
     }
@@ -328,14 +339,13 @@ const QuizPage = () => {
     setQuizState("intro");
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
-    setShowExplanation(false);
+    setCheckedQuestions(new Set());
     setTimeRemaining(null);
   };
 
   const handleReviewAnswers = () => {
     setQuizState("review");
     setCurrentQuestionIndex(0);
-    setShowExplanation(true);
   };
 
 
@@ -509,11 +519,11 @@ const QuizPage = () => {
                       Progress
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {Math.round((Object.keys(selectedAnswers).length / quiz.questions.length) * 100)}%
+                      {Math.round((checkedQuestions.size / quiz.questions.length) * 100)}%
                     </span>
                   </div>
-                  <Progress 
-                    value={(Object.keys(selectedAnswers).length / quiz.questions.length) * 100} 
+                  <Progress
+                    value={(checkedQuestions.size / quiz.questions.length) * 100}
                     className="h-2"
                   />
                 </div>
@@ -549,7 +559,7 @@ const QuizPage = () => {
                     {currentQuestion.options.map((option, idx) => {
                       const isSelected = selectedAnswers[currentQuestion.id] === idx;
                       const isCorrect = idx === currentQuestion.correctAnswer;
-                      const showResult = showExplanation || quizState === "review";
+                      const showResult = isCurrentChecked;
                       
                       let optionStyles = "border-white/[0.08] hover:border-white/20 hover:bg-white/[0.02]";
                       if (isSelected && !showResult) {
@@ -606,7 +616,7 @@ const QuizPage = () => {
                   </div>
 
                   {/* Explanation */}
-                  {showExplanation && (
+                  {isCurrentChecked && (
                     <div className={`p-4 rounded-lg mb-6 ${
                       selectedAnswers[currentQuestion.id] === currentQuestion.correctAnswer
                         ? 'bg-green-500/10 border border-green-500/20'
@@ -649,7 +659,7 @@ const QuizPage = () => {
                     </Button>
 
                     <div className="flex items-center gap-3">
-                      {quizState === "active" && !showExplanation && hasAnswered && (
+                      {quizState === "active" && !isCurrentChecked && hasAnswered && (
                         <Button
                           variant="outline"
                           onClick={handleCheckAnswer}
@@ -657,8 +667,8 @@ const QuizPage = () => {
                           Check Answer
                         </Button>
                       )}
-                      
-                      {(showExplanation || quizState === "review") && (
+
+                      {isCurrentChecked && (
                         <Button
                           onClick={handleNextQuestion}
                           className="bg-primary hover:bg-primary/90"
@@ -675,18 +685,21 @@ const QuizPage = () => {
               {/* Question Navigator */}
               <div className="flex flex-wrap gap-2 justify-center">
                 {quiz.questions.map((q, idx) => {
-                  const isAnswered = selectedAnswers[q.id] !== undefined;
+                  const isQuestionChecked = checkedQuestions.has(q.id);
                   const isCurrent = idx === currentQuestionIndex;
                   const isCorrectInReview = quizState === "review" && selectedAnswers[q.id] === q.correctAnswer;
                   const isWrongInReview = quizState === "review" && selectedAnswers[q.id] !== undefined && selectedAnswers[q.id] !== q.correctAnswer;
-                  
+                  const isLocked = quizState === "active" && idx > maxReachableIndex;
+
                   return (
                     <button
                       key={q.id}
                       onClick={() => {
+                        if (isLocked) return;
                         setCurrentQuestionIndex(idx);
-                        setShowExplanation(quizState === "review");
                       }}
+                      disabled={isLocked}
+                      title={isLocked ? "Answer the current question to unlock this one" : undefined}
                       className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
                         isCurrent
                           ? 'bg-primary text-background'
@@ -694,8 +707,10 @@ const QuizPage = () => {
                           ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                           : isWrongInReview
                           ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                          : isAnswered
+                          : isQuestionChecked
                           ? 'bg-primary/20 text-primary border border-primary/30'
+                          : isLocked
+                          ? 'bg-card/10 text-muted-foreground/30 border border-white/[0.04] cursor-not-allowed'
                           : 'bg-card/30 text-muted-foreground border border-white/[0.08] hover:border-white/20'
                       }`}
                     >

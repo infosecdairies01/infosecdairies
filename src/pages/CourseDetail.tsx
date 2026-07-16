@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/collapsible";
 import { courses as staticCourses, getCoursePriceInr } from "@/data/courses";
 import { apiUrl, fetchCourseBySlug } from "../services/api";
+import { TESTING_MODE } from "@/lib/testingMode";
 import QRCode from "qrcode";
 
 // Import all course background images
@@ -568,12 +569,18 @@ const CourseDetail = () => {
 
     if (slug === "soc-analyst-path") {
       const sapQuizMap: Record<string, string> = {
-        "1.5": "sap-q1",
-        "2.5": "sap-q2",
-        "3.5": "sap-q3",
-        "4.5": "sap-q4",
-        "5.5": "sap-q5",
-        "6.5": "sap-q6",
+        "1.7": "sap-q1",
+        "2.7": "sap-q2",
+        "3.7": "sap-q3",
+        "4.7": "sap-q4",
+        "5.7": "sap-q5",
+        "6.7": "sap-q6",
+        "7.7": "sap-q7",
+        "8.7": "sap-q8",
+        "9.7": "sap-q9",
+        "10.7": "sap-q10",
+        "11.7": "sap-q11",
+        "12.7": "sap-q12",
       };
       return sapQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
@@ -977,7 +984,7 @@ const CourseDetail = () => {
     }
 
     const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
+    if (!accessToken && !TESTING_MODE) {
       const returnUrl = slug === "network-fundamentals"
         ? `/courses/${slug}`
         : `/courses/${slug}/checkout`;
@@ -1323,7 +1330,7 @@ const CourseDetail = () => {
                                       return;
                                     }
 
-                                    if (isCourseProgressEnabled) {
+                                    if (isCourseProgressEnabled && !TESTING_MODE) {
                                       const accessToken = localStorage.getItem("accessToken");
                                       if (!accessToken) {
                                         // Show login prompt instead of auto-redirect
