@@ -105,7 +105,7 @@ const PrivacyPolicy = () => {
               <li>Deactivate your account</li>
             </ul>
             <p className="mt-2">
-              You can contact us at: <a href="mailto:support@infosecdairies.com" className="text-primary hover:underline">support@infosecdairies.com</a>
+              You can contact us at: <a href="mailto:support@mysoclabs.com" className="text-primary hover:underline">support@mysoclabs.com</a>
             </p>
           </section>
 
@@ -120,7 +120,7 @@ const PrivacyPolicy = () => {
             <h2 className="text-2xl font-semibold text-foreground">8. Contact Us</h2>
             <p>
               For any privacy-related questions:<br />
-              📧 <a href="mailto:support@infosecdairies.com" className="text-primary hover:underline">support@infosecdairies.com</a>
+              📧 <a href="mailto:support@mysoclabs.com" className="text-primary hover:underline">support@mysoclabs.com</a>
             </p>
           </section>
         </div>

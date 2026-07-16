@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { apiUrl } from "@/services/api";
 import { verifyJwtLocally } from "@/lib/jwtVerify";
+import { isSafeRedirect } from "@/lib/redirect";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -24,8 +25,7 @@ const Auth = () => {
   const passwordRules = useMemo(() => {
     const value = password || "";
     return {
-      minLen: value.length >= 10,
-      maxLen: value.length <= 15 && value.length > 0,
+      minLen: value.length >= 8,
       upper: /[A-Z]/.test(value),
       lower: /[a-z]/.test(value),
       digit: /\d/.test(value),
@@ -35,7 +35,6 @@ const Auth = () => {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const isSafeRedirect = (p: string) => p.startsWith("/") && !p.startsWith("//") && !p.startsWith("/\\");
   const rawRedirect = searchParams.get("redirect") || "";
   const redirectTo = isSafeRedirect(rawRedirect) ? rawRedirect : "";
   const { login } = useAuth();
@@ -62,8 +61,24 @@ const Auth = () => {
         setError("First name and last name are required for sign up.");
         return;
       }
-      if (password.length > 15) {
-        setError("Password must be at most 15 characters.");
+      if (password.length < 8) {
+        setError("Password must be at least 8 characters.");
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setError("Password must contain at least one uppercase letter.");
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setError("Password must contain at least one lowercase letter.");
+        return;
+      }
+      if (!/\d/.test(password)) {
+        setError("Password must contain at least one digit.");
+        return;
+      }
+      if (!/[^A-Za-z0-9]/.test(password)) {
+        setError("Password must contain at least one special character.");
         return;
       }
       if (password !== confirmPassword) {
@@ -295,10 +310,7 @@ const Auth = () => {
                   <p className="text-xs text-muted-foreground mb-2">Password must include:</p>
                   <div className="space-y-1 text-xs">
                     <div className={passwordRules.minLen ? "text-green-500" : "text-muted-foreground"}>
-                      At least 10 characters
-                    </div>
-                    <div className={password.length === 0 ? "text-muted-foreground" : passwordRules.maxLen ? "text-green-500" : "text-red-500"}>
-                      At most 15 characters
+                      At least 8 characters
                     </div>
                     <div className={passwordRules.upper ? "text-green-500" : "text-muted-foreground"}>
                       One uppercase letter (A-Z)

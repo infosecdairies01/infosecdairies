@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import { sanitize } from "@/lib/sanitize";
 import {
   Shield, ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen,
   Lightbulb, FlaskConical, ExternalLink, Menu, X, Lock, FileQuestion,
@@ -855,7 +856,7 @@ const LessonViewer = () => {
             {listItems.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-muted-foreground">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                <span dangerouslySetInnerHTML={{ __html: parseInlineFormatting(item) }} />
+                <span dangerouslySetInnerHTML={{ __html: sanitize(parseInlineFormatting(item)) }} />
               </li>
             ))}
           </ul>
@@ -897,7 +898,11 @@ const LessonViewer = () => {
     };
 
     const parseInlineFormatting = (text: string): string => {
-      return text
+      const escaped = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return escaped
         .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
         .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded bg-muted/50 text-primary text-sm font-mono">$1</code>');
@@ -999,7 +1004,7 @@ const LessonViewer = () => {
           elements.push(
             <div key={`num-${lineIdx}`} className="flex items-start gap-3 my-2 text-muted-foreground">
               <span className="text-primary font-medium">{match[1]}.</span>
-              <span dangerouslySetInnerHTML={{ __html: parseInlineFormatting(match[2]) }} />
+              <span dangerouslySetInnerHTML={{ __html: sanitize(parseInlineFormatting(match[2])) }} />
             </div>
           );
         }
@@ -1012,7 +1017,7 @@ const LessonViewer = () => {
           <p 
             key={`p-${lineIdx}`} 
             className="text-muted-foreground leading-relaxed my-2"
-            dangerouslySetInnerHTML={{ __html: parseInlineFormatting(line) }}
+            dangerouslySetInnerHTML={{ __html: sanitize(parseInlineFormatting(line)) }}
           />
         );
       }

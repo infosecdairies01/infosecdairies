@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CurrencyProvider } from "./context/CurrencyContext";
 import { HelmetProvider } from "react-helmet-async";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
@@ -45,6 +46,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <CookieConsent />
+        <ErrorBoundary>
         <AuthProvider>
           <CurrencyProvider>
           <BrowserRouter>
@@ -88,6 +90,7 @@ const App = () => (
         </BrowserRouter>
           </CurrencyProvider>
         </AuthProvider>
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   </HelmetProvider>

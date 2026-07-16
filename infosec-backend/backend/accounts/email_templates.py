@@ -1,3 +1,4 @@
+import html as _html
 import logging
 
 from django.conf import settings
@@ -124,6 +125,10 @@ Infosec Dairies Team"""
 def get_payment_receipt_template(course_title: str, amount: str, order_id: str, payment_id: str, user_name: str) -> tuple[str, str]:
     """Return (text_body, html_body) for payment receipt email."""
     logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo-3K6bivW-.png"
+    safe_user_name = _html.escape(str(user_name))
+    safe_course_title = _html.escape(str(course_title))
+    safe_order_id = _html.escape(str(order_id))
+    safe_payment_id = _html.escape(str(payment_id))
     
     text_body = f"""Payment Confirmation
 
@@ -168,7 +173,7 @@ Infosec Dairies Team"""
                     <tr>
                         <td style="padding: 40px 30px;">
                             <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                                Hi <strong style="color: #f8fafc;">{user_name}</strong>,
+                                Hi <strong style="color: #f8fafc;">{safe_user_name}</strong>,
                             </p>
                             <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
                                 Thank you for your purchase! Here's your payment receipt:
@@ -182,7 +187,7 @@ Infosec Dairies Team"""
                                             <tr>
                                                 <td style="padding: 10px 0; border-bottom: 1px solid #1e293b;">
                                                     <span style="color: #64748b; font-size: 14px;">Course</span>
-                                                    <div style="color: #f8fafc; font-size: 18px; font-weight: 600; margin-top: 5px;">{course_title}</div>
+                                                    <div style="color: #f8fafc; font-size: 18px; font-weight: 600; margin-top: 5px;">{safe_course_title}</div>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -194,13 +199,13 @@ Infosec Dairies Team"""
                                             <tr>
                                                 <td style="padding: 15px 0; border-bottom: 1px solid #1e293b;">
                                                     <span style="color: #64748b; font-size: 14px;">Order ID</span>
-                                                    <div style="color: #94a3b8; font-size: 14px; font-family: monospace; margin-top: 5px;">{order_id}</div>
+                                                    <div style="color: #94a3b8; font-size: 14px; font-family: monospace; margin-top: 5px;">{safe_order_id}</div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td style="padding: 15px 0 10px 0;">
                                                     <span style="color: #64748b; font-size: 14px;">Payment ID</span>
-                                                    <div style="color: #94a3b8; font-size: 14px; font-family: monospace; margin-top: 5px;">{payment_id}</div>
+                                                    <div style="color: #94a3b8; font-size: 14px; font-family: monospace; margin-top: 5px;">{safe_payment_id}</div>
                                                 </td>
                                             </tr>
                                         </table>
@@ -239,6 +244,8 @@ Infosec Dairies Team"""
 def get_certificate_template(download_url: str, course_name: str = "your course") -> tuple[str, str]:
     """Return (text_body, html_body) for certificate email."""
     logo_url = "https://www.infosecdairies.io/assets/infosecdairies-logo-3K6bivW-.png"
+    safe_course_name = _html.escape(str(course_name))
+    safe_download_url = _html.escape(str(download_url))
     
     text_body = f"""🎉 Congratulations!
 
@@ -282,7 +289,7 @@ P.S. Share your achievement on LinkedIn and tag us!"""
                             <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
                                 You have successfully completed
                             </p>
-                            <h2 style="color: #f8fafc; margin: 0 0 30px 0; font-size: 24px; font-weight: 700;">{course_name}</h2>
+                            <h2 style="color: #f8fafc; margin: 0 0 30px 0; font-size: 24px; font-weight: 700;">{safe_course_name}</h2>
                             
                             <div style="background: linear-gradient(135deg, #f59e0b20 0%, #d9770620 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 30px; margin: 30px 0;">
                                 <p style="color: #f59e0b; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;">✨ Achievement Unlocked</p>
@@ -293,7 +300,7 @@ P.S. Share your achievement on LinkedIn and tag us!"""
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 35px 0;">
                                 <tr>
                                     <td align="center">
-                                        <a href="{download_url}" style="display: inline-block; background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%); color: #ffffff; text-decoration: none; padding: 18px 40px; border-radius: 10px; font-size: 16px; font-weight: 600; box-shadow: 0 10px 25px -5px rgba(8, 145, 178, 0.4);">
+                                        <a href="{safe_download_url}" style="display: inline-block; background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%); color: #ffffff; text-decoration: none; padding: 18px 40px; border-radius: 10px; font-size: 16px; font-weight: 600; box-shadow: 0 10px 25px -5px rgba(8, 145, 178, 0.4);">
                                             📥 Download Your Certificate
                                         </a>
                                     </td>

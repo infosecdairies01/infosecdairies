@@ -51,6 +51,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("DJANGO_SECRET_KEY", default="django-insecure-change-me-in-production")
 
+if SECRET_KEY == "django-insecure-change-me-in-production" and not DEBUG:
+    import sys as _warn_sys
+    print(
+        "\n╔══════════════════════════════════════════════════════════════╗\n"
+        "║  WARNING: Using insecure default SECRET_KEY in production!  ║\n"
+        "║  Set DJANGO_SECRET_KEY env var immediately.                 ║\n"
+        "╚══════════════════════════════════════════════════════════════╝\n",
+        file=_warn_sys.stderr, flush=True,
+    )
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
 
@@ -110,12 +120,14 @@ SITE_ID = 2  # Use the Site with domain 127.0.0.1:8000
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # 'backend.middleware.SecurityHeadersMiddleware',  # Temporarily disabled - may be causing issues
+    'backend.middleware.SecurityHeadersMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # CsrfViewMiddleware removed — API uses JWT auth, not session cookies.
+    # JWT Bearer tokens are not auto-sent by browsers on cross-origin requests,
+    # so CSRF protection is inherent. Session-based CSRF is unnecessary.
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -124,7 +136,7 @@ MIDDLEWARE = [
 
 # CORS / CSRF settings for local development
 # Frontend runs on http://127.0.0.1:8081 (and sometimes http://localhost:8081)
-CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
+CORS_ALLOW_ALL_ORIGINS = False  # Never allow all origins in production
 CORS_ALLOW_CREDENTIALS = True
 
 _csrf_trusted_origins = config(
@@ -166,12 +178,16 @@ SECURE_CONTENT_TYPE_NOSNIFF = True  # X-Content-Type-Options: nosniff
 SECURE_BROWSER_XSS_FILTER = True  # X-XSS-Protection: 1; mode=block
 REFERRER_POLICY = "strict-origin-when-cross-origin"  # Referrer-Policy
 
-# Note: CSP and Permissions-Policy require django-csp package or custom middleware
-# Will add those next
+# HSTS Settings (enabled in production only)
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Note: CSP and Permissions-Policy are handled by SecurityHeadersMiddleware
 
 # CSRF and Session cookie settings for production
 CSRF_COOKIE_SECURE = not DEBUG  # Require HTTPS in production
-CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access if needed
+CSRF_COOKIE_HTTPONLY = False  # Not needed — CSRF middleware removed; API uses JWT auth
 CSRF_COOKIE_SAMESITE = 'Lax'  # Allow cross-site requests with caution
 CSRF_COOKIE_DOMAIN = None  # Use current domain
 
@@ -243,13 +259,20 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
     "DEFAULT_THROTTLE_RATES": {
+        "anon": config("THROTTLE_ANON_RATE", default="60/min"),
+        "user": config("THROTTLE_USER_RATE", default="120/min"),
         "auth_login_ip": config("AUTH_THROTTLE_LOGIN_IP", default="10/min"),
         "auth_register_ip": config("AUTH_THROTTLE_REGISTER_IP", default="5/min"),
         "auth_otp_ip": config("AUTH_THROTTLE_OTP_IP", default="5/min"),
         "auth_email": config("AUTH_THROTTLE_EMAIL", default="5/min"),
         "payment_verify": config("PAYMENT_VERIFY_THROTTLE", default="10/min"),
         "payment_create": config("PAYMENT_CREATE_THROTTLE", default="10/min"),
+        "leads_create_ip": config("LEADS_THROTTLE_IP", default="5/min"),
     },
 }
 
@@ -263,12 +286,13 @@ _JWT_PUBLIC_KEY = _load_jwt_key("JWT_PUBLIC_KEY", "jwt_public.pem")
 _USE_RS256 = _is_valid_rsa_private_key(_JWT_PRIVATE_KEY)
 
 import sys as _sys
-print(
-    f"[jwt-config] USE_RS256={_USE_RS256} "
-    f"private_key_set={bool(_JWT_PRIVATE_KEY)} "
-    f"public_key_set={bool(_JWT_PUBLIC_KEY)}",
-    file=_sys.stderr, flush=True,
-)
+if DEBUG:
+    print(
+        f"[jwt-config] USE_RS256={_USE_RS256} "
+        f"private_key_set={bool(_JWT_PRIVATE_KEY)} "
+        f"public_key_set={bool(_JWT_PUBLIC_KEY)}",
+        file=_sys.stderr, flush=True,
+    )
 
 _is_production = bool(
     config("RAILWAY_PUBLIC_DOMAIN", default="") or
@@ -360,7 +384,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'accounts.validators.MaximumLengthValidator',
         'OPTIONS': {
-            'max_length': 15,
+            'max_length': 64,
         },
     },
 ]
@@ -427,16 +451,17 @@ if RESEND_API_KEY:
 elif EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-print(
-    "[email-config] EMAIL_BACKEND=", EMAIL_BACKEND,
-    "DEFAULT_FROM_EMAIL=", DEFAULT_FROM_EMAIL,
-    "EMAIL_HOST=", EMAIL_HOST,
-    "EMAIL_PORT=", EMAIL_PORT,
-    "EMAIL_USE_TLS=", EMAIL_USE_TLS,
-    "EMAIL_HOST_USER=", EMAIL_HOST_USER,
-    "EMAIL_HOST_PASSWORD_SET=", bool(EMAIL_HOST_PASSWORD),
-    flush=True,
-)
+if DEBUG:
+    print(
+        "[email-config] EMAIL_BACKEND=", EMAIL_BACKEND,
+        "DEFAULT_FROM_EMAIL=", DEFAULT_FROM_EMAIL,
+        "EMAIL_HOST=", EMAIL_HOST,
+        "EMAIL_PORT=", EMAIL_PORT,
+        "EMAIL_USE_TLS=", EMAIL_USE_TLS,
+        "EMAIL_HOST_USER=", EMAIL_HOST_USER,
+        "EMAIL_HOST_PASSWORD_SET=", bool(EMAIL_HOST_PASSWORD),
+        flush=True,
+    )
 
 LOGGING = {
     "version": 1,

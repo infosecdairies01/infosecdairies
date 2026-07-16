@@ -306,11 +306,8 @@ def submit_quiz(request, slug, quiz_id):
     )
 
     if not answer_key:
-        # Unknown quiz — record what the frontend reports (graceful fallback for new quizzes)
-        score = max(0, min(100, int(request.data.get("score", 0))))
-        passed = bool(request.data.get("passed", False))
-        _upsert_quiz_score(request.user, slug, quiz_id, score, passed)
-        return Response({"score": score, "passed": passed, "correct_count": 0, "total": 0, "results": []})
+        # Unknown quiz — reject client-reported scores; cannot validate without answer key
+        return Response({"detail": "Quiz answer key not available. Score cannot be validated."}, status=503)
 
     results = []
     correct_count = 0

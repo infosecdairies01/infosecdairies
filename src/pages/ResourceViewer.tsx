@@ -3,8 +3,17 @@ import { ChevronLeft, Printer, FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { getCourseById } from "@/data/courses";
 import { getResourceContent } from "@/data/resourceContent";
-import logo from "@/assets/logo.png";
+import { sanitize } from "@/lib/sanitize";
 
+
+const formatInline = (text: string): string =>
+  text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
 const ResourceViewer = () => {
   const { courseId, resourceId } = useParams<{ courseId: string; resourceId: string }>();
@@ -50,7 +59,7 @@ const ResourceViewer = () => {
                 <tr key={ri} className="border-b border-white/[0.06] hover:bg-white/[0.02]">
                   {row.map((cell, ci) => (
                     <td key={ci} className="py-2 px-3 text-foreground/80">
-                      <span dangerouslySetInnerHTML={{ __html: cell.trim().replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>') }} />
+                      <span dangerouslySetInnerHTML={{ __html: sanitize(formatInline(cell.trim())) }} />
                     </td>
                   ))}
                 </tr>
@@ -137,7 +146,7 @@ const ResourceViewer = () => {
         elements.push(
           <div key={`check-${i}`} className="flex items-start gap-2 py-1 pl-2">
             <div className={`w-4 h-4 rounded border mt-0.5 flex-shrink-0 ${checked ? "bg-primary border-primary" : "border-white/20"}`} />
-            <span className="text-foreground/80 text-sm" dangerouslySetInnerHTML={{ __html: text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>') }} />
+            <span className="text-foreground/80 text-sm" dangerouslySetInnerHTML={{ __html: sanitize(formatInline(text)) }} />
           </div>
         );
         i++;
@@ -150,7 +159,7 @@ const ResourceViewer = () => {
         elements.push(
           <div key={`li-${i}`} className="flex items-start gap-2 py-1 pl-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-            <span className="text-foreground/80 text-sm" dangerouslySetInnerHTML={{ __html: text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>') }} />
+            <span className="text-foreground/80 text-sm" dangerouslySetInnerHTML={{ __html: sanitize(formatInline(text)) }} />
           </div>
         );
         i++;
@@ -164,7 +173,7 @@ const ResourceViewer = () => {
           elements.push(
             <div key={`ol-${i}`} className="flex items-start gap-3 py-1 pl-2">
               <span className="text-primary font-semibold text-sm min-w-[1.5rem]">{match[1]}.</span>
-              <span className="text-foreground/80 text-sm" dangerouslySetInnerHTML={{ __html: match[2].replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>') }} />
+              <span className="text-foreground/80 text-sm" dangerouslySetInnerHTML={{ __html: sanitize(formatInline(match[2])) }} />
             </div>
           );
         }
@@ -180,7 +189,7 @@ const ResourceViewer = () => {
 
       // Paragraph
       elements.push(
-        <p key={`p-${i}`} className="text-foreground/80 text-sm leading-relaxed my-2" dangerouslySetInnerHTML={{ __html: line.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>') }} />
+        <p key={`p-${i}`} className="text-foreground/80 text-sm leading-relaxed my-2" dangerouslySetInnerHTML={{ __html: sanitize(formatInline(line)) }} />
       );
       i++;
     }
@@ -222,7 +231,7 @@ const ResourceViewer = () => {
               <div className="relative border-b border-white/[0.08] px-8 py-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <img src={logo} alt="BlueTeamers" className="h-10 w-auto" />
+                    <span className="text-lg font-bold text-foreground">infosecdairies</span>
                     <div>
                       <h1 className="text-xl font-bold text-foreground">{resourceMeta.title}</h1>
                       <div className="flex items-center gap-2 mt-1">
@@ -252,10 +261,10 @@ const ResourceViewer = () => {
               {/* Footer */}
               <div className="relative border-t border-white/[0.08] px-8 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <img src={logo} alt="BlueTeamers" className="h-6 w-auto opacity-60" />
-                  <span className="text-xs text-muted-foreground">BlueTeamers — {course.title}</span>
+                  <span className="text-sm font-semibold text-muted-foreground opacity-60">infosecdairies</span>
+                  <span className="text-xs text-muted-foreground">infosecdairies — {course.title}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">© {new Date().getFullYear()} BlueTeamers. All rights reserved.</span>
+                <span className="text-xs text-muted-foreground">© {new Date().getFullYear()} infosecdairies. All rights reserved.</span>
               </div>
             </div>
           </div>
@@ -266,7 +275,7 @@ const ResourceViewer = () => {
       <div className="hidden print:block p-8">
         <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-300">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="BlueTeamers" className="h-8 w-auto" />
+            <span className="text-lg font-bold text-black">infosecdairies</span>
             <div>
               <h1 className="text-xl font-bold text-black">{resourceMeta.title}</h1>
               <p className="text-sm text-gray-600">{course.title} — {typeLabel[resourceMeta.type] || resourceMeta.type}</p>

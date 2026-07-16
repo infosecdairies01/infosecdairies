@@ -180,10 +180,23 @@ def upload_certificate(request):
     except Exception:
         return JsonResponse({'error': 'Invalid image data'}, status=400)
 
+    # Validate size: reject images larger than 2 MB
+    if len(image_bytes) > 2 * 1024 * 1024:
+        return JsonResponse({'error': 'Image too large. Maximum size is 2 MB.'}, status=400)
+
+    # Validate type: check PNG/JPEG magic bytes
+    _PNG_MAGIC = b'\x89PNG\r\n\x1a\n'
+    _JPEG_MAGIC = b'\xff\xd8\xff'
+    if not (image_bytes[:8] == _PNG_MAGIC or image_bytes[:3] == _JPEG_MAGIC):
+        return JsonResponse({'error': 'Invalid image type. Only PNG and JPEG are allowed.'}, status=400)
+
+    # Determine extension from magic bytes
+    ext = "png" if image_bytes[:8] == _PNG_MAGIC else "jpg"
+
     filename = (
         f"certificates/{course_slug}_"
         f"{user_email.replace('@', '_').replace('.', '_')}_"
-        f"{uuid.uuid4().hex[:8]}.png"
+        f"{uuid.uuid4().hex[:8]}.{ext}"
     )
     path = default_storage.save(filename, ContentFile(image_bytes))
     public_url = default_storage.url(path)

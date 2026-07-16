@@ -220,9 +220,7 @@ const CourseDetail = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log('Loading course for slug:', slug);
         const data = await fetchCourseBySlug(slug); // calls `${VITE_API_BASE_URL}/api/courses/${slug}/`
-        console.log('Course data from API:', data);
         setCourseMeta(data);
       } catch (err) {
         console.error('Error loading course:', err);
@@ -350,10 +348,6 @@ const CourseDetail = () => {
     [slug, courseMeta]
   );
 
-  console.log('Static course found:', staticCourse);
-  console.log('Course meta:', courseMeta);
-  console.log('Slug:', slug);
-
   const levelToDifficulty: Record<string, "easy" | "medium" | "hard"> = {
     beginner: "easy",
     intermediate: "medium",
@@ -445,15 +439,9 @@ const CourseDetail = () => {
 
   // Get course-specific background image
   const courseBgImage = useMemo(() => {
-    console.log('Getting background image for slug:', slug);
-    console.log('Available backgrounds:', courseBackgrounds);
-    console.log('Slug in backgrounds:', slug && courseBackgrounds[slug]);
-    
     if (slug && courseBackgrounds[slug]) {
-      console.log('Using mapped background:', courseBackgrounds[slug]);
       return courseBackgrounds[slug];
     }
-    console.log('Using default background:', socFundamentalsBg);
     return socFundamentalsBg;
   }, [slug]);
 
@@ -882,8 +870,7 @@ const CourseDetail = () => {
     const name = certMeta?.studentName || (user?.fullName || "Student");
     const date = certMeta?.issueDate || new Date().toISOString().slice(0, 10);
 
-    const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.infosecdairies.io/`;
-
+const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.blueteamers.io/`;
     try {
       const cert = await generateCertificatePngDataUrl(name, date);
       if (!cert) return;
@@ -916,7 +903,7 @@ const CourseDetail = () => {
       setShowShareModal(true);
 
     } catch {
-      const fallbackSharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
+      const fallbackSharePageUrl = "https://www.blueteamers.io/share/certificate-completed.html";
       setShareModalText(shareText);
       setShareModalUrl(fallbackSharePageUrl);
       setShowShareModal(true);
@@ -1028,10 +1015,6 @@ const CourseDetail = () => {
       }
       
       if (nextLesson) {
-        console.log('Navigating to next lesson:', `/courses/${slug}/lesson/${nextLesson.id}`);
-        console.log('Slug:', slug);
-        console.log('Next lesson:', nextLesson);
-        
         // Navigate to quiz page if it's a quiz
         const isQuiz = nextLesson.title.toLowerCase().includes('quiz');
         
@@ -1602,10 +1585,10 @@ const CourseDetail = () => {
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
 
-                    {isCourseCompleted && (
+                    {isCourseCompleted && serverCompleted && (
                       <div className="mt-3 space-y-2">
-                        <button
-                          onClick={handleDownloadCertificate}
+                       <button
+                        onClick={handleDownloadCertificate}
                           disabled={isCertDownloading}
                           className="w-full px-6 py-3 rounded-lg text-sm font-semibold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         >

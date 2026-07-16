@@ -10,7 +10,6 @@ from django.http import HttpResponseRedirect
 from django.utils.html import strip_tags
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from rest_framework import status
@@ -198,7 +197,6 @@ def google_jwt(request):
     )
 
 
-@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -288,7 +286,6 @@ def google_onboarding(request):
     )
 
 
-@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])  # use Django's session auth directly, skip DRF CSRF
 @permission_classes([AllowAny])
@@ -330,7 +327,6 @@ def google_start_otp(request):
     return Response({"detail": "OTP sent"}, status=status.HTTP_200_OK)
 
 
-@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -434,7 +430,6 @@ def register(request):
     )
 
 
-@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -464,7 +459,6 @@ def password_reset_request(request):
     )
 
 
-@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -513,7 +507,6 @@ def password_reset_confirm(request):
     )
 
 
-@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -568,7 +561,6 @@ def verify_email(request):
     )
 
 
-@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -649,8 +641,8 @@ def verify_token(request):
         access_token = AccessToken(token)  # Validates signature, expiry, and issuer
         email = access_token.get("email", "")
         return Response({"valid": True, "email": email}, status=status.HTTP_200_OK)
-    except TokenError as e:
-        return Response({"valid": False, "detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+    except TokenError:
+        return Response({"valid": False, "detail": "Invalid or expired token."}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 _ALLOWED_FRONTEND_HOSTS = {

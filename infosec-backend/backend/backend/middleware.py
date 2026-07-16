@@ -41,5 +41,12 @@ class SecurityHeadersMiddleware:
             "usb=()"
         )
         response['Permissions-Policy'] = permissions_policy
-        
+
+        # Strict Transport Security (HSTS) - 1 year, include subdomains, allow preload list
+        response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+
+        # Cross-Origin Isolation headers
+        response['Cross-Origin-Opener-Policy'] = 'same-origin'
+        response['Cross-Origin-Resource-Policy'] = 'same-origin'
+
         return response

@@ -109,6 +109,27 @@ const ForgotPassword = () => {
       return;
     }
 
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      setError("Password must contain at least one lowercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      setError("Password must contain at least one digit.");
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+      setError("Password must contain at least one special character.");
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 

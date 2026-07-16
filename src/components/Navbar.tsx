@@ -36,6 +36,11 @@ const Navbar = () => {
     <nav className="w-full z-50 relative">
       <div className="w-full px-4 md:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
+          {/* Brand */}
+          <Link to="/" className="text-lg font-bold text-[#00ffc8] hover:text-[#7bff81] transition-colors shrink-0">
+            infosecdairies
+          </Link>
+
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8 ml-auto">
             {NAV_LINKS.map(({ to, label }) => (
@@ -92,6 +97,9 @@ const Navbar = () => {
       {menuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-[#020817] border-t border-[#00ffc8]/20 z-50 shadow-xl">
           <div className="flex flex-col px-6 py-4 gap-4">
+            <Link to="/" className="text-lg font-bold text-[#00ffc8] hover:text-[#7bff81] transition-colors" onClick={closeMenu}>
+              infosecdairies
+            </Link>
             {NAV_LINKS.map(({ to, label }) => (
               <Link key={to} to={to} className={linkClass(to)} onClick={closeMenu}>
                 {label}

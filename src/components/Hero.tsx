@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
-import logo from "@/assets/logo.png";
 
 import FloatingParticles from "./FloatingParticles";
 import AnimatedCounter from "./AnimatedCounter";

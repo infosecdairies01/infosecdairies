@@ -25,6 +25,7 @@ const LiveCourseDetail = () => {
     message: ""
   });
   const [phoneError, setPhoneError] = useState("");
+  const [nameError, setNameError] = useState("");
   const [autofilled, setAutofilled] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -49,6 +50,13 @@ const LiveCourseDetail = () => {
     val.replace(/[<>"'`]/g, "").slice(0, 2000);
 
   const PHONE_RE = /^[+\d][\d\s\-(). ]{5,19}$/;
+  const NAME_RE = /^[\w\s'.,\-]{1,255}$/;
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.slice(0, 255);
+    setFormData({ ...formData, name: raw });
+    setNameError(raw.trim() && !NAME_RE.test(raw) ? "Name can only contain letters, spaces, hyphens, apostrophes, periods, and commas." : "");
+  };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/[^+\d\s\-().]/g, "").slice(0, 20);
@@ -58,7 +66,7 @@ const LiveCourseDetail = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneError) return;
+    if (phoneError || nameError) return;
     setLoading(true);
 
     try {
@@ -298,9 +306,13 @@ const LiveCourseDetail = () => {
                     <Input
                       placeholder="Enter your name"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={handleNameChange}
+                      maxLength={255}
                       required
                     />
+                    {nameError && (
+                      <p className="text-xs text-destructive mt-1">{nameError}</p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-1.5 block">Email</label>

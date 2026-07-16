@@ -31,7 +31,7 @@ class MaximumLengthValidator:
     validate_password() is called: registration, password reset, Google onboarding.
     """
 
-    def __init__(self, max_length=15):
+    def __init__(self, max_length=64):
         self.max_length = max_length
 
     def validate(self, password, user=None):

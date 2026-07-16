@@ -97,7 +97,7 @@ const Disclaimer = () => {
             <h2 className="text-2xl font-semibold text-foreground">8. Contact Information</h2>
             <p>
               For questions regarding this disclaimer:<br />
-              📧 <a href="mailto:support@infosecdairies.com" className="text-primary hover:underline">support@infosecdairies.com</a>
+              📧 <a href="mailto:support@mysoclabs.com" className="text-primary hover:underline">support@mysoclabs.com</a>
             </p>
           </section>
         </div>

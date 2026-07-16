@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2, Mail, ArrowLeft, RefreshCw } from "lucide-react";
 import { apiUrl } from "@/services/api";
+import { isSafeRedirect } from "@/lib/redirect";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
@@ -14,7 +15,7 @@ const VerifyEmail = () => {
   
   const [email, setEmail] = useState(searchParams.get("email") || "");
   const rawRedirect = searchParams.get("redirect") || "";
-  const redirectTo = (rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") && !rawRedirect.startsWith("/\\")) ? rawRedirect : "";
+  const redirectTo = isSafeRedirect(rawRedirect) ? rawRedirect : "";
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);

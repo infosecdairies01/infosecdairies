@@ -96,7 +96,7 @@ const TermsOfService = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">9. Contact Information</h2>
             <p>
-              📧 <a href="mailto:support@infosecdairies.com" className="text-primary hover:underline">support@infosecdairies.com</a>
+              📧 <a href="mailto:support@mysoclabs.com" className="text-primary hover:underline">support@mysoclabs.com</a>
             </p>
           </section>
         </div>

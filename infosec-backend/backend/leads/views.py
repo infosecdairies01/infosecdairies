@@ -1,13 +1,15 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Lead
 from .serializers import LeadSerializer
+from .throttles import LeadCreateIPRateThrottle
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([LeadCreateIPRateThrottle])
 def create_lead(request):
     """Create a new lead/enquiry from live course page. Links to user if authenticated."""
     serializer = LeadSerializer(data=request.data)

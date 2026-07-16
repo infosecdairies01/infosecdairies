@@ -337,8 +337,8 @@ def create_order(request):
                 "user_id": str(request.user.id),
             },
         })
-    except BadRequestError as exc:
-        return Response({"detail": str(exc)}, status=502)
+    except BadRequestError:
+        return Response({"detail": "Payment processing failed. Please try again."}, status=502)
 
     CoursePurchase.objects.create(
         user=request.user,

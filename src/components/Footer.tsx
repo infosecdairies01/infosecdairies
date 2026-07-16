@@ -31,7 +31,7 @@ const Footer = () => {
             </Link>
           </div>
           <div className="text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} BlueTeamers. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} infosecdairies. All rights reserved.</p>
           </div>
         </div>
       </div>

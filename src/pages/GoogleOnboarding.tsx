@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiUrl } from "@/services/api";
+import { isSafeRedirect } from "@/lib/redirect";
 
 const GoogleOnboarding = () => {
   const [searchParams] = useSearchParams();
@@ -63,6 +64,27 @@ const GoogleOnboarding = () => {
       return;
     }
 
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setError("Password must contain at least one lowercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setError("Password must contain at least one digit.");
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      setError("Password must contain at least one special character.");
+      return;
+    }
+
     const onboardingToken = sessionStorage.getItem("googleOnboardingToken") || "";
     if (!onboardingToken) {
       setError("Authentication required. Please sign in with Google again.");
@@ -98,7 +120,7 @@ const GoogleOnboarding = () => {
         sessionStorage.removeItem("googleOnboardingToken");
         const rawRedirect = sessionStorage.getItem("authRedirect") || "";
         sessionStorage.removeItem("authRedirect");
-        const redirectParam = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") && !rawRedirect.startsWith("/\\") ? rawRedirect : "";
+        const redirectParam = isSafeRedirect(rawRedirect) ? rawRedirect : "";
         setSuccess("Verification code sent! Redirecting...");
         setTimeout(() => {
           const verifyUrl = `/verify-email?email=${encodeURIComponent(data.email || email)}${redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : ""}`;
