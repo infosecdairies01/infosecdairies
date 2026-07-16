@@ -147,7 +147,7 @@ const Incidents = () => {
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <div className="flex flex-1 pt-20 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         <SOCSidebar activeItem="Incidents" />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="bg-card/25 backdrop-blur-lg border-b border-white/[0.08] px-6 py-4 flex items-center justify-between">
