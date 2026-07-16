@@ -798,7 +798,7 @@ const CourseDetail = () => {
 
     // QR Code (bottom right) - link to course page
     try {
-      const courseUrl = `https://www.infosecdairies.io/courses/${slug}`;
+      const courseUrl = `https://www.blueteamers.io/courses/${slug}`;
       const qrDataUrl = await QRCode.toDataURL(courseUrl, {
         width: Math.round(Math.min(w, h) * 0.12),
         margin: 1,
