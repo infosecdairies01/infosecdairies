@@ -10,20 +10,16 @@ import MitreHeatmapInteractive from "@/components/soc/MitreHeatmapInteractive";
 import ThreatGeoMap from "@/components/soc/ThreatGeoMap";
 import LiveActivityFeed from "@/components/soc/LiveActivityFeed";
 
-import { Bell, Search, User, RefreshCw, Clock, Lock } from "lucide-react";
+import { Bell, Search, User, RefreshCw, Clock } from "lucide-react";
 
 const Labs = () => {
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      {/* Full area below navbar — blurred preview + overlay */}
-      <div className="flex flex-1 pt-20 overflow-hidden relative">
-
-        {/* Blurred background: sidebar + dashboard */}
-        <div className="absolute inset-0 flex overflow-hidden pointer-events-none select-none blur-sm opacity-60">
-          <SOCSidebar activeItem="Dashboard" locked />
-          <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex flex-1 overflow-hidden relative">
+        <SOCSidebar activeItem="Dashboard" />
+        <div className="flex-1 flex flex-col min-w-0">
             <header className="bg-card/25 backdrop-blur-lg border-b border-white/[0.08] px-6 py-4 flex items-center justify-between">
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Security Dashboard</h1>
@@ -68,21 +64,6 @@ const Labs = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Glass lock overlay — covers entire area below navbar */}
-        <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-[2px] z-10">
-          <div className="flex flex-col items-center gap-4 px-10 py-8 rounded-2xl border border-white/[0.12] bg-white/[0.04] backdrop-blur-xl shadow-2xl text-center max-w-sm mx-4">
-            <div className="w-14 h-14 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center">
-              <Lock className="w-7 h-7 text-destructive" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-1">You don't have access to this page</h2>
-              <p className="text-sm text-muted-foreground">Please upgrade your plan or contact the administrator</p>
-            </div>
-          </div>
-        </div>
-
       </div>
     </main>
   );
