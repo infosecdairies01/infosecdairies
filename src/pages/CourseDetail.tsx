@@ -325,7 +325,14 @@ const CourseDetail = () => {
     fetch(apiUrl(`/api/certificates/my/${slug}/`), {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
-      .then(r => r.ok ? r.json() : null)
+      .then(r => {
+        if (r.status === 403) {
+          // Server says course not completed — clear any stale cert metadata
+          setCertMeta(null);
+          return null;
+        }
+        return r.ok ? r.json() : null;
+      })
       .then(data => {
         if (data) {
           setCertMeta({
@@ -873,7 +880,7 @@ const CourseDetail = () => {
   const handleShareOnLinkedIn = async () => {
     if (!course || !user) return;
 
-    if (serverCompleted === false) {
+    if (serverCompleted !== true) {
       setEnrollError("Please pass at least one quiz before sharing your certificate.");
       return;
     }
@@ -925,7 +932,7 @@ const CourseDetail = () => {
 
   const handleDownloadCertificate = async () => {
     if (isCertDownloading) return;
-    if (serverCompleted === false) {
+    if (serverCompleted !== true) {
       setEnrollError("Please pass at least one quiz before downloading your certificate.");
       return;
     }
@@ -1589,7 +1596,7 @@ const CourseDetail = () => {
                       <span>
                         {checkingEnrollment || enrollLoading
                           ? "Please wait..."
-                          : isEnrolled && isCourseCompleted
+                          : isEnrolled && serverCompleted === true
                           ? "Review Course"
                           : isEnrolled
                           ? "Continue Course"
@@ -1602,7 +1609,7 @@ const CourseDetail = () => {
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
 
-                    {isCourseCompleted && (
+                    {serverCompleted === true && (
                       <div className="mt-3 space-y-2">
                         <button
                           onClick={handleDownloadCertificate}
