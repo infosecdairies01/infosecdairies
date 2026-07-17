@@ -817,7 +817,7 @@ const CourseDetail = () => {
 
     // QR Code (bottom right) - link to course page
     try {
-      const courseUrl = `https://www.infosecdairies.io/courses/${slug}`;
+      const courseUrl = `https://www.blueteamers.io/courses/${slug}`;
       const qrDataUrl = await QRCode.toDataURL(courseUrl, {
         width: Math.round(Math.min(w, h) * 0.12),
         margin: 1,
@@ -889,7 +889,7 @@ const CourseDetail = () => {
     const name = certMeta?.studentName || (user?.fullName || "Student");
     const date = certMeta?.issueDate || new Date().toISOString().slice(0, 10);
 
-    const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.infosecdairies.io/`;
+    const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.blueteamers.io/`;
 
     try {
       const cert = await generateCertificatePngDataUrl(name, date);
@@ -923,7 +923,7 @@ const CourseDetail = () => {
       setShowShareModal(true);
 
     } catch {
-      const fallbackSharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
+      const fallbackSharePageUrl = "https://www.blueteamers.io/share/certificate-completed.html";
       setShareModalText(shareText);
       setShareModalUrl(fallbackSharePageUrl);
       setShowShareModal(true);
