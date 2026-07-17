@@ -5,6 +5,9 @@ node_modules
 .env.local
 rzp-key.csv
 imp/
+infosec-backend/backup_railway.ps1
+infosec-backend/backend/env_vars.txt
+railway code no push.txt
 
 # Django generated files
 **/__pycache__/
