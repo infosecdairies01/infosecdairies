@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "check:jwt-key": "node scripts/check-jwt-key-sync.mjs"
+    "check:jwt-key": "node scripts/check-jwt-key-sync.mjs",
+    "wazuh:start": "node scripts/wazuh.mjs start",
+    "wazuh:stop": "node scripts/wazuh.mjs stop",
+    "wazuh:status": "node scripts/wazuh.mjs status"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
