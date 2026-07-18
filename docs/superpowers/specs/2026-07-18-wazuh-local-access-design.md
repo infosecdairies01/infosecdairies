@@ -29,7 +29,7 @@ This phase does **not** build the full guided-lab/scoring system from the 2026-0
 
 - **`start`**
   1. Runs `wsl.exe -d Ubuntu-22.04 -- bash -lc "cd ~/wazuh-docker/single-node && docker compose start"`.
-  2. Polls `https://localhost` every few seconds (TLS verification disabled, since the dashboard uses a self-signed cert), for up to ~90 seconds.
+  2. Polls the dashboard port (`localhost:443`) every few seconds via a raw TCP connect — not an HTTPS request, so no TLS trust decision about the dashboard's self-signed cert is ever needed — for up to ~90 seconds.
   3. Prints `Wazuh dashboard ready at https://localhost` on first successful response, or a timeout warning with a troubleshooting hint if it never comes up.
 - **`stop`** — runs `docker compose stop` the same way (frees the RAM the indexer/manager use when not in use for labs work).
 - **`status`** — runs `docker compose ps` inside the distro and performs the same one-shot reachability check against `https://localhost`, printing both.
