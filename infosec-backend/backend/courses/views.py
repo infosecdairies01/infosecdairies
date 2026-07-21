@@ -530,6 +530,7 @@ def _strip_lab_answers(content: dict) -> dict:
     return result
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def lesson_content(request, slug, lesson_id):
     """
     Return the full lesson content JSON for an enrolled, paid user.
@@ -550,14 +551,6 @@ def lesson_content(request, slug, lesson_id):
         return Response({"detail": "Invalid lesson_id format."}, status=400)
 
     course = get_object_or_404(Course, slug=slug, is_published=True)
-
-    # DEV MODE: allow access without auth when DEBUG=True (local testing only).
-    if settings.DEBUG and not request.user.is_authenticated:
-        content_obj = get_object_or_404(LessonContent, course_slug=slug, lesson_id=lesson_id)
-        safe_content = _strip_lab_answers(content_obj.content_json)
-        response = Response(safe_content)
-        response["Cache-Control"] = f"private, max-age={_LESSON_CONTENT_CACHE_SECONDS}"
-        return response
 
     # Staff bypass — they can preview any lesson without an enrollment record.
     is_staff = request.user.is_staff or request.user.is_superuser
