@@ -7,6 +7,7 @@ from allauth.account.models import EmailAddress
 from rest_framework import serializers
 
 from .models import User, AuthProvider
+from .disposable_email import is_disposable_email
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -62,32 +63,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         block_disposable = getattr(settings, "BLOCK_DISPOSABLE_EMAILS", True)
         if block_disposable and "@" in email:
-            domain = email.split("@", 1)[1]
-            blocked_domains = set(
-                d.strip().lower()
-                for d in getattr(
-                    settings,
-                    "DISPOSABLE_EMAIL_DOMAINS",
-                    [
-                        "mailinator.com",
-                        "guerrillamail.com",
-                        "guerrillamail.info",
-                        "guerrillamail.net",
-                        "sharklasers.com",
-                        "yopmail.com",
-                        "yopmail.fr",
-                        "yopmail.net",
-                        "temp-mail.org",
-                        "10minutemail.com",
-                        "10minutemail.net",
-                        "mohmal.com",
-                        "dispostable.com",
-                        "getnada.com",
-                    ],
-                )
-                if d.strip()
-            )
-            if domain in blocked_domains:
+            if is_disposable_email(email):
                 raise serializers.ValidationError("Disposable email addresses are not allowed.")
         existing = User.objects.filter(email=email).first()
         if existing:

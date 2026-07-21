@@ -1,67 +1,68 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Search, CheckCircle, XCircle, ArrowLeft, Award, Calendar, User, BookOpen } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { Search, CheckCircle, XCircle, ArrowLeft, Award, Calendar, User, BookOpen, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { apiUrl } from "@/services/api";
 
 interface CertificateData {
-  id: string;
-  recipientName: string;
+  certId: string;
+  studentName: string;
   courseName: string;
   issueDate: string;
-  status: "valid" | "expired" | "revoked";
+  verified: boolean;
 }
 
-const sampleCertificates: Record<string, CertificateData> = {
-  "INFD-BSF-2026-001": {
-    id: "INFD-BSF-2026-001",
-    recipientName: "Ahmed Al-Rashid",
-    courseName: "Blue Team & SOC Fundamentals",
-    issueDate: "2026-01-15",
-    status: "valid",
-  },
-  "INFD-SOC-2026-002": {
-    id: "INFD-SOC-2026-002",
-    recipientName: "Sarah Mitchell",
-    courseName: "SOC Analyst Practical Course",
-    issueDate: "2026-02-10",
-    status: "valid",
-  },
-  "INFD-IR-2025-003": {
-    id: "INFD-IR-2025-003",
-    recipientName: "James Park",
-    courseName: "Incident Response Fundamentals",
-    issueDate: "2025-06-20",
-    status: "expired",
-  },
-};
-
 const CertificateVerify = () => {
-  const [certificateId, setCertificateId] = useState("");
+  const [searchParams] = useSearchParams();
+  const [certificateId, setCertificateId] = useState(searchParams.get("cert") || "");
   const [result, setResult] = useState<CertificateData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleVerify = () => {
-    const trimmed = certificateId.trim().toUpperCase();
+  useEffect(() => {
+    const certFromUrl = searchParams.get("cert");
+    if (certFromUrl) {
+      setCertificateId(certFromUrl);
+      lookupCertificate(certFromUrl);
+    }
+  }, []);
+
+  const lookupCertificate = async (id: string) => {
+    const trimmed = id.trim();
     if (!trimmed) return;
     setSearched(true);
-    const found = sampleCertificates[trimmed] || null;
-    setResult(found);
-    setNotFound(!found);
+    setLoading(true);
+    setResult(null);
+    setNotFound(false);
+
+    try {
+      const res = await fetch(apiUrl(`/api/certificates/lookup/${encodeURIComponent(trimmed)}/`));
+      if (!res.ok) {
+        setNotFound(true);
+        return;
+      }
+      const data = await res.json();
+      if (data?.success && data?.certId) {
+        setResult(data as CertificateData);
+      } else {
+        setNotFound(true);
+      }
+    } catch {
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleVerify = () => lookupCertificate(certificateId);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleVerify();
-  };
-
-  const statusConfig = {
-    valid: { label: "Valid", icon: CheckCircle, className: "text-secondary bg-secondary/10 border-secondary/30" },
-    expired: { label: "Expired", icon: XCircle, className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30" },
-    revoked: { label: "Revoked", icon: XCircle, className: "text-destructive bg-destructive/10 border-destructive/30" },
   };
 
   return (
@@ -93,27 +94,35 @@ const CertificateVerify = () => {
                     if (searched) { setSearched(false); setResult(null); setNotFound(false); }
                   }}
                   onKeyDown={handleKeyDown}
-                  placeholder="e.g. INFD-BSF-2026-001"
+                  placeholder="e.g. a1b2c3d4e5f6g7h8"
                   className="bg-background/50 border-white/[0.1] text-foreground placeholder:text-muted-foreground"
                   maxLength={30}
                 />
-                <Button onClick={handleVerify} disabled={!certificateId.trim()} className="shrink-0 gap-2">
-                  <Search className="w-4 h-4" />
+                <Button onClick={handleVerify} disabled={!certificateId.trim() || loading} className="shrink-0 gap-2">
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                   Verify
                 </Button>
               </div>
             </CardContent>
           </Card>
 
+          {/* Loading */}
+          {loading && (
+            <div className="text-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+              <p className="text-sm text-muted-foreground mt-3">Looking up certificate...</p>
+            </div>
+          )}
+
           {/* Result */}
-          {result && (
+          {result && !loading && (
             <Card className="bg-card/30 backdrop-blur-lg border-white/[0.08] animate-fade-in">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold text-foreground">Certificate Details</CardTitle>
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[result.status].className}`}>
-                    {(() => { const Icon = statusConfig[result.status].icon; return <Icon className="w-3.5 h-3.5" />; })()}
-                    {statusConfig[result.status].label}
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border text-secondary bg-secondary/10 border-secondary/30">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Verified
                   </span>
                 </div>
               </CardHeader>
@@ -123,14 +132,14 @@ const CertificateVerify = () => {
                     <Award className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     <div>
                       <p className="text-xs text-muted-foreground">Certificate ID</p>
-                      <p className="text-sm font-mono text-foreground">{result.id}</p>
+                      <p className="text-sm font-mono text-foreground">{result.certId}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <User className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     <div>
                       <p className="text-xs text-muted-foreground">Recipient</p>
-                      <p className="text-sm text-foreground">{result.recipientName}</p>
+                      <p className="text-sm text-foreground">{result.studentName}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -152,13 +161,13 @@ const CertificateVerify = () => {
             </Card>
           )}
 
-          {notFound && (
+          {notFound && !loading && (
             <Card className="bg-card/30 backdrop-blur-lg border-destructive/20 animate-fade-in">
               <CardContent className="p-6 text-center">
                 <XCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
                 <h3 className="text-foreground font-semibold mb-1">Certificate Not Found</h3>
                 <p className="text-sm text-muted-foreground">
-                  No certificate matches the ID <span className="font-mono text-foreground">"{certificateId.trim().toUpperCase()}"</span>. Please check and try again.
+                  No certificate matches the ID <span className="font-mono text-foreground">"{certificateId.trim()}"</span>. Please check and try again.
                 </p>
               </CardContent>
             </Card>

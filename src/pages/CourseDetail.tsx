@@ -655,6 +655,8 @@ const CourseDetail = () => {
 
   // Function to determine if a lesson should be unlocked
   const isLessonUnlocked = (lesson: any, moduleIndex: number, lessonIndex: number) => {
+    if (TESTING_MODE) return true;
+
     if (!isCourseProgressEnabled) {
       return true;
     }
@@ -741,9 +743,12 @@ const CourseDetail = () => {
     0
   );
   const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-  const isCourseCompleted = totalLessons > 0 && completedLessons >= totalLessons;
+  // Use server-authoritative completion flag (from /completion/ endpoint) for certificate gating.
+  // The server checks all lessons + at least one passing quiz — not manipulable by the client.
+  // Fall back to client-side check only when server data hasn't loaded yet.
+  const isCourseCompleted = serverCompleted === true || (serverCompleted === null && totalLessons > 0 && completedLessons >= totalLessons);
 
-  const generateCertificatePngDataUrl = async (certName: string, certDate: string) => {
+  const generateCertificatePngDataUrl = async (certName: string, certDate: string, qrCertId?: string) => {
     try {
       if (!course) return null;
 
@@ -815,9 +820,12 @@ const CourseDetail = () => {
     ctx.font = `500 ${Math.round(h * 0.028)}px "Montserrat", Inter, Arial, sans-serif`;
     ctx.fillText(issueDate, xLeft, Math.round(h * 0.835));
 
-    // QR Code (bottom right) - link to course page
+    // QR Code (bottom right) - link to verify page with certificate ID
     try {
-      const courseUrl = `https://www.infosecdairies.io/courses/${slug}`;
+      const certId = qrCertId || certMeta?.certId;
+      const courseUrl = certId
+        ? `https://blueteamers.io/verify?cert=${certId}`
+        : `https://blueteamers.io/verify`;
       const qrDataUrl = await QRCode.toDataURL(courseUrl, {
         width: Math.round(Math.min(w, h) * 0.12),
         margin: 1,
@@ -889,7 +897,7 @@ const CourseDetail = () => {
     const name = certMeta?.studentName || (user?.fullName || "Student");
     const date = certMeta?.issueDate || new Date().toISOString().slice(0, 10);
 
-    const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.infosecdairies.io/`;
+    const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://blueteamers.io/`;
 
     try {
       const cert = await generateCertificatePngDataUrl(name, date);
@@ -923,7 +931,7 @@ const CourseDetail = () => {
       setShowShareModal(true);
 
     } catch {
-      const fallbackSharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
+      const fallbackSharePageUrl = "https://blueteamers.io/share/certificate-completed.html";
       setShareModalText(shareText);
       setShareModalUrl(fallbackSharePageUrl);
       setShowShareModal(true);
@@ -938,27 +946,41 @@ const CourseDetail = () => {
     }
 
     setIsCertDownloading(true);
-    // Use frozen server values — falls back gracefully if certMeta not loaded yet
     const name = certMeta?.studentName || (user?.fullName || "Student");
     const date = certMeta?.issueDate || new Date().toISOString().slice(0, 10);
 
     try {
-      const cert = await generateCertificatePngDataUrl(name, date);
+      // First, upload the image to get a cert_id (or use existing one).
+      // Generate a temporary canvas without QR to upload, then regenerate with the cert_id.
+      let qrCertId = certMeta?.certId;
+
+      if (!qrCertId) {
+        const tempCert = await generateCertificatePngDataUrl(name, date);
+        if (tempCert) {
+          const uploadData = await uploadCertIfNeeded(tempCert.dataUrl);
+          if (uploadData?.cert_id) {
+            qrCertId = uploadData.cert_id;
+            setCertMeta(prev => prev ? {
+              ...prev,
+              exists: true,
+              certId: uploadData.cert_id,
+              studentName: uploadData.student_name || prev.studentName,
+              issueDate: uploadData.issue_date || prev.issueDate,
+            } : prev);
+          }
+        }
+      }
+
+      // Regenerate canvas with cert_id embedded in QR code
+      const cert = await generateCertificatePngDataUrl(name, date, qrCertId);
       if (!cert) {
         setEnrollError("Could not generate certificate. Please try again.");
         return;
       }
 
-      // Upload once (first time); subsequent downloads skip the upload
-      const uploadData = await uploadCertIfNeeded(cert.dataUrl);
-      if (uploadData?.cert_id) {
-        setCertMeta(prev => prev ? {
-          ...prev,
-          exists: true,
-          certId: uploadData.cert_id,
-          studentName: uploadData.student_name || prev.studentName,
-          issueDate: uploadData.issue_date || prev.issueDate,
-        } : prev);
+      // If we uploaded a temp canvas, re-upload the final one with QR code
+      if (qrCertId && !certMeta?.certId) {
+        await uploadCertIfNeeded(cert.dataUrl);
       }
 
       const a = document.createElement("a");

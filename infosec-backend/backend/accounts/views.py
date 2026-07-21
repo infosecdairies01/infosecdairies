@@ -23,6 +23,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .models import LoginOtp
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from .email_templates import _send_html_email, get_otp_email_template
+from .disposable_email import is_disposable_email
 from .throttles import (
     EmailRateThrottle,
     LoginIPRateThrottle,
@@ -252,6 +253,10 @@ def google_onboarding(request):
     cleaned = strip_tags(raw_full_name).strip()
     if cleaned != raw_full_name:
         return Response({"detail": "Invalid characters in name"}, status=status.HTTP_400_BAD_REQUEST)
+
+    block_disposable = getattr(settings, "BLOCK_DISPOSABLE_EMAILS", True)
+    if block_disposable and is_disposable_email(user.email):
+        return Response({"detail": "Disposable email addresses are not allowed."}, status=status.HTTP_400_BAD_REQUEST)
 
     from django.contrib.auth.password_validation import validate_password
     from django.core.exceptions import ValidationError
