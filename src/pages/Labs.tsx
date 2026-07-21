@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import SOCSidebar from "@/components/soc/SOCSidebar";
 import AlertSummaryCards from "@/components/soc/AlertSummaryCards";
@@ -10,11 +11,19 @@ import MitreHeatmapInteractive from "@/components/soc/MitreHeatmapInteractive";
 import ThreatGeoMap from "@/components/soc/ThreatGeoMap";
 import LiveActivityFeed from "@/components/soc/LiveActivityFeed";
 
-import { Bell, Search, User, RefreshCw, Clock } from "lucide-react";
+import { Bell, Search, User, RefreshCw, Clock, Construction } from "lucide-react";
 
 const Labs = () => {
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
+
   return (
-    <main className="min-h-screen bg-background flex flex-col">
+    <main className="h-screen bg-background flex flex-col overflow-hidden">
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -64,6 +73,19 @@ const Labs = () => {
               </div>
             </div>
           </div>
+      </div>
+
+      {/* Glass overlay — page under development, pinned to viewport below navbar, blocks scroll/clicks */}
+      <div className="fixed top-16 md:top-20 inset-x-0 bottom-0 z-40 flex items-center justify-center bg-background/30 backdrop-blur-md">
+        <div className="flex flex-col items-center gap-4 px-10 py-8 rounded-2xl border border-white/[0.12] bg-white/[0.04] backdrop-blur-xl shadow-2xl text-center max-w-sm mx-4">
+          <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <Construction className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-1">Under Development</h2>
+            <p className="text-sm text-muted-foreground">This section is being actively built. Check back soon.</p>
+          </div>
+        </div>
       </div>
     </main>
   );
