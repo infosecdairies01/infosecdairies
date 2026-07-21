@@ -36,10 +36,16 @@ def _payment_rate_limit(key: str, limit: int, period: int) -> bool:
 
 
 def _get_client_ip(request) -> str:
-    """Return the real client IP, handling Railway's reverse-proxy X-Forwarded-For."""
+    """Return the real client IP, handling Railway's reverse-proxy X-Forwarded-For.
+
+    Railway's edge proxy appends the real connecting IP as the LAST entry in the
+    header; anything before it (including a client-forged X-Forwarded-For) is
+    attacker-controlled. Trusting the first entry let a client claim any country
+    (e.g. NG) to get that country's much cheaper price in create_order.
+    """
     forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        return forwarded.split(",")[-1].strip()
     return request.META.get("REMOTE_ADDR", "")
 
 
