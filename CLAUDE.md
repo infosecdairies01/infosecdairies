@@ -24,15 +24,9 @@ python manage.py migrate          # Apply migrations
 python manage.py makemigrations   # Create new migrations
 ```
 
-### Wazuh (local SOC labs)
+### Wazuh (local SOC labs — local only, not in production)
 
-The Practice → Logs section links out to a local Wazuh SIEM instance running as Docker containers inside the `Ubuntu-22.04` WSL2 distro (separate from Docker Desktop). Manage it from this project with:
-
-```sh
-npm run wazuh:start   # Start the Wazuh containers, wait until the dashboard is reachable
-npm run wazuh:stop    # Stop the containers (frees RAM the indexer/manager use)
-npm run wazuh:status  # Show container status + dashboard reachability
-```
+The Practice → Logs section links out to a local Wazuh SIEM instance running as Docker containers inside the `Ubuntu-22.04` WSL2 distro. Wazuh scripts are local-only — do not add Wazuh env vars to Vercel or any production environment.
 
 Dashboard: `https://localhost` (self-signed cert — expect a browser warning). See `docs/superpowers/specs/2026-07-18-wazuh-local-access-design.md` for the full design.
 

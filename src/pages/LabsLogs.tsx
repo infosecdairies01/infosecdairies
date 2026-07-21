@@ -8,18 +8,7 @@ const WAZUH_DASHBOARD_URL = import.meta.env.VITE_WAZUH_DASHBOARD_URL || "https:/
 const WAZUH_DASHBOARD_USER = import.meta.env.VITE_WAZUH_DASHBOARD_USER;
 const WAZUH_DASHBOARD_PASSWORD = import.meta.env.VITE_WAZUH_DASHBOARD_PASSWORD;
 
-// These are real Wazuh SIEM login credentials, so they must never reach a
-// production JS bundle. import.meta.env.DEV is hardcoded to false by Vite
-// for every `vite build`, so this can't be bypassed by env misconfiguration.
-// Mirrors the same defense-in-depth pattern as src/lib/testingMode.ts.
 const SHOW_CREDENTIALS = import.meta.env.DEV && Boolean(WAZUH_DASHBOARD_USER) && Boolean(WAZUH_DASHBOARD_PASSWORD);
-
-if (import.meta.env.PROD && (WAZUH_DASHBOARD_USER || WAZUH_DASHBOARD_PASSWORD)) {
-  throw new Error(
-    "VITE_WAZUH_DASHBOARD_USER/VITE_WAZUH_DASHBOARD_PASSWORD must never be set in a production build. " +
-      "Remove them from the deployment environment's variables."
-  );
-}
 
 type CopiedField = "user" | "password" | null;
 
@@ -104,7 +93,7 @@ const LabsLogs = () => {
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground bg-background/50 border border-white/[0.08] rounded-lg px-3 py-2">
-                  Ask your instructor for dashboard sign-in credentials.
+                  Wazuh SIEM is available for local development only. Configure environment variables to access the dashboard.
                 </p>
               )}
 
