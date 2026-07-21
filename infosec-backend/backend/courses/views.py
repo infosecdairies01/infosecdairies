@@ -3,6 +3,7 @@ import copy as _copy
 import logging as _logging
 from datetime import timedelta
 
+from django.conf import settings
 from django.core.cache import cache as _cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -469,14 +470,22 @@ def submit_quiz(request, slug, quiz_id):
 def course_completion(request, slug):
     """
     Server-authoritative completion status.
-    Completed = user has at least one passing QuizScore recorded for this course.
+    Completed = user has completed ALL lessons (LessonContent)
+    AND passed at least one quiz for this course.
     """
     course = get_object_or_404(Course, slug=slug, is_published=True)
     _, denied = _ensure_enrolled_and_paid(request.user, course)
     if denied:
-        # For free courses, skip payment check
         if slug != FREE_COURSE_SLUG:
             return denied
+
+    total_lessons = LessonContent.objects.filter(course_slug=slug).count()
+    completed_lessons = LessonProgress.objects.filter(user=request.user, course=course).count()
+    all_lessons_done = total_lessons > 0 and completed_lessons >= total_lessons
+
+    has_passing_quiz = QuizScore.objects.filter(
+        user=request.user, course_slug=slug, passed=True
+    ).exists()
 
     quiz_ids_passed = list(
         QuizScore.objects.filter(user=request.user, course_slug=slug, passed=True)
@@ -484,7 +493,9 @@ def course_completion(request, slug):
     )
 
     return Response({
-        "completed": len(quiz_ids_passed) > 0,
+        "completed": all_lessons_done and has_passing_quiz,
+        "total_lessons": total_lessons,
+        "completed_lessons": completed_lessons,
         "quiz_ids_passed": quiz_ids_passed,
         "course_slug": slug,
     })
@@ -517,7 +528,6 @@ def _strip_lab_answers(content: dict) -> dict:
     for q in pe.get("labQuestions") or []:
         q.pop("answer", None)
     return result
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

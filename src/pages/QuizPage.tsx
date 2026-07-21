@@ -160,11 +160,49 @@ const QuizPage = () => {
     ? getQuizById(normalizedCourseId || "", resolvedQuizId) || getQuizById(normalizedCourseId || "", "q1")
     : null;
   
-  const [quizState, setQuizState] = useState<QuizState>("intro");
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
-  const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set());
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const storageKey = `quiz_progress_${slug}_${resolvedQuizId || quizId}`;
+
+  const saveProgress = () => {
+    const data = {
+      quizState,
+      currentQuestionIndex,
+      selectedAnswers,
+      checkedQuestions: Array.from(checkedQuestions),
+      timeRemaining,
+    };
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(data));
+    } catch {}
+  };
+
+  // Restore progress from sessionStorage on mount
+  useEffect(() => {
+    if (!quiz) return;
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (!saved) return;
+      const data = JSON.parse(saved);
+      if (data.quizState === "active" || data.quizState === "review") {
+        setQuizState(data.quizState);
+        setCurrentQuestionIndex(data.currentQuestionIndex || 0);
+        setSelectedAnswers(data.selectedAnswers || {});
+        setCheckedQuestions(new Set(data.checkedQuestions || []));
+        if (typeof data.timeRemaining === "number") {
+          setTimeRemaining(data.timeRemaining);
+        }
+      }
+    } catch {}
+  }, [quiz]);
+
+  // Save progress whenever state changes during active/review
+  useEffect(() => {
+    if (quizState === "active" || quizState === "review") {
+      saveProgress();
+    }
+    if (quizState === "results") {
+      try { sessionStorage.removeItem(storageKey); } catch {}
+    }
+  }, [quizState, currentQuestionIndex, selectedAnswers, checkedQuestions, timeRemaining]);
 
   // Timer effect
   useEffect(() => {
@@ -326,6 +364,7 @@ const QuizPage = () => {
   };
 
   const handleStartQuiz = () => {
+    try { sessionStorage.removeItem(storageKey); } catch {}
     setQuizState("active");
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
@@ -336,6 +375,7 @@ const QuizPage = () => {
   };
 
   const handleRetry = () => {
+    try { sessionStorage.removeItem(storageKey); } catch {}
     setQuizState("intro");
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});

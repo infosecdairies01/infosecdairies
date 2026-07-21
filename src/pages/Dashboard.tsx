@@ -465,6 +465,11 @@ const Dashboard = () => {
           <p className="text-muted-foreground mb-1">
             Continue your blue team training journey
           </p>
+          {user?.email && (
+            <p className="text-sm text-muted-foreground/70">
+              {user.email}
+            </p>
+          )}
         </div>
 
         {/* Stats Overview */}

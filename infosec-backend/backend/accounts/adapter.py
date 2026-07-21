@@ -6,6 +6,8 @@ from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+from .disposable_email import is_disposable_email
+
 User = get_user_model()
 
 _ALLOWED_FRONTEND_HOSTS = {
@@ -122,6 +124,13 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 
         except User.DoesNotExist:
             # No existing user with this email — new account creation.
+            # Brand new Google user: block disposable emails.
+            if getattr(settings, "BLOCK_DISPOSABLE_EMAILS", True) and email:
+                if is_disposable_email(email):
+                    from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+                    raise DefaultSocialAccountAdapter().validation_exception(
+                        "Disposable email addresses are not allowed."
+                    )
             # Brand new Google user: require onboarding + OTP before issuing JWT.
             if getattr(sociallogin.account, "provider", None) == "google":
                 user = sociallogin.user

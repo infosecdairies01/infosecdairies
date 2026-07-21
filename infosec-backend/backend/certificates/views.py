@@ -39,6 +39,38 @@ def _completion_date_for(user, course):
     return str(timezone.now().date())
 
 
+def _is_course_completed(user, course_slug: str) -> bool:
+    """Server-authoritative completion check.
+
+    Returns True only when the user has:
+      1. A LessonProgress record for EVERY lesson stored in LessonContent
+         for this course, AND
+      2. At least one passing QuizScore for this course.
+    """
+    from courses.models import Course, LessonContent, LessonProgress, QuizScore
+
+    course = Course.objects.filter(slug=course_slug, is_published=True).first()
+    if not course:
+        return False
+
+    total_lessons = LessonContent.objects.filter(course_slug=course_slug).count()
+    if total_lessons == 0:
+        return False
+
+    completed_lessons = LessonProgress.objects.filter(
+        user=user, course=course
+    ).count()
+
+    if completed_lessons < total_lessons:
+        return False
+
+    has_passing_quiz = QuizScore.objects.filter(
+        user=user, course_slug=course_slug, passed=True
+    ).exists()
+
+    return has_passing_quiz
+
+
 @api_view(["GET"])
 def lookup_certificate(request, cert_id):
     """Lookup certificate by ID."""
@@ -74,6 +106,8 @@ def my_certificate(request, slug):
     if _rate_limit(f"cert_my:{ip}:{request.user.id}", 60, 3600):
         return JsonResponse({"error": "Rate limit exceeded."}, status=429)
 
+    completed = _is_course_completed(request.user, slug)
+
     # If cert already exists, return the frozen stored values
     existing = Certificate.objects.filter(user=request.user, course_slug=slug).first()
     if existing:
@@ -83,6 +117,7 @@ def my_certificate(request, slug):
             'studentName': existing.student_name,
             'issueDate': existing.issue_date,
             'courseName': existing.course_name,
+            'completed': True,
         })
 
     # Cert not yet generated — return completion date so client uses the right date
@@ -94,6 +129,7 @@ def my_certificate(request, slug):
 
     return JsonResponse({
         'exists': False,
+        'completed': completed,
         'studentName': request.user.full_name or request.user.email,
         'issueDate': completion_date,
     })
@@ -154,15 +190,10 @@ def upload_certificate(request):
                 status=403,
             )
 
-    # Verify server-side quiz completion
-    has_passing_score = QuizScore.objects.filter(
-        user=request.user,
-        course_slug=course_slug,
-        passed=True,
-    ).exists()
-    if not has_passing_score:
+    # Verify server-side course completion — all lessons + at least one passing quiz
+    if not _is_course_completed(request.user, course_slug):
         return JsonResponse(
-            {'error': 'You must pass at least one quiz to earn this certificate'},
+            {'error': 'You must complete all lessons and pass at least one quiz to earn this certificate'},
             status=403,
         )
 
@@ -264,7 +295,7 @@ def certificate_share(request):
     <meta name=\"twitter:title\" content=\"{title}\" />
     <meta name=\"twitter:description\" content=\"{description}\" />
     {twitter_image_meta}
-    <meta http-equiv=\"refresh\" content=\"0; url=https://www.infosecdairies.io/\" />
+    <meta http-equiv=\"refresh\" content=\"0; url=https://blueteamers.io/\" />
   </head>
   <body></body>
 </html>"""
