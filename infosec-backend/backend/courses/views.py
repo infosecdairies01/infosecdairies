@@ -530,14 +530,14 @@ def _strip_lab_answers(content: dict) -> dict:
     return result
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
 def lesson_content(request, slug, lesson_id):
     """
     Return the full lesson content JSON for an enrolled, paid user.
 
     Security properties
     ───────────────────
-    • Requires a valid JWT (IsAuthenticated) — unauthenticated callers → 401.
+    • Requires a valid JWT (IsAuthenticated) — unauthenticated callers → 401,
+      except for the local-only preview path below.
     • Checks the DB for a current enrollment record for *this* user (not a JWT claim)
       → an attacker with a stolen course-access token cannot fetch content, because
       the enrollment check runs against request.user which comes from the *auth* JWT,
@@ -551,6 +551,23 @@ def lesson_content(request, slug, lesson_id):
         return Response({"detail": "Invalid lesson_id format."}, status=400)
 
     course = get_object_or_404(Course, slug=slug, is_published=True)
+
+    # Local dev convenience only: requires ALLOW_UNAUTH_LESSON_PREVIEW to be set
+    # (only ever in a local .env — never in a deployed environment) AND the
+    # request to originate from loopback, so it can't be triggered remotely.
+    if (
+        not request.user.is_authenticated
+        and settings.ALLOW_UNAUTH_LESSON_PREVIEW
+        and request.META.get("REMOTE_ADDR") in ("127.0.0.1", "::1")
+    ):
+        content_obj = get_object_or_404(LessonContent, course_slug=slug, lesson_id=lesson_id)
+        safe_content = _strip_lab_answers(content_obj.content_json)
+        response = Response(safe_content)
+        response["Cache-Control"] = f"private, max-age={_LESSON_CONTENT_CACHE_SECONDS}"
+        return response
+
+    if not request.user.is_authenticated:
+        return Response({"detail": "Authentication required."}, status=401)
 
     # Staff bypass — they can preview any lesson without an enrollment record.
     is_staff = request.user.is_staff or request.user.is_superuser

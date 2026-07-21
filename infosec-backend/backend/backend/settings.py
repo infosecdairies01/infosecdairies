@@ -54,6 +54,11 @@ SECRET_KEY = config("DJANGO_SECRET_KEY", default="django-insecure-change-me-in-p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
 
+# Local-only convenience: lets lesson_content skip auth for loopback requests.
+# Independent of DEBUG on purpose — only ever set this in your local .env, never
+# in any deployed environment, so a stray DEBUG=True elsewhere can't also enable it.
+ALLOW_UNAUTH_LESSON_PREVIEW = config("ALLOW_UNAUTH_LESSON_PREVIEW", default=False, cast=bool)
+
 # Allow local development hosts
 _railway_hosts = [
     config("RAILWAY_STATIC_URL", default="").strip(),
