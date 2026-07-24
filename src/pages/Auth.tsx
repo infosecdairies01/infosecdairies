@@ -205,14 +205,23 @@ const Auth = () => {
   };
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="absolute inset-0 circuit-pattern opacity-5" />
+    <main className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Dark base with subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-slate-950 to-black" />
+      
+      {/* Animated scanlines */}
+      <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,255,200,0.03)_50%)] bg-[length:100%_4px] animate-scan" />
+      
+      {/* Hexagon pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iMTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0yOCAwTDAgMjVWNzVMMjggMTAwTDU2IDc1VjI1WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmZmM4IiBzdHJva2Utd2lkdGg9IjEiLz48L3N2Zz4=')] bg-[length:56px_100px]" />
+      </div>
+      
+      {/* Vignette effect */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.7)_100%)]" />
       
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8 animate-fade-up">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
-            <span className="font-bold text-2xl gradient-text">BlueTeamers</span>
-          </Link>
           <h1 className="text-3xl font-bold mt-4">
             {isLogin ? "Welcome Back" : "Create Account"}
           </h1>

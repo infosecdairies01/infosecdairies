@@ -74,7 +74,7 @@ const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, is
       <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-br from-primary/20 via-transparent to-secondary/10 opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500" />
       
       {/* Card container with enhanced glassmorphism */}
-      <div className="relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] transition-all duration-500 ease-out group-hover:bg-card/35 group-hover:backdrop-blur-xl group-hover:translate-y-[-6px] group-hover:border-white/[0.12] shadow-lg shadow-black/20 group-hover:shadow-xl group-hover:shadow-primary/10 h-full min-h-[320px] flex flex-col">
+      <div className="relative overflow-hidden rounded-xl bg-card/10 border border-white/[0.06] transition-all duration-500 ease-out group-hover:bg-card/18 group-hover:translate-y-[-6px] group-hover:border-white/[0.10] shadow-lg shadow-black/20 group-hover:shadow-xl group-hover:shadow-primary/10 h-full min-h-[320px] flex flex-col">
         
         {/* Thumbnail Image */}
         {thumbnailSrc && (
@@ -85,7 +85,7 @@ const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, is
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
             {/* Gradient overlay for smooth transition to content */}
-            <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-card/30 via-card/10 to-transparent" />
             
             {/* Difficulty badge - overlaid on thumbnail */}
             {difficulty && (
@@ -103,17 +103,6 @@ const CourseCard = ({ title, description, index, difficulty, slug, thumbnail, is
           </span>
         )}
         
-        {/* Inner light reflection - top edge */}
-        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        
-        {/* Inner light reflection - left edge */}
-        <div className="absolute inset-y-0 left-0 w-[1px] bg-gradient-to-b from-white/15 via-white/5 to-transparent" />
-        
-        {/* Subtle inner teal glow */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/[0.03] via-transparent to-secondary/[0.02] pointer-events-none" />
-        
-        {/* Left accent gradient line */}
-        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-primary to-secondary opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
         
         {/* Content - Left aligned */}
         <div className="p-6 pl-5 flex flex-col flex-1">

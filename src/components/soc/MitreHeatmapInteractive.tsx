@@ -83,11 +83,11 @@ const tactics: Tactic[] = [
 ];
 
 const getHeatColor = (count: number) => {
-  if (count >= 18) return "bg-destructive/60 border-destructive/40 text-destructive";
-  if (count >= 12) return "bg-orange-500/40 border-orange-500/30 text-orange-400";
-  if (count >= 8) return "bg-yellow-500/30 border-yellow-500/25 text-yellow-400";
-  if (count >= 4) return "bg-primary/25 border-primary/20 text-primary";
-  return "bg-muted/20 border-white/[0.06] text-muted-foreground";
+  if (count >= 18) return "bg-destructive/60 border-destructive/40 text-white";
+  if (count >= 12) return "bg-orange-500/40 border-orange-500/30 text-white";
+  if (count >= 8) return "bg-yellow-500/30 border-yellow-500/25 text-white";
+  if (count >= 4) return "bg-primary/25 border-primary/20 text-white";
+  return "bg-muted/20 border-white/[0.06] text-white";
 };
 
 const getStatusBadge = (status: string) => {

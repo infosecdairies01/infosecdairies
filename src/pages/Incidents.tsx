@@ -101,23 +101,23 @@ const incidentsData: Incident[] = [
 
 const getSeverityStyles = (severity: string) => {
   switch (severity) {
-    case "Critical": return "bg-destructive/15 text-destructive border-destructive/25";
-    case "High": return "bg-orange-500/15 text-orange-400 border-orange-500/25";
-    case "Medium": return "bg-yellow-500/15 text-yellow-400 border-yellow-500/25";
+    case "Critical": return "bg-primary/15 text-primary border-primary/25";
+    case "High": return "bg-primary/15 text-primary border-primary/25";
+    case "Medium": return "bg-primary/15 text-primary border-primary/25";
     case "Low": return "bg-primary/15 text-primary border-primary/25";
-    default: return "bg-muted text-muted-foreground border-border";
+    default: return "bg-primary/15 text-primary border-primary/25";
   }
 };
 
 const getStatusStyles = (status: string) => {
   switch (status) {
-    case "Open": return "text-destructive bg-destructive/10 border-destructive/20";
+    case "Open": return "text-primary bg-primary/10 border-primary/20";
     case "Investigating": return "text-primary bg-primary/10 border-primary/20";
-    case "Containment": return "text-orange-400 bg-orange-500/10 border-orange-500/20";
-    case "Eradication": return "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
-    case "Recovery": return "text-secondary bg-secondary/10 border-secondary/20";
-    case "Closed": return "text-muted-foreground bg-muted/20 border-white/[0.06]";
-    default: return "text-muted-foreground bg-muted border-border";
+    case "Containment": return "text-primary bg-primary/10 border-primary/20";
+    case "Eradication": return "text-primary bg-primary/10 border-primary/20";
+    case "Recovery": return "text-primary bg-primary/10 border-primary/20";
+    case "Closed": return "text-primary bg-primary/10 border-primary/20";
+    default: return "text-primary bg-primary/10 border-primary/20";
   }
 };
 
@@ -171,7 +171,7 @@ const Incidents = () => {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Open", count: statusCounts.open, color: "text-destructive", icon: AlertTriangle, bg: "bg-destructive/10" },
+                  { label: "Open", count: statusCounts.open, color: "text-primary", icon: AlertTriangle, bg: "bg-primary/10" },
                   { label: "Active", count: statusCounts.active, color: "text-primary", icon: Play, bg: "bg-primary/10" },
                   { label: "Closed", count: statusCounts.closed, color: "text-muted-foreground", icon: CheckCircle, bg: "bg-muted/20" },
                 ].map((stat) => (
@@ -216,9 +216,7 @@ const Incidents = () => {
                 {filteredIncidents.map((incident) => (
                   <div key={incident.id} className="group relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] p-5 shadow-lg shadow-black/20 hover:bg-card/35 hover:border-white/[0.12] transition-all duration-300 cursor-pointer">
                     <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px]">
-                      <div className={cn("w-full h-full", getSeverityDot(incident.severity))} />
-                    </div>
+                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-primary to-secondary opacity-50" />
 
                     <div className="relative pl-3">
                       <div className="flex items-start justify-between mb-3">

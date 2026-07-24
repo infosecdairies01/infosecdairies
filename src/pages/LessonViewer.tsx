@@ -1118,10 +1118,10 @@ const LessonViewer = () => {
           <div className="relative">
             <div className="absolute inset-0 h-48 overflow-hidden">
               <div 
-                className="absolute inset-0 bg-cover bg-center opacity-20"
+                className="absolute inset-0 bg-cover bg-center opacity-40"
                 style={{ backgroundImage: `url(${courseBgImage})` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/50 to-background" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/30 to-background" />
             </div>
 
             <div className="relative container mx-auto px-6 py-8">

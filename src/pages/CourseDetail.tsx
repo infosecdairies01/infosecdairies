@@ -1120,15 +1120,15 @@ const CourseDetail = () => {
         {/* Course-specific Background - only for hero, subtle atmospheric */}
         <div className="absolute inset-0 h-[420px] overflow-hidden">
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-80"
             style={{
               backgroundImage: `url(${courseBgImage})`,
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/30 to-background/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-background/15 to-background/30" />
           {/* Extra dark overlay behind text area */}
-          <div className="absolute inset-0 bg-background/40" />
+          <div className="absolute inset-0 bg-background/20" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10 py-8">

@@ -46,8 +46,8 @@ const Labs = () => {
                 <button className="w-8 h-8 bg-primary/10 border border-primary/25 rounded-full flex items-center justify-center text-primary"><User className="w-4 h-4" /></button>
               </div>
             </header>
-            <div className="flex-1 p-6 overflow-hidden">
-              <div className="space-y-6">
+            <div className="flex-1 overflow-auto">
+              <div className="p-6 space-y-6">
                 <AlertSummaryCards />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2"><AlertsChart /></div>

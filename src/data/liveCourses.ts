@@ -29,7 +29,7 @@ export const liveCourses: LiveCourse[] = [
     duration: "8 Weeks",
     format: "Live Online Sessions (Weekends)",
     batchSize: "Limited to 20 participants",
-    fee: "₹15,000",
+    fee: "₹20,000",
     whoIsItFor: [
       "Fresh graduates aspiring to enter cybersecurity",
       "IT professionals transitioning to security roles",
@@ -145,7 +145,7 @@ export const liveCourses: LiveCourse[] = [
     duration: "6 Weeks",
     format: "Live Online Sessions (Weekends)",
     batchSize: "Limited to 15 participants",
-    fee: "₹15,000",
+    fee: "₹20,000",
     whoIsItFor: [
       "SOC analysts wanting to specialize in SIEM",
       "System administrators managing log infrastructure",
@@ -241,7 +241,7 @@ export const liveCourses: LiveCourse[] = [
     duration: "10 Weeks",
     format: "Live Online Sessions (Weekends)",
     batchSize: "Limited to 15 participants",
-    fee: "₹15,000",
+    fee: "₹20,000",
     whoIsItFor: [
       "Security professionals expanding into forensics",
       "Law enforcement officers investigating cybercrime",
@@ -377,7 +377,7 @@ export const liveCourses: LiveCourse[] = [
     duration: "8 Weeks",
     format: "Live Online Sessions (Weekends)",
     batchSize: "Limited to 20 participants",
-    fee: "₹15,000",
+    fee: "₹20,000",
     whoIsItFor: [
       "Security professionals moving into management",
       "IT managers responsible for compliance",
@@ -484,122 +484,6 @@ export const liveCourses: LiveCourse[] = [
       "Strong communication and documentation skills"
     ],
     certificationDetails: "Certificate of Completion provided. This training aligns with CISM, CRISC, and CGRC certification requirements."
-  },
-  {
-    id: "bug-bounty",
-    title: "Bug Bounty Hunter",
-    tagline: "Discover Vulnerabilities and Earn While You Learn",
-    description: "Enter the exciting world of bug bounty hunting where you get paid to find security vulnerabilities. This practical training teaches you reconnaissance, web application testing, and responsible disclosure. Learn the techniques used by successful bug bounty hunters to find high-impact vulnerabilities.",
-    duration: "8 Weeks",
-    format: "Live Online Sessions (Weekends)",
-    batchSize: "Limited to 15 participants",
-    fee: "₹15,000",
-    whoIsItFor: [
-      "Security enthusiasts wanting to earn through bug bounties",
-      "Web developers interested in security testing",
-      "Penetration testers expanding their skills",
-      "Students aspiring to become ethical hackers",
-      "Anyone curious about finding security vulnerabilities"
-    ],
-    whatYouWillLearn: [
-      "Navigate bug bounty platforms and understand program rules",
-      "Perform comprehensive reconnaissance and asset discovery",
-      "Identify and exploit web application vulnerabilities",
-      "Test authentication and authorization mechanisms",
-      "Find business logic flaws that automated tools miss",
-      "Write professional vulnerability reports that get accepted",
-      "Understand responsible disclosure and legal boundaries",
-      "Build a sustainable bug bounty hunting methodology"
-    ],
-    roadmap: [
-      {
-        week: 1,
-        title: "Bug Bounty Fundamentals",
-        topics: [
-          "Understanding the bug bounty ecosystem",
-          "Platform selection: HackerOne, Bugcrowd, Intigriti",
-          "Reading and understanding program scope",
-          "Setting up your testing environment safely"
-        ]
-      },
-      {
-        week: 2,
-        title: "Reconnaissance & Asset Discovery",
-        topics: [
-          "Subdomain enumeration techniques",
-          "Port scanning and service identification",
-          "Technology fingerprinting and stack analysis",
-          "Finding hidden endpoints and parameters"
-        ]
-      },
-      {
-        week: 3,
-        title: "Web Application Security Basics",
-        topics: [
-          "HTTP protocol deep-dive",
-          "Understanding cookies, sessions, and tokens",
-          "Proxy setup and traffic interception",
-          "Common vulnerability classes overview (OWASP Top 10)"
-        ]
-      },
-      {
-        week: 4,
-        title: "Injection Vulnerabilities",
-        topics: [
-          "SQL injection: detection and exploitation",
-          "Cross-Site Scripting (XSS): reflected, stored, DOM-based",
-          "Command injection and template injection",
-          "XXE and other XML-based attacks"
-        ]
-      },
-      {
-        week: 5,
-        title: "Authentication & Authorization Flaws",
-        topics: [
-          "Authentication bypass techniques",
-          "IDOR and broken access control",
-          "JWT and token-based auth vulnerabilities",
-          "OAuth and SSO misconfiguration"
-        ]
-      },
-      {
-        week: 6,
-        title: "Advanced Vulnerability Discovery",
-        topics: [
-          "Server-Side Request Forgery (SSRF)",
-          "Business logic vulnerabilities",
-          "Race conditions and timing attacks",
-          "Subdomain takeover hunting"
-        ]
-      },
-      {
-        week: 7,
-        title: "Reporting & Communication",
-        topics: [
-          "Writing impactful vulnerability reports",
-          "Proof of concept development",
-          "Communicating with security teams effectively",
-          "Handling disputes and escalations"
-        ]
-      },
-      {
-        week: 8,
-        title: "Building Your Bug Bounty Career",
-        topics: [
-          "Developing your hunting methodology",
-          "Automation and tool development",
-          "Managing time and avoiding burnout",
-          "Success stories and community involvement"
-        ]
-      }
-    ],
-    prerequisites: [
-      "Basic understanding of web technologies (HTML, JavaScript, HTTP)",
-      "Familiarity with command-line interfaces",
-      "Ethical mindset and commitment to legal testing only",
-      "Laptop with ability to run virtual machines"
-    ],
-    certificationDetails: "Certificate of Completion awarded. This training provides a strong foundation for OSCP, OSWE, and eWPT certifications."
   }
 ];
 

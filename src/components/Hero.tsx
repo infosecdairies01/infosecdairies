@@ -11,7 +11,7 @@ const Hero = () => {
       behavior: 'smooth'
     });
   };
-  return <section className="relative min-h-screen flex items-start justify-center overflow-hidden pt-14 md:pt-20">
+  return <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14 md:pt-20">
       {/* Dark base with subtle gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-slate-950 to-black" />
       
@@ -48,7 +48,6 @@ const Hero = () => {
             <div className="space-y-2 group hover:scale-110 transition-transform duration-300 animate-slide-right" style={{
             animationDelay: '0.6s'
           }}>
-              <div className="w-8 h-8 mx-auto text-primary flex items-center justify-center text-2xl group-hover:animate-pulse">🛡️</div>
               <p className="text-2xl font-bold gradient-text">
                 <AnimatedCounter end={100} suffix="%" />
               </p>
@@ -57,14 +56,12 @@ const Hero = () => {
             <div className="space-y-2 group hover:scale-110 transition-transform duration-300 animate-fade-up" style={{
             animationDelay: '0.7s'
           }}>
-              <div className="w-8 h-8 mx-auto text-primary flex items-center justify-center text-2xl group-hover:animate-pulse">🛡️</div>
               <p className="text-2xl font-bold gradient-text">Real-World</p>
               <p className="text-sm text-muted-foreground">Detection & Response</p>
             </div>
             <div className="space-y-2 group hover:scale-110 transition-transform duration-300 animate-slide-left" style={{
             animationDelay: '0.8s'
           }}>
-              <div className="w-8 h-8 mx-auto text-primary flex items-center justify-center text-2xl group-hover:animate-pulse">🔐</div>
               <p className="text-2xl font-bold gradient-text">Practitioner-Led</p>
               <p className="text-sm text-muted-foreground">Training</p>
             </div>

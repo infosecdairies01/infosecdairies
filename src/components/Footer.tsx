@@ -1,4 +1,3 @@
-import { Linkedin } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -11,10 +10,19 @@ const Footer = () => {
               href="https://www.linkedin.com/company/blueteamers/"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-full bg-muted/50 hover:bg-[#0077B5]/20 transition-colors group"
+              className="p-1.5 rounded-full bg-muted/50 hover:bg-[#0077B5]/20 transition-colors group"
               aria-label="LinkedIn"
             >
-              <Linkedin className="w-5 h-5 text-muted-foreground group-hover:text-[#0077B5] transition-colors" />
+              <img src="https://cdn-icons-png.flaticon.com/512/4138/4138130.png" alt="LinkedIn" className="w-6 h-6 group-hover:text-[#0077B5] transition-colors" />
+            </a>
+            <a
+              href="https://www.instagram.com/blueteamers_?igsh=MW9vdHJicHZvOGZxYg%3D%3D&utm_source=qr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full bg-muted/50 hover:bg-[#E4405F]/20 transition-colors group flex items-center justify-center"
+              aria-label="Instagram"
+            >
+              <img src="https://static.vecteezy.com/system/resources/previews/018/930/413/non_2x/instagram-logo-instagram-icon-transparent-free-png.png" alt="Instagram" className="w-10 h-10 group-hover:text-[#E4405F] transition-colors" />
             </a>
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

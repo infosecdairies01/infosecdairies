@@ -1,20 +1,17 @@
-import { Terminal, Activity, Eye, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import socLabsHero from "@/assets/soc-labs-hero.jpg";
 const SOCLabs = () => {
   const features = [
     {
-      icon: Terminal,
       title: "Real-Time Alert Triage",
       description: "Analyze live security alerts just like a SOC analyst would in production environments.",
     },
     {
-      icon: Activity,
       title: "Threat Investigation",
       description: "Deep dive into suspicious activities, correlate events, and build incident timelines.",
     },
     {
-      icon: Eye,
       title: "SIEM Mastery",
       description: "Get hands-on experience with dashboards, queries, and detection rules used by top security teams.",
     },

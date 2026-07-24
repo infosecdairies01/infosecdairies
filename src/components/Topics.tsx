@@ -1,40 +1,33 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, AlertTriangle, FileSearch, Lock, Activity, Target } from "lucide-react";
 import { useState } from "react";
 
 const topics = [
   {
-    icon: Target,
     title: "Threat Detection",
     description: "Advanced techniques for identifying and analyzing security threats in real-time",
     color: "from-primary to-secondary"
   },
   {
-    icon: Eye,
     title: "Security Monitoring",
     description: "Continuous surveillance and analysis of network traffic and system activities",
     color: "from-secondary to-primary"
   },
   {
-    icon: AlertTriangle,
     title: "Incident Response",
     description: "Structured approaches to handling and recovering from security incidents",
     color: "from-primary to-accent"
   },
   {
-    icon: FileSearch,
     title: "Log Analysis",
     description: "Deep dive into security logs to uncover anomalies and potential threats",
     color: "from-accent to-secondary"
   },
   {
-    icon: Lock,
     title: "Access Control",
     description: "Implementing robust authentication and authorization mechanisms",
     color: "from-secondary to-accent"
   },
   {
-    icon: Activity,
     title: "SIEM Solutions",
     description: "Security Information and Event Management best practices and tools",
     color: "from-accent to-primary"
@@ -60,7 +53,6 @@ const Topics = () => {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {topics.map((topic, index) => {
-            const Icon = topic.icon;
             const isHovered = hoveredIndex === index;
             
             return (
@@ -83,9 +75,6 @@ const Topics = () => {
                 )}
                 
                 <CardHeader className="relative z-10">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-cyber flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 glow-cyan">
-                    <Icon className="w-6 h-6 text-primary-foreground" />
-                  </div>
                   <CardTitle className="text-xl gradient-text group-hover:scale-105 transition-transform duration-300 inline-block">
                     {topic.title}
                   </CardTitle>

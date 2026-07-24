@@ -46,9 +46,9 @@ const investigations = [
 
 const getSeverityDot = (severity: string) => {
   switch (severity) {
-    case "Critical": return "bg-destructive";
-    case "High": return "bg-orange-500";
-    case "Medium": return "bg-yellow-500";
+    case "Critical": return "bg-primary";
+    case "High": return "bg-primary";
+    case "Medium": return "bg-primary";
     default: return "bg-primary";
   }
 };
@@ -56,10 +56,10 @@ const getSeverityDot = (severity: string) => {
 const getStageColor = (stage: string) => {
   switch (stage) {
     case "Analysis": return "text-primary bg-primary/10 border-primary/20";
-    case "Containment": return "text-orange-400 bg-orange-500/10 border-orange-500/20";
-    case "Eradication": return "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
-    case "Recovery": return "text-secondary bg-secondary/10 border-secondary/20";
-    default: return "text-muted-foreground bg-muted border-border";
+    case "Containment": return "text-primary bg-primary/10 border-primary/20";
+    case "Eradication": return "text-primary bg-primary/10 border-primary/20";
+    case "Recovery": return "text-primary bg-primary/10 border-primary/20";
+    default: return "text-primary bg-primary/10 border-primary/20";
   }
 };
 

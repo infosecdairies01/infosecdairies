@@ -216,11 +216,19 @@ const Settings = () => {
 
                   <div className="space-y-3">
                     {[
-                      { name: "Sarah Martinez", role: "SOC Lead", status: "Online", incidents: 3, shift: "Day" },
-                      { name: "John Davis", role: "Tier 2 Analyst", status: "Online", incidents: 2, shift: "Day" },
-                      { name: "Mike Robinson", role: "Tier 2 Analyst", status: "Online", incidents: 1, shift: "Day" },
-                      { name: "Emily Chen", role: "Tier 1 Analyst", status: "Offline", incidents: 0, shift: "Night" },
-                      { name: "Alex Kumar", role: "Threat Hunter", status: "Offline", incidents: 0, shift: "Night" },
+                      { name: "Kenny", role: "SOC Lead", status: "Online", incidents: 3, shift: "Day" },
+                      { name: "Hemanth", role: "Tier 2 Analyst", status: "Online", incidents: 2, shift: "Day" },
+                      { name: "Hruthik", role: "Tier 2 Analyst", status: "Online", incidents: 1, shift: "Day" },
+                      { name: "Tejomaya", role: "Tier 1 Analyst", status: "Offline", incidents: 0, shift: "Night" },
+                      { name: "Ajith", role: "Threat Hunter", status: "Offline", incidents: 0, shift: "Night" },
+                      { name: "Kavya", role: "Developers", status: "Online", incidents: 0, shift: "Day" },
+                     { name: "Shrija", role: "Analyst", status: "Offline", incidents: 1, shift: "Day" },
+                     { name: "Harika", role: "AI/ML Engineer", status: "Online", incidents: 0, shift: "Night" },
+                      { name: "Shwetha", role: "Threat Hunter", status: "Offline", incidents: 0, shift: "Night" },
+
+
+
+
                     ].map((member) => (
                       <div key={member.name} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/[0.02] transition-colors">
                         <div className="flex items-center gap-3">
@@ -228,7 +236,7 @@ const Settings = () => {
                             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/30 to-secondary/20 border border-white/[0.08] flex items-center justify-center text-xs font-bold text-foreground">
                               {member.name.split(" ").map(n => n[0]).join("")}
                             </div>
-                            <div className={cn("absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background", member.status === "Online" ? "bg-secondary" : "bg-muted-foreground")} />
+                            <div className={cn("absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background", member.status === "Online" ? "bg-primary" : "bg-muted-foreground")} />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-foreground">{member.name}</p>
@@ -238,10 +246,10 @@ const Settings = () => {
                         <div className="flex items-center gap-3">
                           {member.incidents > 0 && (
                             <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                              <Shield className="w-3 h-3" />{member.incidents} active
+                              {member.incidents} active
                             </span>
                           )}
-                          <span className={cn("text-[10px]", member.status === "Online" ? "text-secondary" : "text-muted-foreground")}>{member.status}</span>
+                          <span className={cn("text-[10px]", member.status === "Online" ? "text-primary" : "text-muted-foreground")}>{member.status}</span>
                         </div>
                       </div>
                     ))}

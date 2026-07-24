@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Linkedin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const CTA = () => {
@@ -28,7 +27,7 @@ const CTA = () => {
   }, []);
 
   return (
-    <section ref={ref} className="py-20 relative overflow-hidden">
+    <section ref={ref} className="py-12 relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-cyber opacity-10 animate-gradient-shift" style={{ backgroundSize: '200% 200%' }} />
       <div className="absolute inset-0 circuit-pattern opacity-5" />
@@ -46,7 +45,7 @@ const CTA = () => {
             Connect with us on LinkedIn for insights, tips, and discussions.
           </p>
 
-          <div className={`flex justify-center items-center pt-4 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.4s' : '0s' }}>
+          <div className={`flex justify-center items-center gap-3 pt-4 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.4s' : '0s' }}>
             <Button
               size="lg"
               className="bg-[#0077B5] hover:bg-[#0077B5]/90 transition-all duration-300 hover:scale-110 group"
@@ -58,14 +57,29 @@ const CTA = () => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
               >
-                <Linkedin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <img src="https://cdn-icons-png.flaticon.com/512/4138/4138130.png" alt="LinkedIn" className="w-8 h-8 group-hover:scale-110 transition-transform" />
                 LinkedIn
+              </a>
+            </Button>
+            <Button
+              size="lg"
+              className="bg-[#E4405F] hover:bg-[#E4405F]/90 transition-all duration-300 hover:scale-110 group"
+              asChild
+            >
+              <a
+                href="https://www.instagram.com/blueteamers_?igsh=MW9vdHJicHZvOGZxYg%3D%3D&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <img src="https://static.vecteezy.com/system/resources/previews/018/930/413/non_2x/instagram-logo-instagram-icon-transparent-free-png.png" alt="Instagram" className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                Instagram
               </a>
             </Button>
           </div>
 
           <p className={`text-sm text-muted-foreground pt-8 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.6s' : '0s' }}>
-            <span className="inline-block animate-pulse">🔒</span> Defending today, securing tomorrow
+            Defending today, securing tomorrow
           </p>
         </div>
       </div>
