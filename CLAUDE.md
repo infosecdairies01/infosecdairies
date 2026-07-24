@@ -24,6 +24,12 @@ python manage.py migrate          # Apply migrations
 python manage.py makemigrations   # Create new migrations
 ```
 
+### Wazuh (local SOC labs — local only, not in production)
+
+The Practice → Logs section links out to a local Wazuh SIEM instance running as Docker containers inside the `Ubuntu-22.04` WSL2 distro. Wazuh scripts are local-only — do not add Wazuh env vars to Vercel or any production environment.
+
+Dashboard: `https://localhost` (self-signed cert — expect a browser warning). See `docs/superpowers/specs/2026-07-18-wazuh-local-access-design.md` for the full design.
+
 ## Architecture
 
 This is a cybersecurity e-learning platform (InfoSec Dairies) built with React + Vite. It has two parts:

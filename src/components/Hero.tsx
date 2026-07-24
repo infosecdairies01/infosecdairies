@@ -11,7 +11,7 @@ const Hero = () => {
       behavior: 'smooth'
     });
   };
-  return <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14 md:pt-20">
+  return <section className="relative min-h-screen flex items-start justify-center overflow-hidden pt-14 md:pt-20">
       {/* Dark base with subtle gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-slate-950 to-black" />
       

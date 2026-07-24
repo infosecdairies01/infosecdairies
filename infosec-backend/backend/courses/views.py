@@ -394,12 +394,18 @@ def submit_quiz(request, slug, quiz_id):
                 LessonProgress.objects.get_or_create(user=request.user, course=course, lesson_id="6.5")
         elif slug == "soc-analyst-path":
             sap_map = {
-                "sap-q1": "1.5",
-                "sap-q2": "2.5",
-                "sap-q3": "3.5",
-                "sap-q4": "4.5",
-                "sap-q5": "5.5",
-                "sap-q6": "6.5",
+                "sap-q1": "1.7",
+                "sap-q2": "2.7",
+                "sap-q3": "3.7",
+                "sap-q4": "4.7",
+                "sap-q5": "5.7",
+                "sap-q6": "6.7",
+                "sap-q7": "7.7",
+                "sap-q8": "8.7",
+                "sap-q9": "9.7",
+                "sap-q10": "10.7",
+                "sap-q11": "11.7",
+                "sap-q12": "12.7",
             }
             mapped_lesson_id = sap_map.get(quiz_id)
         elif slug == "detection-engineering-basics":

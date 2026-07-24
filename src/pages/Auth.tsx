@@ -222,6 +222,9 @@ const Auth = () => {
       
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8 animate-fade-up">
+          <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
+            <span className="font-bold text-2xl gradient-text">BlueTeamers</span>
+          </Link>
           <h1 className="text-3xl font-bold mt-4">
             {isLogin ? "Welcome Back" : "Create Account"}
           </h1>

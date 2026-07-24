@@ -328,10 +328,10 @@ const alertsData: Alert[] = [
 const alertTypes = ["All Types", "Web Attack", "Data Leakage", "ThreatIntel", "Brute Force", "Malware", "Proxy"];
 
 const sevConfig: Record<string, { icon: React.ReactNode; textClass: string; dotClass: string }> = {
-  Critical: { icon: null, textClass: "text-primary", dotClass: "text-primary" },
-  High: { icon: null, textClass: "text-primary", dotClass: "text-primary" },
-  Medium: { icon: null, textClass: "text-primary", dotClass: "text-primary" },
-  Low: { icon: null, textClass: "text-primary", dotClass: "text-primary" },
+  Critical: { icon: <Star className="w-3.5 h-3.5 fill-current" />, textClass: "text-red-400", dotClass: "text-red-500" },
+  High: { icon: <AlertTriangle className="w-3.5 h-3.5" />, textClass: "text-orange-400", dotClass: "text-orange-500" },
+  Medium: { icon: <Square className="w-3.5 h-3.5 fill-current" />, textClass: "text-yellow-400", dotClass: "text-yellow-500" },
+  Low: { icon: <Square className="w-3.5 h-3.5 fill-current" />, textClass: "text-blue-400", dotClass: "text-blue-500" },
 };
 
 // ── Component ──────────────────────────────────────────────────
@@ -470,7 +470,7 @@ const Alerts = () => {
                       )}
                     >
                       <div className="px-3 py-3 flex items-center">
-                        {sev.icon && <span className={sev.dotClass}>{sev.icon}</span>}
+                        <span className={sev.dotClass}>{sev.icon}</span>
                       </div>
                       <div className="px-3 py-3 flex items-center">
                         <span className={cn("text-xs font-semibold", sev.textClass)}>{alert.severity}</span>

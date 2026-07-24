@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Linkedin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const CTA = () => {
@@ -45,7 +46,7 @@ const CTA = () => {
             Connect with us on LinkedIn for insights, tips, and discussions.
           </p>
 
-          <div className={`flex justify-center items-center gap-3 pt-4 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.4s' : '0s' }}>
+          <div className={`flex justify-center items-center pt-4 transition-all duration-500`} style={{ transitionDelay: isVisible ? '0.4s' : '0s' }}>
             <Button
               size="lg"
               className="bg-[#0077B5] hover:bg-[#0077B5]/90 transition-all duration-300 hover:scale-110 group"

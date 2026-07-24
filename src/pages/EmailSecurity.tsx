@@ -330,25 +330,47 @@ const EmailSecurity = () => {
                     ))}
                   </div>
 
-                  <div className="overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] shadow-lg shadow-black/20">
-                    <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-primary to-secondary" />
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-white/[0.06]">
-                            <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 pl-5">From</th>
-                            <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">To</th>
-                            <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Subject</th>
-                            <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Date</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filtered.map((email) => (
-                            <tr key={email.id} onClick={() => { scrollToTop(); setSelectedEmail(email); }} className="border-b border-white/[0.03] last:border-b-0 hover:bg-white/[0.03] transition-colors cursor-pointer group">
-                              <td className="px-4 py-3 pl-5"><span className="text-sm text-foreground truncate max-w-[180px] block">{email.from}</span></td>
-                              <td className="px-4 py-3"><span className="text-sm text-muted-foreground truncate max-w-[140px] block">{email.to}</span></td>
-                              <td className="px-4 py-3"><span className="text-sm text-foreground group-hover:text-primary transition-colors truncate max-w-[220px] block">{email.subject}</span></td>
+              {/* Filter Pills */}
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                {(["All", "Clean", "Suspicious", "Malicious", "Quarantined"] as const).map((v) => (
+                  <button key={v} onClick={() => setVerdictFilter(v)} className={cn("px-3 py-1.5 rounded-lg text-xs font-medium transition-all", verdictFilter === v ? "bg-primary/15 text-primary border border-primary/25" : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04] border border-transparent")}>
+                    {v}
+                  </button>
+                ))}
+              </div>
+
+              {/* Email List + Detail Split */}
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div className={cn("relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] shadow-lg shadow-black/20", selectedEmail ? "lg:col-span-3" : "lg:col-span-5")}>
+                  <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-white/[0.06]">
+                          <th className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Verdict</th>
+                          <th className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">From</th>
+                          <th className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">To</th>
+                          <th className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Subject</th>
+                          <th className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Date</th>
+                          <th className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 text-center">Att.</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((email) => {
+                          const vc = verdictConfig[email.verdict];
+                          const VIcon = vc.icon;
+                          return (
+                            <tr key={email.id} onClick={() => setSelectedEmail(email)} className={cn("border-b border-white/[0.03] last:border-b-0 hover:bg-white/[0.03] transition-colors cursor-pointer group", selectedEmail?.id === email.id && "bg-primary/5 border-l-2 border-l-primary")}>
+                              <td className="px-4 py-3">
+                                <span className={cn("inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border font-medium", vc.bg, vc.color, vc.border)}>
+                                  <VIcon className="w-3 h-3" />
+                                  {email.verdict}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3"><span className="text-xs text-foreground font-mono truncate max-w-[180px] block">{email.from}</span></td>
+                              <td className="px-4 py-3"><span className="text-xs text-muted-foreground font-mono truncate max-w-[140px] block">{email.to}</span></td>
+                              <td className="px-4 py-3"><span className="text-xs text-foreground group-hover:text-primary transition-colors truncate max-w-[220px] block">{email.subject}</span></td>
                               <td className="px-4 py-3 whitespace-nowrap">
                                 <span className="text-sm text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" />{email.time}</span>
                                 <span className="text-[11px] text-muted-foreground/60">{email.date}</span>
@@ -439,7 +461,93 @@ const EmailSecurity = () => {
                     </div>
                   </div>
                 </div>
-              )}
+
+                {/* Detail Panel */}
+                {selectedEmail && (
+                  <div className="lg:col-span-2 relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] shadow-lg shadow-black/20">
+                    <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                    <div className="p-5 space-y-5 overflow-auto max-h-[calc(100vh-300px)]">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold text-foreground mb-1 break-words">{selectedEmail.subject}</h3>
+                          <p className="text-[10px] text-muted-foreground">{selectedEmail.id} · {selectedEmail.date} {selectedEmail.time}</p>
+                        </div>
+                        <button onClick={() => setSelectedEmail(null)} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {(() => {
+                        const vc = verdictConfig[selectedEmail.verdict];
+                        const VIcon = vc.icon;
+                        return (
+                          <div className={cn("flex items-center gap-2 px-3 py-2 rounded-lg border", vc.bg, vc.border)}>
+                            <VIcon className={cn("w-5 h-5", vc.color)} />
+                            <div>
+                              <p className={cn("text-sm font-semibold", vc.color)}>{selectedEmail.verdict}</p>
+                              {selectedEmail.threatType && <p className="text-[10px] text-muted-foreground">{selectedEmail.threatType}</p>}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">From</p>
+                          <p className="text-xs text-foreground font-mono break-all">{selectedEmail.from}</p>
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">IP: {selectedEmail.senderIP}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">To</p>
+                          <p className="text-xs text-foreground font-mono break-all">{selectedEmail.to}</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Email Authentication</p>
+                        <div className="flex gap-4">
+                          <div className="text-center"><p className="text-[9px] text-muted-foreground mb-1">SPF</p>{authBadge(selectedEmail.spfResult)}</div>
+                          <div className="text-center"><p className="text-[9px] text-muted-foreground mb-1">DKIM</p>{authBadge(selectedEmail.dkimResult)}</div>
+                          <div className="text-center"><p className="text-[9px] text-muted-foreground mb-1">DMARC</p>{authBadge(selectedEmail.dmarcResult)}</div>
+                        </div>
+                      </div>
+
+                      {selectedEmail.hasAttachment && (
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Attachment</p>
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background/50 border border-white/[0.06]">
+                            <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-xs text-foreground font-mono">{selectedEmail.attachmentName}</span>
+                            {(selectedEmail.verdict === "Malicious" || selectedEmail.verdict === "Quarantined") && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 ml-auto">Blocked</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedEmail.body && (
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Email Body</p>
+                          <div className="px-3 py-3 rounded-lg bg-background/50 border border-white/[0.06]">
+                            <pre className="text-xs text-foreground/80 whitespace-pre-wrap font-sans leading-relaxed">{selectedEmail.body}</pre>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-2">
+                        <button className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-primary/10 text-primary border border-primary/25 hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5">
+                          <Eye className="w-3.5 h-3.5" /> Investigate
+                        </button>
+                        {selectedEmail.verdict !== "Clean" && (
+                          <button className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-destructive/10 text-destructive border border-destructive/25 hover:bg-destructive/20 transition-colors flex items-center justify-center gap-1.5">
+                            <ShieldX className="w-3.5 h-3.5" /> Block Sender
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

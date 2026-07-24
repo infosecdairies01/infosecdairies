@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/collapsible";
 import { courses as staticCourses, getCoursePriceInr } from "@/data/courses";
 import { apiUrl, fetchCourseBySlug } from "../services/api";
+import { TESTING_MODE } from "@/lib/testingMode";
 import QRCode from "qrcode";
 
 // Import all course background images
@@ -325,14 +326,7 @@ const CourseDetail = () => {
     fetch(apiUrl(`/api/certificates/my/${slug}/`), {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
-      .then(r => {
-        if (r.status === 403) {
-          // Server says course not completed — clear any stale cert metadata
-          setCertMeta(null);
-          return null;
-        }
-        return r.ok ? r.json() : null;
-      })
+      .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
           setCertMeta({
@@ -575,12 +569,18 @@ const CourseDetail = () => {
 
     if (slug === "soc-analyst-path") {
       const sapQuizMap: Record<string, string> = {
-        "1.5": "sap-q1",
-        "2.5": "sap-q2",
-        "3.5": "sap-q3",
-        "4.5": "sap-q4",
-        "5.5": "sap-q5",
-        "6.5": "sap-q6",
+        "1.7": "sap-q1",
+        "2.7": "sap-q2",
+        "3.7": "sap-q3",
+        "4.7": "sap-q4",
+        "5.7": "sap-q5",
+        "6.7": "sap-q6",
+        "7.7": "sap-q7",
+        "8.7": "sap-q8",
+        "9.7": "sap-q9",
+        "10.7": "sap-q10",
+        "11.7": "sap-q11",
+        "12.7": "sap-q12",
       };
       return sapQuizMap[lessonLikeQuizId] ?? lessonLikeQuizId;
     }
@@ -817,7 +817,7 @@ const CourseDetail = () => {
 
     // QR Code (bottom right) - link to course page
     try {
-      const courseUrl = `https://www.blueteamers.io/courses/${slug}`;
+      const courseUrl = `https://www.infosecdairies.io/courses/${slug}`;
       const qrDataUrl = await QRCode.toDataURL(courseUrl, {
         width: Math.round(Math.min(w, h) * 0.12),
         margin: 1,
@@ -880,7 +880,7 @@ const CourseDetail = () => {
   const handleShareOnLinkedIn = async () => {
     if (!course || !user) return;
 
-    if (serverCompleted !== true) {
+    if (serverCompleted === false) {
       setEnrollError("Please pass at least one quiz before sharing your certificate.");
       return;
     }
@@ -889,7 +889,7 @@ const CourseDetail = () => {
     const name = certMeta?.studentName || (user?.fullName || "Student");
     const date = certMeta?.issueDate || new Date().toISOString().slice(0, 10);
 
-    const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.blueteamers.io/`;
+    const shareText = `I have completed my course on ${course.title} from BlueTeamers! 🎓\n\nhttps://www.infosecdairies.io/`;
 
     try {
       const cert = await generateCertificatePngDataUrl(name, date);
@@ -923,7 +923,7 @@ const CourseDetail = () => {
       setShowShareModal(true);
 
     } catch {
-      const fallbackSharePageUrl = "https://www.blueteamers.io/share/certificate-completed.html";
+      const fallbackSharePageUrl = "https://www.infosecdairies.io/share/certificate-completed.html";
       setShareModalText(shareText);
       setShareModalUrl(fallbackSharePageUrl);
       setShowShareModal(true);
@@ -932,7 +932,7 @@ const CourseDetail = () => {
 
   const handleDownloadCertificate = async () => {
     if (isCertDownloading) return;
-    if (serverCompleted !== true) {
+    if (serverCompleted === false) {
       setEnrollError("Please pass at least one quiz before downloading your certificate.");
       return;
     }
@@ -984,7 +984,7 @@ const CourseDetail = () => {
     }
 
     const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
+    if (!accessToken && !TESTING_MODE) {
       const returnUrl = slug === "network-fundamentals"
         ? `/courses/${slug}`
         : `/courses/${slug}/checkout`;
@@ -1330,7 +1330,7 @@ const CourseDetail = () => {
                                       return;
                                     }
 
-                                    if (isCourseProgressEnabled) {
+                                    if (isCourseProgressEnabled && !TESTING_MODE) {
                                       const accessToken = localStorage.getItem("accessToken");
                                       if (!accessToken) {
                                         // Show login prompt instead of auto-redirect

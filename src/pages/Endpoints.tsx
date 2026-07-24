@@ -1,18 +1,6 @@
 import Navbar from "@/components/Navbar";
 import SOCSidebar from "@/components/soc/SOCSidebar";
-import {
-  Bell,
-  User,
-  Monitor,
-  Shield,
-  Wifi,
-  WifiOff,
-  Clock,
-  ChevronRight,
-  ChevronLeft,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Bell, User, Monitor, Shield, Wifi, WifiOff, AlertTriangle, Clock, Cpu, HardDrive, ChevronRight, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 
@@ -183,21 +171,81 @@ const Endpoints = () => {
                 ))}
               </div>
 
-              {/* Endpoint list — single gradient bar on the whole container, not per row */}
-              <div className="relative overflow-hidden rounded-xl border border-border bg-card/25 backdrop-blur-lg pl-4">
-                <span className={cn("absolute left-0 top-0 bottom-0 w-[3px]", GRADIENT_BAR)} />
+              {/* Endpoint Cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {filtered.map((ep) => {
+                  const statusInfo = getStatusIcon(ep.status);
+                  return (
+                    <div key={ep.id} className="group relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] p-5 shadow-lg shadow-black/20 hover:bg-card/35 hover:border-white/[0.12] transition-all duration-300 cursor-pointer">
+                      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
-                {pageItems.length === 0 && (
-                  <div className="px-5 py-10 text-center text-sm text-muted-foreground">No endpoints match your search.</div>
-                )}
-                {pageItems.map((ep) => (
-                  <div
-                    key={ep.id}
-                    className="group flex flex-wrap lg:flex-nowrap items-center gap-x-6 gap-y-2 px-5 py-4 border-b border-border last:border-b-0 hover:bg-white/[0.03] transition-colors cursor-pointer"
-                  >
-                    <div className="w-[190px] shrink-0">
-                      <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{ep.hostname}</p>
-                      <span className="text-xs font-mono text-muted-foreground">{ep.ip}</span>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("p-2 rounded-lg", statusInfo.bg)}>
+                            <Monitor className={cn("w-4 h-4", statusInfo.color)} />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{ep.hostname}</h3>
+                            <span className="text-xs font-mono text-muted-foreground">{ep.ip}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", getRiskStyles(ep.risk))}>{ep.risk}</span>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">OS:</span>
+                          <span className="text-foreground">{ep.os} {ep.osVersion}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">User:</span>
+                          <span className="text-foreground">{ep.user}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">Dept:</span>
+                          <span className="text-foreground">{ep.department}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">EDR:</span>
+                          <span className={getEdrStyles(ep.edrStatus)}>{ep.edrStatus}</span>
+                        </div>
+                      </div>
+
+                      {ep.status === "Online" && (
+                        <div className="space-y-1.5 mb-3">
+                          {[
+                            { label: "CPU", value: ep.cpu },
+                            { label: "MEM", value: ep.memory },
+                            { label: "DISK", value: ep.disk },
+                          ].map((r) => (
+                            <div key={r.label} className="flex items-center gap-2">
+                              <span className="text-[9px] text-muted-foreground/60 w-7">{r.label}</span>
+                              <div className="flex-1 h-1 bg-muted/20 rounded-full overflow-hidden">
+                                <div className={cn("h-full rounded-full transition-all", getBarColor(r.value))} style={{ width: `${r.value}%` }} />
+                              </div>
+                              <span className="text-[9px] text-muted-foreground/60 w-7 text-right">{r.value}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <statusInfo.icon className={cn("w-3 h-3", statusInfo.color)} />
+                          <span>{ep.status}</span>
+                          <span className="mx-1">·</span>
+                          <Clock className="w-3 h-3" />
+                          <span>{ep.lastSeen}</span>
+                        </div>
+                        {ep.openAlerts > 0 && (
+                          <span className="flex items-center gap-1 text-destructive">
+                            <AlertTriangle className="w-3 h-3" />{ep.openAlerts} alerts
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="w-[170px] shrink-0">

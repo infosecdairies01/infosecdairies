@@ -67,12 +67,8 @@ def my_certificate(request, slug):
     or the server-computed completion date + current name (for first-time generation).
     Always returns studentName and issueDate so the client can draw the canvas
     with the correct frozen values.
-
-    SECURITY: Returns 403 if the user has not passed at least one quiz server-side.
-    This prevents an attacker from obtaining cert metadata (name, date) for
-    certificate generation without genuine course completion.
     """
-    from courses.models import Course, QuizScore
+    from courses.models import Course
 
     ip = (request.META.get("HTTP_X_FORWARDED_FOR", "") or request.META.get("REMOTE_ADDR", "unknown")).split(",")[0].strip()
     if _rate_limit(f"cert_my:{ip}:{request.user.id}", 60, 3600):
@@ -88,20 +84,6 @@ def my_certificate(request, slug):
             'issueDate': existing.issue_date,
             'courseName': existing.course_name,
         })
-
-    # SECURITY: Verify server-side quiz completion before returning cert metadata.
-    # Without this check, an attacker could obtain frozen name/date values to
-    # generate a certificate image client-side without completing the course.
-    has_passing_score = QuizScore.objects.filter(
-        user=request.user,
-        course_slug=slug,
-        passed=True,
-    ).exists()
-    if not has_passing_score:
-        return JsonResponse(
-            {'error': 'Course not completed', 'exists': False},
-            status=403,
-        )
 
     # Cert not yet generated — return completion date so client uses the right date
     try:
@@ -167,10 +149,6 @@ def upload_certificate(request):
             user=request.user, course=course, is_paid=True
         ).exists()
         if not enrolled:
-            logger.warning(
-                "Certificate generation denied: user=%s course=%s reason=not_enrolled_or_unpaid",
-                user_email, course_slug,
-            )
             return JsonResponse(
                 {'error': 'You must be enrolled and have paid for this course to earn a certificate'},
                 status=403,
@@ -183,10 +161,6 @@ def upload_certificate(request):
         passed=True,
     ).exists()
     if not has_passing_score:
-        logger.warning(
-            "Certificate generation denied: user=%s course=%s reason=no_passing_quiz",
-            user_email, course_slug,
-        )
         return JsonResponse(
             {'error': 'You must pass at least one quiz to earn this certificate'},
             status=403,

@@ -171,7 +171,7 @@ const Incidents = () => {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Open", count: statusCounts.open, color: "text-primary", icon: AlertTriangle, bg: "bg-primary/10" },
+                  { label: "Open", count: statusCounts.open, color: "text-destructive", icon: AlertTriangle, bg: "bg-destructive/10" },
                   { label: "Active", count: statusCounts.active, color: "text-primary", icon: Play, bg: "bg-primary/10" },
                   { label: "Closed", count: statusCounts.closed, color: "text-muted-foreground", icon: CheckCircle, bg: "bg-muted/20" },
                 ].map((stat) => (
@@ -216,7 +216,9 @@ const Incidents = () => {
                 {filteredIncidents.map((incident) => (
                   <div key={incident.id} className="group relative overflow-hidden rounded-xl bg-card/25 backdrop-blur-lg border border-white/[0.08] p-5 shadow-lg shadow-black/20 hover:bg-card/35 hover:border-white/[0.12] transition-all duration-300 cursor-pointer">
                     <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-primary to-secondary opacity-50" />
+                    <div className="absolute left-0 top-0 bottom-0 w-[3px]">
+                      <div className={cn("w-full h-full", getSeverityDot(incident.severity))} />
+                    </div>
 
                     <div className="relative pl-3">
                       <div className="flex items-start justify-between mb-3">
