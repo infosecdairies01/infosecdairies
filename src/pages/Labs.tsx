@@ -72,6 +72,7 @@ const Labs = () => {
               <RecentAlertsTable />
             </div>
           </div>
+        </div>
       </div>
 
       {/* Glass overlay — page under development, pinned to viewport below navbar, blocks scroll/clicks */}
